@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TrendingUp, TrendingDown, ChevronDown, ChevronUp, Info, Leaf, Calculator, Fuel, AlertCircle } from 'lucide-react';
+import { TrendingUp, TrendingDown, ChevronDown, ChevronUp, Info, Leaf, Calculator, Fuel, AlertCircle, FileText } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -44,7 +44,6 @@ const FUEL_OPTIONS = [
 
 export function SavingsCard({
   results,
-  assumptions,
   scop,
   selectedTariff,
   currentFuel,
@@ -54,10 +53,16 @@ export function SavingsCard({
 }: SavingsCardProps) {
   const [isEfficiencyOpen, setIsEfficiencyOpen] = useState(false);
   const [isCalculationOpen, setIsCalculationOpen] = useState(false);
+  const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const { data: tariffs, isLoading: tariffsLoading } = useTariffs();
 
-  const { annualSavings, savingsCouldIncrease, confidenceLabel, epcBand } = results;
-  const isNegativeSavings = annualSavings < 0;
+  const { savingsRange, savingsCouldIncrease, confidenceLabel, epcBand, isOilFuel, oilSavings, oilCurrentCost } = results;
+  
+  // Use worst case to determine if bills could increase
+  const worstCaseSavings = isOilFuel && oilSavings 
+    ? oilSavings.modernBoiler.worst 
+    : savingsRange.worst;
+  const showWarning = worstCaseSavings < 0;
 
   const handleTariffChange = (tariffId: string) => {
     const tariff = tariffs?.find(t => t.id === tariffId);
@@ -71,6 +76,17 @@ export function SavingsCard({
     if (['A', 'B', 'C'].includes(epcBand)) return 'bg-success/10 text-success';
     if (['D', 'E'].includes(epcBand)) return 'bg-warning/10 text-warning';
     return 'bg-muted text-muted-foreground';
+  };
+
+  // Format savings range display
+  const formatSavingsRange = (worst: number, typical: number, best: number) => {
+    if (worst < 0 && typical < 0 && best < 0) {
+      return `Bills may increase by ${formatCurrency(Math.abs(best))} – ${formatCurrency(Math.abs(worst))}`;
+    }
+    if (worst < 0) {
+      return `${formatCurrency(Math.abs(worst))} more to ${formatCurrency(best)} savings`;
+    }
+    return `${formatCurrency(worst)} – ${formatCurrency(best)}`;
   };
 
   return (
@@ -89,15 +105,15 @@ export function SavingsCard({
         <CardContent className="p-0">
           {/* Savings display */}
           <div className={`p-4 md:p-5 border-b border-border ${
-            isNegativeSavings ? 'bg-warning/5' : 'bg-gradient-to-r from-success/5 to-accent/5'
+            showWarning ? 'bg-warning/5' : 'bg-gradient-to-r from-success/5 to-accent/5'
           }`}>
             <div className="flex flex-col gap-4">
               {/* Main savings figure */}
               <div className="flex items-start gap-3">
                 <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0 ${
-                  isNegativeSavings ? 'bg-warning/10' : 'bg-success/10'
+                  showWarning ? 'bg-warning/10' : 'bg-success/10'
                 }`}>
-                  {isNegativeSavings ? (
+                  {showWarning ? (
                     <TrendingDown className="w-5 h-5 sm:w-6 sm:h-6 text-warning" />
                   ) : (
                     <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-success" />
@@ -105,19 +121,53 @@ export function SavingsCard({
                 </div>
                 <div className="flex-1">
                   <p className="text-xs text-muted-foreground mb-1">
-                    {savingsCouldIncrease ? 'Bills may increase slightly' : 'Estimated annual savings'}
+                    {savingsCouldIncrease ? 'Estimated annual change' : 'Estimated annual savings range'}
                   </p>
                   
-                  <div className="space-y-1">
-                    <div className="flex items-baseline gap-2 flex-wrap">
-                      <span className={`text-2xl sm:text-3xl md:text-4xl font-bold ${
-                        isNegativeSavings ? 'text-warning' : 'text-success'
-                      }`}>
-                        {formatCurrency(Math.abs(annualSavings))}
-                      </span>
-                      <span className="text-xs sm:text-sm text-muted-foreground">/year</span>
+                  {/* Non-oil display */}
+                  {!isOilFuel && (
+                    <div className="space-y-2">
+                      <div className="flex items-baseline gap-2 flex-wrap">
+                        <span className={`text-xl sm:text-2xl md:text-3xl font-bold ${
+                          savingsRange.typical < 0 ? 'text-warning' : 'text-success'
+                        }`}>
+                          {formatSavingsRange(savingsRange.worst, savingsRange.typical, savingsRange.best)}
+                        </span>
+                        <span className="text-xs sm:text-sm text-muted-foreground">/year</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Typical: <span className="font-medium text-foreground">{formatCurrency(savingsRange.typical)}</span>
+                      </div>
                     </div>
-                  </div>
+                  )}
+
+                  {/* Oil-specific display */}
+                  {isOilFuel && oilSavings && (
+                    <div className="space-y-3">
+                      <div className="space-y-1">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Compared to modern oil boiler (85% eff)</p>
+                        <div className="flex items-baseline gap-2 flex-wrap">
+                          <span className={`text-lg sm:text-xl font-bold ${
+                            oilSavings.modernBoiler.typical < 0 ? 'text-warning' : 'text-success'
+                          }`}>
+                            {formatSavingsRange(oilSavings.modernBoiler.worst, oilSavings.modernBoiler.typical, oilSavings.modernBoiler.best)}
+                          </span>
+                          <span className="text-xs text-muted-foreground">/year</span>
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Compared to older oil boiler (70% eff)</p>
+                        <div className="flex items-baseline gap-2 flex-wrap">
+                          <span className={`text-lg sm:text-xl font-bold ${
+                            oilSavings.oldBoiler.typical < 0 ? 'text-warning' : 'text-success'
+                          }`}>
+                            {formatSavingsRange(oilSavings.oldBoiler.worst, oilSavings.oldBoiler.typical, oilSavings.oldBoiler.best)}
+                          </span>
+                          <span className="text-xs text-muted-foreground">/year</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -150,19 +200,34 @@ export function SavingsCard({
               </div>
 
               {/* Cost breakdown */}
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 text-xs text-muted-foreground">
-                <span>
-                  Current heating: <span className="font-medium text-foreground">{formatCurrency(results.baselineCost)}/year</span>
-                </span>
-                <span>
-                  Heat pump: <span className="font-medium text-foreground">{formatCurrency(results.hpCost)}/year</span>
-                </span>
+              <div className="flex flex-col gap-2 text-xs text-muted-foreground">
+                {!isOilFuel ? (
+                  <>
+                    <span>
+                      Current heating: <span className="font-medium text-foreground">{formatCurrency(results.baselineCost)}/year</span>
+                    </span>
+                    <span>
+                      Heat pump: <span className="font-medium text-foreground">{formatCurrency(results.hpCostRange.worst)} – {formatCurrency(results.hpCostRange.best)}/year</span>
+                    </span>
+                  </>
+                ) : oilCurrentCost && (
+                  <>
+                    <span>
+                      Modern oil boiler: <span className="font-medium text-foreground">{formatCurrency(oilCurrentCost.modernBoiler)}/year</span>
+                    </span>
+                    <span>
+                      Older oil boiler: <span className="font-medium text-foreground">{formatCurrency(oilCurrentCost.oldBoiler)}/year</span>
+                    </span>
+                    <span>
+                      Heat pump: <span className="font-medium text-foreground">{formatCurrency(results.hpCostRange.worst)} – {formatCurrency(results.hpCostRange.best)}/year</span>
+                    </span>
+                  </>
+                )}
               </div>
 
               {/* Disclaimer */}
-              <p className="text-[10px] sm:text-xs text-muted-foreground italic">
-                Based on national average energy use for EPC {epcBand} homes and conservative performance assumptions. 
-                Final results depend on survey and any insulation improvements.
+              <p className="text-[10px] sm:text-xs text-muted-foreground italic border-t border-border pt-3">
+                This is a digital estimate based on national averages and public data. A home survey confirms final system design, costs, and savings.
               </p>
             </div>
           </div>
@@ -234,7 +299,42 @@ export function SavingsCard({
             </Collapsible>
           </div>
 
-          {/* Transparency accordion */}
+          {/* Summary section */}
+          <div className="p-4 md:p-5 border-b border-border">
+            <Collapsible open={isSummaryOpen} onOpenChange={setIsSummaryOpen}>
+              <CollapsibleTrigger asChild>
+                <button className="flex items-center gap-1.5 text-xs text-primary hover:underline w-full justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <FileText className="w-3 h-3" />
+                    Summary
+                  </span>
+                  {isSummaryOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-3">
+                <div className="bg-muted/50 p-3 rounded-lg space-y-3 text-xs text-muted-foreground">
+                  <p>
+                    This estimate is based on national average energy use for homes in your EPC band, typical boiler efficiencies, 
+                    and conservative heat pump performance assumptions. It compares your current heating system to a Cosy heat pump 
+                    on your selected tariff.
+                  </p>
+                  <p className="font-medium text-foreground">We account for:</p>
+                  <ul className="list-disc list-inside space-y-1 pl-1">
+                    <li>How efficient homes in your EPC band typically are</li>
+                    <li>The difference between space heating and hot water</li>
+                    <li>Real-world heat pump efficiency (not lab ratings)</li>
+                    <li>How much heating can realistically run in cheaper tariff hours</li>
+                  </ul>
+                  <p>
+                    Your actual results depend on your home's size, insulation, radiator setup, and usage patterns. 
+                    A survey confirms final design and performance.
+                  </p>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          </div>
+
+          {/* How we calculated this */}
           <div className="p-4 md:p-5">
             <Collapsible open={isCalculationOpen} onOpenChange={setIsCalculationOpen}>
               <CollapsibleTrigger asChild>
@@ -247,76 +347,76 @@ export function SavingsCard({
                 </button>
               </CollapsibleTrigger>
               <CollapsibleContent className="pt-3">
-                <div className="bg-muted/50 p-3 rounded-lg space-y-2 text-xs text-muted-foreground">
-                  {/* Heat demand breakdown */}
-                  <div className="pb-2 border-b border-border">
-                    <p className="font-medium text-foreground mb-1">Heat demand (national average for EPC {epcBand})</p>
-                    <div className="flex justify-between">
-                      <span>Total useful heat:</span>
-                      <span className="font-medium text-foreground">{results.annualHeatKwh.toLocaleString()} kWh/year</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Space heating:</span>
-                      <span className="font-medium text-foreground">{results.spaceHeatKwh.toLocaleString()} kWh</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Hot water:</span>
-                      <span className="font-medium text-foreground">{results.dhwHeatKwh.toLocaleString()} kWh</span>
-                    </div>
+                <div className="bg-muted/50 p-3 rounded-lg space-y-3 text-xs text-muted-foreground">
+                  {/* Methodology explanation */}
+                  <div className="space-y-2">
+                    <p className="font-medium text-foreground">Our methodology:</p>
+                    <ol className="list-decimal list-inside space-y-1.5 pl-1">
+                      <li>We started with a typical UK home heat demand (11,500 kWh/year) and adjusted it based on your EPC band.</li>
+                      <li>We split that into space heating and hot water, which run at different efficiencies.</li>
+                      <li>We estimated your current system's fuel use using typical boiler efficiencies.</li>
+                      <li>We modelled heat pump electricity use using a conservative seasonal efficiency adjusted for your EPC band.</li>
+                      <li>We applied your selected tariff, assuming only part of heating runs in cheaper hours.</li>
+                      <li>We compared the two and showed a range to reflect uncertainty.</li>
+                    </ol>
                   </div>
 
-                  {/* Current system */}
-                  <div className="pb-2 border-b border-border">
-                    <p className="font-medium text-foreground mb-1">Current system</p>
-                    <div className="flex justify-between">
-                      <span>Fuel type:</span>
-                      <span className="font-medium text-foreground">{getFuelDisplayName(results.currentFuelType)}</span>
+                  {/* Detailed breakdown */}
+                  <div className="pt-2 border-t border-border space-y-2">
+                    <p className="font-medium text-foreground">Your numbers:</p>
+                    
+                    {/* Heat demand breakdown */}
+                    <div className="pb-2 border-b border-border/50">
+                      <p className="font-medium text-foreground/80 mb-1 text-[10px] uppercase tracking-wide">Heat demand (EPC {epcBand})</p>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+                        <span>Total useful heat:</span>
+                        <span className="font-medium text-foreground text-right">{results.annualHeatKwh.toLocaleString()} kWh/yr</span>
+                        <span>Space heating:</span>
+                        <span className="font-medium text-foreground text-right">{results.spaceHeatKwh.toLocaleString()} kWh</span>
+                        <span>Hot water:</span>
+                        <span className="font-medium text-foreground text-right">{results.dhwHeatKwh.toLocaleString()} kWh</span>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Boiler efficiency:</span>
-                      <span className="font-medium text-foreground">{Math.round(results.boilerEfficiency * 100)}%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Fuel energy used:</span>
-                      <span className="font-medium text-foreground">{results.fuelInputKwh.toLocaleString()} kWh/year</span>
-                    </div>
-                  </div>
 
-                  {/* Heat pump performance */}
-                  <div className="pb-2 border-b border-border">
-                    <p className="font-medium text-foreground mb-1">Heat pump performance</p>
-                    <div className="flex justify-between">
-                      <span>Selected SCOP:</span>
-                      <span className="font-medium text-foreground">{scop.toFixed(1)}</span>
+                    {/* Current system */}
+                    <div className="pb-2 border-b border-border/50">
+                      <p className="font-medium text-foreground/80 mb-1 text-[10px] uppercase tracking-wide">Current system</p>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+                        <span>Fuel type:</span>
+                        <span className="font-medium text-foreground text-right">{getFuelDisplayName(results.currentFuelType)}</span>
+                        <span>Boiler efficiency:</span>
+                        <span className="font-medium text-foreground text-right">{Math.round(results.boilerEfficiency * 100)}%</span>
+                        <span>Fuel energy used:</span>
+                        <span className="font-medium text-foreground text-right">{results.fuelInputKwh.toLocaleString()} kWh/yr</span>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span>EPC derate applied:</span>
-                      <span className="font-medium text-foreground">{Math.round(results.epcDerateApplied * 100)}%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Adjusted space SCOP:</span>
-                      <span className="font-medium text-foreground">{results.scopAdjusted.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>DHW SCOP (fixed):</span>
-                      <span className="font-medium text-foreground">{results.dhwScop.toFixed(1)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Electricity used:</span>
-                      <span className="font-medium text-foreground">{results.hpElectricKwh.toLocaleString()} kWh/year</span>
-                    </div>
-                  </div>
 
-                  {/* Electricity cost */}
-                  <div>
-                    <p className="font-medium text-foreground mb-1">Electricity cost</p>
-                    <div className="flex justify-between">
-                      <span>Cheap-hour share:</span>
-                      <span className="font-medium text-foreground">{Math.round(results.offpeakShareUsed * 100)}%</span>
+                    {/* Heat pump performance */}
+                    <div className="pb-2 border-b border-border/50">
+                      <p className="font-medium text-foreground/80 mb-1 text-[10px] uppercase tracking-wide">Heat pump performance</p>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+                        <span>Selected SCOP:</span>
+                        <span className="font-medium text-foreground text-right">{scop.toFixed(1)}</span>
+                        <span>EPC derate applied:</span>
+                        <span className="font-medium text-foreground text-right">{Math.round(results.epcDerateApplied * 100)}%</span>
+                        <span>Adjusted space SCOP:</span>
+                        <span className="font-medium text-foreground text-right">{results.scopAdjusted.toFixed(2)}</span>
+                        <span>DHW COP (fixed):</span>
+                        <span className="font-medium text-foreground text-right">{results.dhwCop.toFixed(1)}</span>
+                        <span>Electricity used:</span>
+                        <span className="font-medium text-foreground text-right">{results.hpElectricKwh.toLocaleString()} kWh/yr</span>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Effective rate:</span>
-                      <span className="font-medium text-foreground">{(results.weightedRate * 100).toFixed(1)}p/kWh</span>
+
+                    {/* Electricity cost */}
+                    <div>
+                      <p className="font-medium text-foreground/80 mb-1 text-[10px] uppercase tracking-wide">Electricity cost</p>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+                        <span>Cheap-hour share:</span>
+                        <span className="font-medium text-foreground text-right">{Math.round(results.offpeakShareUsed * 100)}%</span>
+                        <span>Effective rate:</span>
+                        <span className="font-medium text-foreground text-right">{(results.weightedRate * 100).toFixed(2)}p/kWh</span>
+                      </div>
                     </div>
                   </div>
 
