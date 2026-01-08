@@ -45,7 +45,7 @@ export function AddressLookup({ onAddressSelect, onManualEntry }: AddressLookupP
           onClick={handleSearch} 
           disabled={loading || !postcode.trim()}
           size="lg"
-          className="w-full h-14 rounded-full bg-gradient-to-r from-primary to-[hsl(280,70%,50%)] hover:from-primary/90 hover:to-[hsl(280,70%,45%)] text-white font-bold text-lg shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:-translate-y-0.5 transition-all"
+          className="w-full h-14 rounded-full bg-primary hover:bg-primary/90 text-white font-bold text-lg transition-all"
         >
           {loading ? (
             <Loader2 className="w-5 h-5 animate-spin" />
