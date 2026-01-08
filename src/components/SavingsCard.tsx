@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { TrendingUp, ChevronDown, ChevronUp, Leaf, Play, Info } from 'lucide-react';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { TrendingUp, ChevronDown, ChevronUp, Info, Leaf } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   Collapsible,
@@ -38,117 +37,92 @@ export function SavingsCard({
 
   const isNegativeSavings = results.annualSavings < 0;
   const displaySavings = Math.abs(results.annualSavings);
-  
-  const tariffLabel = tariff === 'cosy' 
-    ? `Octopus Cosy (${(assumptions.cosy_blended_rate * 100).toFixed(0)}p/kWh blended)` 
-    : `Standard tariff (${(assumptions.electricity_rate * 100).toFixed(0)}p/kWh)`;
 
   return (
-    <div className="space-y-4 animate-fade-in" style={{ animationDelay: '0.15s' }}>
-      {/* Section header */}
-      <div>
-        <h2 className="text-xl font-semibold text-foreground">Annual savings</h2>
-        <p className="text-sm text-muted-foreground">Your projected savings from your new system</p>
+    <div className="space-y-4 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-bold text-foreground">Annual savings</h2>
+          <p className="text-xs text-muted-foreground">Projected savings from your new system</p>
+        </div>
+        <div className="flex items-center gap-2 text-success">
+          <Leaf className="w-5 h-5 animate-bounce-in" style={{ animationDelay: '0.3s' }} />
+        </div>
       </div>
 
       <Card className="border border-border shadow-card overflow-hidden">
         <CardContent className="p-0">
-          <div className="grid lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-border">
-            {/* Left: Efficiency selector */}
-            <div className="p-6 space-y-4">
-              <div>
-                <p className="text-sm font-medium text-foreground mb-3">
-                  Select your preferred guaranteed efficiency:
-                </p>
-                <div className="flex gap-2">
-                  {EFFICIENCY_OPTIONS.map((option) => (
-                    <div key={option.value} className="relative flex-1">
-                      {option.recommended && (
-                        <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white text-xs px-2 py-0.5 z-10">
-                          Recommended
-                        </Badge>
-                      )}
-                      <button
-                        onClick={() => onScopChange(option.value)}
-                        className={`w-full py-3 px-4 rounded-lg border-2 text-center font-semibold transition-all ${
-                          scop === option.value
-                            ? 'border-primary bg-primary-light text-primary'
-                            : 'border-border bg-background text-foreground hover:border-primary/50'
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-                <CollapsibleTrigger asChild>
-                  <button className="flex items-center gap-2 text-sm text-primary hover:underline">
-                    <Info className="w-4 h-4" />
-                    Why does efficiency make a difference to running cost?
-                    {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                  </button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="pt-3">
-                  <p className="text-sm text-muted-foreground">
-                    A higher efficiency means your heat pump converts more electricity into heat. 
-                    At 370% efficiency (SCOP 3.7), for every 1kWh of electricity used, you get 3.7kWh of heat. 
-                    This directly reduces your running costs and carbon footprint.
-                  </p>
-                </CollapsibleContent>
-              </Collapsible>
-            </div>
-
-            {/* Right: Savings summary */}
-            <div className="p-6 space-y-4">
+          {/* Savings display - prominent */}
+          <div className="p-4 md:p-5 bg-gradient-to-r from-success/5 to-accent/5 border-b border-border">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-success" />
+                <div className="w-12 h-12 rounded-2xl bg-success/10 flex items-center justify-center animate-pulse-glow">
+                  <TrendingUp className="w-6 h-6 text-success" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Annual savings</p>
-                  <p className={`text-3xl font-bold ${isNegativeSavings ? 'text-warning' : 'text-success'}`}>
+                  <p className="text-xs text-muted-foreground">You could save</p>
+                  <p className={`text-2xl md:text-3xl font-bold ${isNegativeSavings ? 'text-warning' : 'text-success'}`}>
                     {isNegativeSavings ? '-' : ''}{formatCurrency(displaySavings)}
+                    <span className="text-sm font-normal text-muted-foreground">/year</span>
                   </p>
                 </div>
               </div>
-
-              <p className="text-sm text-muted-foreground">
-                Based on your chosen guaranteed efficiency
-              </p>
-
-              {/* Tariff selector */}
-              <div className="space-y-2">
-                <select 
-                  value={tariff}
-                  onChange={(e) => onTariffChange(e.target.value as 'cosy' | 'standard')}
-                  className="w-full p-3 rounded-lg border border-border bg-background text-sm text-foreground"
-                >
-                  <option value="cosy">Octopus Cosy tariff ({(assumptions.cosy_blended_rate * 100).toFixed(0)}p/kWh blended)</option>
-                  <option value="standard">Standard tariff ({(assumptions.electricity_rate * 100).toFixed(0)}p/kWh)</option>
-                </select>
-              </div>
-
-              <p className="text-sm text-muted-foreground">
-                We've estimated your current annual heating bill to be <span className="font-medium text-foreground">{formatCurrency(results.baselineCost)}</span>.
-              </p>
+              <select 
+                value={tariff}
+                onChange={(e) => onTariffChange(e.target.value as 'cosy' | 'standard')}
+                className="text-xs p-2 rounded-lg border border-border bg-background text-muted-foreground max-w-[140px]"
+              >
+                <option value="cosy">Octopus Cosy</option>
+                <option value="standard">Standard tariff</option>
+              </select>
             </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Current heating: <span className="font-medium text-foreground">{formatCurrency(results.baselineCost)}/year</span>
+            </p>
+          </div>
+
+          {/* Efficiency selector - compact */}
+          <div className="p-4 md:p-5">
+            <p className="text-sm font-medium text-foreground mb-3">Choose efficiency level:</p>
+            <div className="flex gap-2">
+              {EFFICIENCY_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => onScopChange(option.value)}
+                  className={`flex-1 relative py-3 px-2 rounded-xl border-2 text-center transition-all card-selectable ${
+                    scop === option.value
+                      ? 'border-primary bg-primary-light'
+                      : 'border-border bg-card hover:border-primary/50'
+                  }`}
+                >
+                  {option.recommended && (
+                    <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-primary text-white text-[10px] px-2 py-0.5 whitespace-nowrap">
+                      Best value
+                    </Badge>
+                  )}
+                  <span className="block text-lg font-bold text-foreground">{option.label}</span>
+                  <span className="block text-[10px] text-muted-foreground">{option.radiators} radiators</span>
+                </button>
+              ))}
+            </div>
+
+            <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+              <CollapsibleTrigger asChild>
+                <button className="flex items-center gap-1.5 text-xs text-primary hover:underline mt-3">
+                  <Info className="w-3 h-3" />
+                  What does efficiency mean?
+                  {isOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-2">
+                <p className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                  Higher efficiency = more heat per unit of electricity. At 370% (SCOP 3.7), you get 3.7kWh of heat for every 1kWh used.
+                </p>
+              </CollapsibleContent>
+            </Collapsible>
           </div>
         </CardContent>
       </Card>
-
-      {/* Compact video link */}
-      <div className="flex items-center gap-3 p-4 bg-muted rounded-xl">
-        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-          <Play className="w-5 h-5 text-primary ml-0.5" />
-        </div>
-        <div className="flex-1">
-          <p className="text-sm font-medium text-foreground">Learn how heat pumps save you money</p>
-          <p className="text-xs text-muted-foreground">2 min video</p>
-        </div>
-      </div>
     </div>
   );
 }
