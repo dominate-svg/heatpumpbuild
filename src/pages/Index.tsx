@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { AddressLookup } from '@/components/AddressLookup';
 import { ManualEntryForm } from '@/components/ManualEntryForm';
+import { ResearchScreen } from '@/components/ResearchScreen';
 import type { EPCData } from '@/lib/calculations';
 import { useNavigate, Link } from 'react-router-dom';
 import logo from '@/assets/logo.png';
@@ -18,12 +19,39 @@ export default function Index() {
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [showManualEntryBottom, setShowManualEntryBottom] = useState(false);
   const [showMobileBar, setShowMobileBar] = useState(false);
+  const [showResearchScreen, setShowResearchScreen] = useState(false);
+  const [isDataReady, setIsDataReady] = useState(false);
+  const [hasEpcError, setHasEpcError] = useState(false);
+  const [pendingEpcData, setPendingEpcData] = useState<EPCData | null>(null);
   const navigate = useNavigate();
 
   const handleAddressSelect = (epcData: EPCData) => {
-    sessionStorage.setItem('epcData', JSON.stringify(epcData));
-    navigate('/estimate');
+    // Store EPC data and show research screen
+    setPendingEpcData(epcData);
+    setShowResearchScreen(true);
+    setIsDataReady(true);
+    setHasEpcError(false);
   };
+
+  const handleResearchComplete = useCallback(() => {
+    if (pendingEpcData) {
+      sessionStorage.setItem('epcData', JSON.stringify(pendingEpcData));
+      navigate('/estimate');
+    }
+  }, [pendingEpcData, navigate]);
+
+  const handleManualEstimateFromError = useCallback(() => {
+    setShowResearchScreen(false);
+    setHasEpcError(false);
+    setShowManualEntry(true);
+  }, []);
+
+  const handleTryAgain = useCallback(() => {
+    setShowResearchScreen(false);
+    setHasEpcError(false);
+    setPendingEpcData(null);
+    setIsDataReady(false);
+  }, []);
 
   const scrollToPostcode = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -37,6 +65,19 @@ export default function Index() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Show research screen overlay
+  if (showResearchScreen) {
+    return (
+      <ResearchScreen
+        isDataReady={isDataReady}
+        hasError={hasEpcError}
+        onComplete={handleResearchComplete}
+        onManualEstimate={handleManualEstimateFromError}
+        onTryAgain={handleTryAgain}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
