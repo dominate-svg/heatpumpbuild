@@ -7,91 +7,91 @@
 @layer base {
   :root {
     /* Warm off-white background */
-    --background: 40 20% 98%;
-    --foreground: 240 6% 12%;
+    --background: 40 25% 97%;
+    --foreground: 0 0% 8%;
 
     --card: 0 0% 100%;
-    --card-foreground: 240 6% 12%;
+    --card-foreground: 0 0% 8%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 6% 12%;
+    --popover-foreground: 0 0% 8%;
 
-    /* Smart Energy Homes Pink (Primary CTA) */
-    --primary: 330 85% 55%;
+    /* Smart Energy Homes Hot Pink (Primary CTA) - STRONGER */
+    --primary: 338 100% 50%;
     --primary-foreground: 0 0% 100%;
 
-    /* Octopus Purple (Trust/Partnership accents) */
-    --octopus: 270 60% 50%;
+    /* Octopus Deep Purple (Trust/Partnership) - STRONGER */
+    --octopus: 265 85% 45%;
     --octopus-foreground: 0 0% 100%;
 
     --secondary: 40 15% 96%;
-    --secondary-foreground: 240 6% 20%;
+    --secondary-foreground: 0 0% 15%;
 
-    --muted: 40 12% 94%;
-    --muted-foreground: 240 4% 46%;
+    --muted: 40 15% 93%;
+    --muted-foreground: 0 0% 40%;
 
     --accent: 40 20% 92%;
-    --accent-foreground: 240 6% 12%;
+    --accent-foreground: 0 0% 8%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 90% 55%;
     --destructive-foreground: 0 0% 100%;
 
     /* Controlled border/divider color */
-    --border: 40 10% 90%;
-    --input: 40 10% 90%;
-    --ring: 330 85% 55%;
+    --border: 40 12% 88%;
+    --input: 40 12% 88%;
+    --ring: 338 100% 50%;
 
     --radius: 0.75rem;
 
-    --success: 160 84% 39%;
+    --success: 155 90% 35%;
     --success-foreground: 0 0% 100%;
     
-    --warning: 38 92% 50%;
+    --warning: 38 95% 50%;
     --warning-foreground: 0 0% 100%;
 
-    /* Charcoal text */
-    --charcoal: 240 6% 12%;
-    --charcoal-light: 240 4% 36%;
+    /* Charcoal text - darker */
+    --charcoal: 0 0% 8%;
+    --charcoal-light: 0 0% 30%;
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 240 6% 20%;
-    --sidebar-primary: 330 85% 55%;
+    --sidebar-foreground: 0 0% 15%;
+    --sidebar-primary: 338 100% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 40 15% 96%;
-    --sidebar-accent-foreground: 240 6% 20%;
-    --sidebar-border: 40 10% 90%;
-    --sidebar-ring: 330 85% 55%;
+    --sidebar-accent-foreground: 0 0% 15%;
+    --sidebar-border: 40 12% 88%;
+    --sidebar-ring: 338 100% 50%;
   }
 
   .dark {
     /* Keep light mode only for this energy brand */
-    --background: 40 20% 98%;
-    --foreground: 240 6% 12%;
+    --background: 40 25% 97%;
+    --foreground: 0 0% 8%;
     --card: 0 0% 100%;
-    --card-foreground: 240 6% 12%;
+    --card-foreground: 0 0% 8%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 6% 12%;
-    --primary: 330 85% 55%;
+    --popover-foreground: 0 0% 8%;
+    --primary: 338 100% 50%;
     --primary-foreground: 0 0% 100%;
-    --octopus: 270 60% 50%;
+    --octopus: 265 85% 45%;
     --octopus-foreground: 0 0% 100%;
     --secondary: 40 15% 96%;
-    --secondary-foreground: 240 6% 20%;
-    --muted: 40 12% 94%;
-    --muted-foreground: 240 4% 46%;
+    --secondary-foreground: 0 0% 15%;
+    --muted: 40 15% 93%;
+    --muted-foreground: 0 0% 40%;
     --accent: 40 20% 92%;
-    --accent-foreground: 240 6% 12%;
-    --destructive: 0 84% 60%;
+    --accent-foreground: 0 0% 8%;
+    --destructive: 0 90% 55%;
     --destructive-foreground: 0 0% 100%;
-    --border: 40 10% 90%;
-    --input: 40 10% 90%;
-    --ring: 330 85% 55%;
-    --success: 160 84% 39%;
+    --border: 40 12% 88%;
+    --input: 40 12% 88%;
+    --ring: 338 100% 50%;
+    --success: 155 90% 35%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
+    --warning: 38 95% 50%;
     --warning-foreground: 0 0% 100%;
-    --charcoal: 240 6% 12%;
-    --charcoal-light: 240 4% 36%;
+    --charcoal: 0 0% 8%;
+    --charcoal-light: 0 0% 30%;
   }
 }
 
