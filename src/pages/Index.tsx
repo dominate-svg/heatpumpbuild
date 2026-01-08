@@ -1,35 +1,30 @@
 import { useState } from 'react';
-import { Header } from '@/components/Header';
 import { AddressLookup } from '@/components/AddressLookup';
 import { ManualEntryForm } from '@/components/ManualEntryForm';
-import { CosyBadge } from '@/components/CosyBadge';
-import { Award, BadgeCheck, Percent, Search, ClipboardCheck, CalendarCheck, Lock, ShieldCheck, ChevronDown } from 'lucide-react';
+import { Star, Zap, Clock, Home, ClipboardCheck, CalendarCheck } from 'lucide-react';
 import type { EPCData } from '@/lib/calculations';
 import { useNavigate } from 'react-router-dom';
 import octopusPartner from '@/assets/octopus-partner.png';
+import cosyBadge from '@/assets/cosy-badge.png';
+import logo from '@/assets/logo.png';
 
-const TRUST_BADGES = [
-  { icon: Award, label: '£7,500 grant available' },
-  { icon: Percent, label: '0% VAT on installation' },
-  { icon: BadgeCheck, label: 'Octopus-accredited installer' },
+const SOCIAL_PROOF = [
+  { label: '500+ installs', icon: Home },
+  { label: '4.9★ Trustpilot', icon: Star },
+  { label: 'Octopus Trusted Partner', icon: null, isImage: true },
+  { label: 'MCS Certified', icon: null },
+];
+
+const COSY_BENEFITS = [
+  'Half-price off-peak electricity',
+  'Designed for heat pumps',
+  'Automatically scheduled',
 ];
 
 const STEPS = [
-  { icon: Search, label: 'Find your home', num: 1, active: true },
-  { icon: ClipboardCheck, label: 'See your estimate', num: 2 },
-  { icon: CalendarCheck, label: 'Book your survey', num: 3 },
-];
-
-const STATS = [
-  { value: '500+', label: 'Installs', bg: 'bg-primary/10' },
-  { value: '4.9★', label: 'Rating', bg: 'bg-accent/10' },
-  { value: '~£1,200', label: 'Avg savings', bg: 'bg-success/10' },
-];
-
-const ACCREDITATIONS = [
-  { name: 'MCS Certified', text: 'MCS' },
-  { name: 'TrustMark', text: 'TrustMark' },
-  { name: 'RECC', text: 'RECC' },
+  { num: 1, label: 'Find your home', icon: Home },
+  { num: 2, label: 'See your estimate', icon: ClipboardCheck },
+  { num: 3, label: 'Book your survey', icon: CalendarCheck },
 ];
 
 export default function Index() {
@@ -43,102 +38,124 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-      
-      {/* Hero Section */}
-      <section className="bg-muted/30">
-        <div className="max-w-3xl mx-auto px-4 pt-8 pb-12 md:pt-16 md:pb-20">
-          
-          {/* Headline */}
-          <div className="text-center mb-8 md:mb-10">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight mb-4 md:mb-5">
-              See what a{' '}
-              <span className="text-primary">Cosy</span> heat pump<br className="hidden sm:block" />
-              <span className="sm:hidden"> </span>could do for your home
-            </h1>
-            
-            <p className="text-base md:text-xl text-muted-foreground max-w-lg mx-auto mb-6 md:mb-8 px-2">
-              Powered by your EPC data. Instant estimate. No obligation.
-            </p>
+      {/* Minimal Header */}
+      <header className="py-6">
+        <div className="max-w-4xl mx-auto px-4 flex justify-center">
+          <img src={logo} alt="Smart Energy Homes" className="h-10 md:h-12" />
+        </div>
+      </header>
 
-            {/* Trust badges - stack on small mobile */}
-            <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-2 sm:gap-3 px-2">
-              {TRUST_BADGES.map((badge, i) => (
-                <div 
-                  key={i} 
-                  className="flex items-center justify-center gap-2 bg-white rounded-full px-3 py-2 border border-border"
-                >
-                  <badge.icon className="w-4 h-4 text-primary flex-shrink-0" />
-                  <span className="text-xs sm:text-sm font-medium text-foreground">{badge.label}</span>
-                </div>
-              ))}
+      {/* Hero Section - Centered Vertical Stack */}
+      <section className="py-8 md:py-16">
+        <div className="max-w-2xl mx-auto px-4 text-center">
+          
+          {/* Hook Headline */}
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-foreground leading-[1.05] tracking-tight mb-6">
+            Join the Octopus Cosy<br />
+            <span className="text-primary">heat pump revolution.</span>
+          </h1>
+          
+          <p className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-4">
+            Get your heat pump estimate in under 30 seconds.
+          </p>
+          
+          <p className="text-base md:text-lg text-muted-foreground mb-10 md:mb-14">
+            Powered by your EPC data. No sales pressure. No obligation.
+          </p>
+
+          {/* Postcode CTA Module */}
+          <div className="bg-card rounded-2xl p-6 sm:p-8 md:p-10 shadow-xl border border-border mb-8 animate-card-entrance">
+            <div className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-bold uppercase tracking-wide mb-5">
+              Free EPC Check
             </div>
+            
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground mb-6">
+              Find your home
+            </h2>
+            
+            {showManualEntry ? (
+              <ManualEntryForm
+                onSubmit={handleAddressSelect}
+                onBack={() => setShowManualEntry(false)}
+              />
+            ) : (
+              <AddressLookup
+                onAddressSelect={handleAddressSelect}
+                onManualEntry={() => setShowManualEntry(true)}
+              />
+            )}
           </div>
 
-          {/* Search Card */}
-          <div className="max-w-xl mx-auto px-2 sm:px-0">
-            {/* Main card */}
-            <div className="bg-card rounded-2xl sm:rounded-3xl p-5 sm:p-8 md:p-10 shadow-glow-primary ring-1 ring-primary/10 animate-card-entrance">
-              <div className="text-center mb-5 sm:mb-6">
-                <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-primary mb-3 sm:mb-4">
-                  <Search className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
-                </div>
-                <h2 className="text-xl sm:text-2xl font-bold text-foreground">Find your home</h2>
-              </div>
-              
-              {showManualEntry ? (
-                <ManualEntryForm
-                  onSubmit={handleAddressSelect}
-                  onBack={() => setShowManualEntry(false)}
-                />
-              ) : (
-                <AddressLookup
-                  onAddressSelect={handleAddressSelect}
-                  onManualEntry={() => setShowManualEntry(true)}
-                />
-              )}
+          {/* Social Proof Badges */}
+          <div className="flex flex-wrap justify-center gap-3 md:gap-4 mb-16 md:mb-20">
+            <div className="flex items-center gap-2 px-4 py-2 bg-card rounded-full border border-border shadow-sm">
+              <Home className="w-4 h-4 text-primary" />
+              <span className="text-sm font-semibold text-foreground">500+ installs</span>
             </div>
-
-            {/* Directional micro-cue */}
-            <div className="flex flex-col items-center mt-8 text-foreground">
-              <span className="text-sm font-semibold mb-1">Start here 👇</span>
-              <ChevronDown className="w-5 h-5 text-primary animate-bounce-subtle" />
+            <div className="flex items-center gap-2 px-4 py-2 bg-card rounded-full border border-border shadow-sm">
+              <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+              <span className="text-sm font-semibold text-foreground">4.9★ Trustpilot</span>
             </div>
-
-            {/* Trust line below */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-4 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-primary" />
-                <span>No sales calls. No obligation.</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Lock className="w-4 h-4 text-primary" />
-                <span>We respect your privacy.</span>
-              </div>
+            <div className="px-4 py-2 bg-card rounded-full border border-border shadow-sm">
+              <img src={octopusPartner} alt="Octopus Trusted Partner" className="h-6" />
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-card rounded-full border border-border shadow-sm">
+              <span className="text-sm font-semibold text-foreground">MCS Certified</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 3-Step Row */}
-      <section className="py-8 md:py-10 bg-white border-y border-border overflow-x-auto">
-        <div className="max-w-3xl mx-auto px-4">
-          <div className="flex items-center justify-between min-w-[280px] gap-2 md:gap-8">
+      {/* Cosy Tariff Section */}
+      <section className="py-12 md:py-20 bg-foreground text-white">
+        <div className="max-w-3xl mx-auto px-4 text-center">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold leading-tight mb-6">
+            Why Cosy makes heat pumps<br />
+            <span className="text-primary">cheaper to run</span>
+          </h2>
+          
+          <p className="text-xl sm:text-2xl md:text-3xl font-bold text-white/90 mb-10">
+            8 hours of half-price electricity every day
+          </p>
+          
+          <div className="flex flex-col sm:flex-row justify-center gap-4 md:gap-6 mb-10">
+            {COSY_BENEFITS.map((benefit, i) => (
+              <div 
+                key={i}
+                className="flex items-center justify-center gap-3 px-5 py-4 bg-white/10 rounded-xl backdrop-blur-sm"
+              >
+                <Zap className="w-5 h-5 text-primary flex-shrink-0" />
+                <span className="text-base md:text-lg font-semibold">{benefit}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-center gap-4">
+            <img src={cosyBadge} alt="Cosy Accredited" className="h-14 md:h-16" />
+            <img src={octopusPartner} alt="Octopus Partner" className="h-14 md:h-16" />
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="py-12 md:py-20">
+        <div className="max-w-3xl mx-auto px-4 text-center">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground mb-12 md:mb-16">
+            How it works
+          </h2>
+          
+          <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-4">
             {STEPS.map((step, i) => (
-              <div key={i} className="flex items-center gap-2 md:gap-6 flex-1">
-                <div className="flex flex-col items-center text-center flex-1">
-                  <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center mb-1.5 sm:mb-2 ${
-                    step.active 
-                      ? 'bg-primary' 
-                      : 'bg-muted border-2 border-border'
-                  }`}>
-                    <step.icon className={`w-4 h-4 sm:w-6 sm:h-6 ${step.active ? 'text-white' : 'text-primary'}`} />
+              <div key={i} className="flex items-center gap-4 md:gap-0">
+                <div className="flex flex-col items-center">
+                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-primary flex items-center justify-center mb-4">
+                    <step.icon className="w-8 h-8 md:w-10 md:h-10 text-white" />
                   </div>
-                  <span className="text-[10px] sm:text-xs font-bold text-primary">Step {step.num}</span>
-                  <span className="text-[10px] sm:text-xs text-muted-foreground leading-tight">{step.label}</span>
+                  <span className="text-sm font-bold text-primary mb-1">Step {step.num}</span>
+                  <span className="text-base md:text-lg font-semibold text-foreground">{step.label}</span>
                 </div>
                 {i < STEPS.length - 1 && (
-                  <div className="w-4 sm:w-8 md:w-16 h-0.5 bg-border rounded-full flex-shrink-0" />
+                  <div className="hidden md:block w-16 lg:w-24 h-0.5 bg-border mx-4" />
                 )}
               </div>
             ))}
@@ -146,66 +163,14 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Social Proof */}
-      <section className="py-10 md:py-14">
-        <div className="max-w-3xl mx-auto px-4">
-          <h3 className="text-center text-lg sm:text-xl font-bold text-foreground mb-6 md:mb-8">
-            Trusted by homeowners across the UK
-          </h3>
-          
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-8 md:mb-10">
-            {STATS.map((stat, i) => (
-              <div 
-                key={i} 
-                className="text-center p-3 sm:p-5 rounded-xl sm:rounded-2xl bg-muted border border-border"
-              >
-                <div className="text-xl sm:text-3xl md:text-4xl font-bold text-foreground mb-0.5 sm:mb-1">{stat.value}</div>
-                <div className="text-xs sm:text-sm text-muted-foreground font-medium">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Accreditation Strip */}
-      <section className="py-10 bg-white border-y border-primary/5">
-        <div className="max-w-3xl mx-auto px-4">
-          <h3 className="text-center text-sm font-bold text-muted-foreground uppercase tracking-wide mb-6">
-            Trusted & Accredited
-          </h3>
-          
-          <div className="flex flex-wrap items-center justify-center gap-4">
-            <CosyBadge size="md" />
-            <img 
-              src={octopusPartner} 
-              alt="Octopus Trusted Partner" 
-              className="h-12 w-auto object-contain"
-            />
-            {ACCREDITATIONS.map((acc, i) => (
-              <div 
-                key={i} 
-                className="px-5 py-2.5 bg-muted/50 rounded-full border border-primary/10 text-sm font-semibold text-muted-foreground"
-              >
-                {acc.text}
-              </div>
-            ))}
-          </div>
-          
-          <p className="text-center text-sm text-muted-foreground mt-6">
-            Installed by certified professionals.
-          </p>
-        </div>
-      </section>
-
-      {/* Footer Reassurance */}
-      <section className="py-8">
+      {/* Footer */}
+      <footer className="py-8 border-t border-border">
         <div className="max-w-3xl mx-auto px-4 text-center">
-          <p className="text-xs text-muted-foreground/70">
+          <p className="text-sm text-muted-foreground">
             Digital estimate only. Final system design and pricing confirmed after a home survey.
           </p>
         </div>
-      </section>
+      </footer>
     </div>
   );
 }
