@@ -1,92 +1,96 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Smart Energy Homes - Premium Advert Style Design System */
+/* Smart Energy Homes - Octopus Energy Inspired Design System */
 
 @layer base {
   :root {
-    /* Clean off-white background */
-    --background: 40 20% 98%;
-    --foreground: 0 0% 8%;
+    /* Octopus-style lavender/pink backgrounds */
+    --background: 280 30% 98%;
+    --foreground: 260 25% 20%;
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 8%;
+    --card-foreground: 260 25% 20%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 8%;
+    --popover-foreground: 260 25% 20%;
 
-    /* Strong magenta/purple accent */
-    --primary: 300 100% 35%;
+    /* Octopus Pink/Purple primary (higher contrast) */
+    --primary: 292 92% 38%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 40 15% 96%;
-    --secondary-foreground: 0 0% 12%;
+    --secondary: 280 20% 96%;
+    --secondary-foreground: 260 25% 25%;
 
-    --muted: 40 10% 94%;
-    --muted-foreground: 0 0% 40%;
+    --muted: 280 20% 95%;
+    --muted-foreground: 260 15% 45%;
 
-    /* Teal accent */
-    --accent: 174 72% 40%;
+    /* Octopus teal accent */
+    --accent: 174 72% 45%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 88%;
-    --input: 0 0% 88%;
-    --ring: 300 100% 35%;
+    --border: 280 15% 90%;
+    --input: 280 15% 90%;
+    --ring: 292 92% 38%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
-    /* Success green */
-    --success: 160 84% 35%;
+    /* Success green (Octopus style) */
+    --success: 160 84% 39%;
     --success-foreground: 0 0% 100%;
     
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    /* Warm surface */
-    --surface-warm: 40 30% 97%;
+    /* Pink/lavender tinted backgrounds */
+    --primary-light: 290 50% 97%;
+    --primary-muted: 290 30% 94%;
+
+    /* Teal backgrounds */
+    --accent-light: 174 50% 96%;
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 0 0% 12%;
-    --sidebar-primary: 300 100% 35%;
+    --sidebar-foreground: 260 25% 25%;
+    --sidebar-primary: 292 90% 44%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 40 15% 96%;
-    --sidebar-accent-foreground: 0 0% 12%;
-    --sidebar-border: 0 0% 88%;
-    --sidebar-ring: 300 100% 35%;
+    --sidebar-accent: 280 20% 96%;
+    --sidebar-accent-foreground: 260 25% 25%;
+    --sidebar-border: 280 15% 90%;
+    --sidebar-ring: 292 90% 44%;
   }
 
   .dark {
-    /* Light mode only */
-    --background: 40 20% 98%;
-    --foreground: 0 0% 8%;
+    /* Keep light mode only for this energy brand */
+    --background: 0 0% 100%;
+    --foreground: 220 20% 18%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 8%;
+    --card-foreground: 220 20% 18%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 8%;
-    --primary: 300 100% 35%;
+    --popover-foreground: 220 20% 18%;
+    --primary: 300 75% 42%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 40 15% 96%;
-    --secondary-foreground: 0 0% 12%;
-    --muted: 40 10% 94%;
-    --muted-foreground: 0 0% 40%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 20% 25%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 10% 46%;
     --accent: 174 72% 40%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 88%;
-    --input: 0 0% 88%;
-    --ring: 300 100% 35%;
-    --success: 160 84% 35%;
+    --border: 220 14% 90%;
+    --input: 220 14% 90%;
+    --ring: 300 75% 42%;
+    --success: 160 84% 39%;
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
-    --surface-warm: 40 30% 97%;
+    --primary-light: 300 60% 97%;
+    --primary-muted: 300 40% 95%;
+    --accent-light: 174 50% 96%;
   }
 }
 
@@ -97,14 +101,7 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
-    letter-spacing: -0.01em;
-  }
-
-  h1, h2, h3, h4, h5, h6 {
-    letter-spacing: -0.03em;
-    font-weight: 800;
   }
 }
 
@@ -286,22 +283,12 @@
 
   /* Search card entrance animation */
   .animate-card-entrance {
-    animation: cardEntrance 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: cardEntrance 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   }
 
   @keyframes cardEntrance {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* Input glow pulse - subtle attention grabber */
-  .input-glow-pulse {
-    animation: inputGlowPulse 3s ease-in-out infinite;
-  }
-
-  @keyframes inputGlowPulse {
-    0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0); }
-    50% { box-shadow: 0 0 0 4px hsl(var(--primary) / 0.08); }
+    from { opacity: 0; transform: scale(0.98); }
+    to { opacity: 1; transform: scale(1); }
   }
 
   /* Breathing halo animation */

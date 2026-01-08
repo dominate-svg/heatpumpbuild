@@ -27,36 +27,36 @@ export function AddressLookup({ onAddressSelect, onManualEntry }: AddressLookupP
   };
 
   return (
-    <div className="space-y-4">
-      {/* Premium Postcode Input */}
-      <div className="space-y-4">
+    <div className="space-y-5">
+      {/* Octopus-style Search Input */}
+      <div className="space-y-3">
         <div className="relative">
-          <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+          <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
           <Input
             type="text"
             placeholder="Enter your postcode"
             value={postcode}
             onChange={(e) => setPostcode(e.target.value.toUpperCase())}
             onKeyDown={handleKeyDown}
-            className="pl-14 h-16 text-xl rounded-xl font-bold placeholder:font-normal placeholder:text-muted-foreground/70 transition-all border-2 border-border bg-background focus:border-primary focus:ring-4 focus:ring-primary/10 input-glow-pulse"
+            className="pl-12 h-14 text-lg rounded-2xl font-semibold placeholder:text-muted-foreground transition-all border-2 bg-card input-pop input-focus-glow"
           />
         </div>
         <Button 
           onClick={handleSearch} 
           disabled={loading || !postcode.trim()}
           size="lg"
-          className="w-full h-16 rounded-xl text-white font-extrabold text-xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/30 transition-all hover:shadow-xl hover:shadow-primary/40 hover:-translate-y-0.5 disabled:opacity-60 disabled:hover:translate-y-0"
+          className="w-full h-14 rounded-full text-white font-extrabold text-lg cta-solid ring-1 ring-primary/30 animate-shimmer-sweep cta-hover-lift disabled:opacity-70"
         >
           {loading ? (
-            <Loader2 className="w-6 h-6 animate-spin" />
+            <Loader2 className="w-5 h-5 animate-spin" />
           ) : (
             'Get my free estimate'
           )}
         </Button>
       </div>
       
-      <p className="text-center text-sm text-muted-foreground font-medium">
-        Takes about 30 seconds <span className="text-primary">⚡</span>
+      <p className="text-center text-sm text-muted-foreground">
+        Takes about 30 seconds ⚡
       </p>
 
       {error && (
