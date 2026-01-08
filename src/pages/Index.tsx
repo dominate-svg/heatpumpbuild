@@ -77,20 +77,16 @@ export default function Index() {
 
           {/* Search Card */}
           <div className="max-w-xl mx-auto">
-            {/* Card with animated halo */}
+            {/* Card with solid colour background */}
             <div className="relative">
-              {/* Animated halo ring */}
+              {/* Solid colour block behind card */}
               <div 
-                className="absolute -inset-3 rounded-[2rem] bg-primary/20 blur-xl animate-halo-pulse pointer-events-none"
+                className="absolute -inset-4 rounded-[2.5rem] bg-primary"
                 aria-hidden="true"
               />
               
               {/* Main card */}
-              <div className="relative bg-white rounded-3xl p-8 md:p-10 shadow-xl border border-primary/10 animate-card-entrance"
-                   style={{ 
-                     boxShadow: '0 8px 32px -8px hsl(290 70% 55% / 0.2), 0 4px 16px -4px hsl(290 70% 55% / 0.1)',
-                     background: 'radial-gradient(ellipse at center, hsl(0 0% 100%) 0%, hsl(290 30% 99%) 100%)'
-                   }}>
+              <div className="relative bg-white rounded-3xl p-8 md:p-10 animate-card-entrance">
                 <div className="text-center mb-6">
                   <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary mb-4">
                     <Search className="w-7 h-7 text-white" />
@@ -113,9 +109,9 @@ export default function Index() {
             </div>
 
             {/* Directional micro-cue */}
-            <div className="flex flex-col items-center mt-6 text-muted-foreground">
-              <span className="text-xs font-medium mb-1">Start here 👇</span>
-              <ChevronDown className="w-5 h-5 animate-bounce-subtle" />
+            <div className="flex flex-col items-center mt-8 text-foreground">
+              <span className="text-sm font-semibold mb-1">Start here 👇</span>
+              <ChevronDown className="w-5 h-5 text-primary animate-bounce-subtle" />
             </div>
 
             {/* Trust line below */}
