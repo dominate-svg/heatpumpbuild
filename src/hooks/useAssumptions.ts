@@ -40,6 +40,11 @@ export function useAssumptions() {
         adder_location_9m: assumptions.adder_location_9m ?? 600,
         adder_cylinder_150l: assumptions.adder_cylinder_150l ?? 1150,
         adder_cylinder_210l: assumptions.adder_cylinder_210l ?? 1700,
+        // Radiator contribution assumptions
+        base_customer_contribution: assumptions.base_customer_contribution ?? 3000,
+        included_radiators: assumptions.included_radiators ?? 2,
+        rad_upgrade_cost: assumptions.rad_upgrade_cost ?? 350,
+        min_customer_contribution: assumptions.min_customer_contribution ?? 2000,
       };
     },
   });

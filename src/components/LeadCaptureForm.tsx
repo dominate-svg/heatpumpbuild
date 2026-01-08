@@ -21,6 +21,7 @@ interface LeadCaptureFormProps {
     region?: string;
     locationAdder: string;
     cylinderOption: string;
+    selectedRadiators: number;
   };
 }
 

@@ -6,6 +6,7 @@ import { SystemCard } from '@/components/SystemCard';
 import { CostCard } from '@/components/CostCard';
 import { SavingsCard } from '@/components/SavingsCard';
 import { InstallOptions } from '@/components/InstallOptions';
+import { RadiatorSelector } from '@/components/RadiatorSelector';
 import { Timeline } from '@/components/Timeline';
 import { LeadCaptureForm } from '@/components/LeadCaptureForm';
 import { StickyCTA } from '@/components/StickyCTA';
@@ -24,6 +25,10 @@ export default function Estimate() {
   const [tariff, setTariff] = useState<'cosy' | 'standard'>('cosy');
   const [locationAdder, setLocationAdder] = useState<'included' | '6m' | '9m'>('included');
   const [cylinderOption, setCylinderOption] = useState<'existing' | '150l' | '210l'>('existing');
+  const [selectedRadiators, setSelectedRadiators] = useState<number | null>(null);
+
+  // Initialize selectedRadiators from assumptions once loaded
+  const effectiveRadiators = selectedRadiators ?? assumptions?.included_radiators ?? 2;
 
   useEffect(() => {
     const stored = sessionStorage.getItem('epcData');
@@ -55,8 +60,9 @@ export default function Estimate() {
       tariff,
       locationAdder,
       cylinderOption,
+      selectedRadiators: effectiveRadiators,
     }, assumptions);
-  }, [epcData, assumptions, scop, tariff, locationAdder, cylinderOption]);
+  }, [epcData, assumptions, scop, tariff, locationAdder, cylinderOption, effectiveRadiators]);
 
   if (isLoading || !epcData || !results || !assumptions) {
     return (
@@ -77,6 +83,7 @@ export default function Estimate() {
     region: epcData.region,
     locationAdder,
     cylinderOption,
+    selectedRadiators: effectiveRadiators,
   };
 
   return (
@@ -112,7 +119,12 @@ export default function Estimate() {
             <SystemCard results={results} />
             
             {/* Section C - Cost card */}
-            <CostCard results={results} />
+            <CostCard 
+              results={results} 
+              assumptions={assumptions}
+              scop={scop}
+              cylinderOption={cylinderOption}
+            />
             
             {/* Section D - Savings card */}
             <SavingsCard 
@@ -130,6 +142,13 @@ export default function Estimate() {
               cylinderOption={cylinderOption}
               onLocationChange={setLocationAdder}
               onCylinderChange={setCylinderOption}
+              assumptions={assumptions}
+            />
+            
+            {/* Section E2 - Radiator selector */}
+            <RadiatorSelector
+              selectedRadiators={effectiveRadiators}
+              onRadiatorChange={setSelectedRadiators}
               assumptions={assumptions}
             />
             

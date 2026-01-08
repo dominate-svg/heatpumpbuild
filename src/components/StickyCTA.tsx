@@ -27,6 +27,7 @@ interface StickyCTAProps {
     region?: string;
     locationAdder: string;
     cylinderOption: string;
+    selectedRadiators: number;
   };
 }
 
