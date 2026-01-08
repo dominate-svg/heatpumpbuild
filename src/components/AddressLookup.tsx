@@ -43,7 +43,7 @@ export function AddressLookup({ onAddressSelect, onManualEntry }: AddressLookupP
           onClick={handleSearch} 
           disabled={loading || !postcode.trim()}
           size="lg"
-          className="w-full h-14 rounded-lg bg-primary hover:bg-primary/90 text-white font-bold text-base transition-all disabled:opacity-50 cta-hover-lift"
+          className="w-full h-14 rounded-lg bg-[hsl(265,80%,35%)] hover:bg-[hsl(265,80%,28%)] text-white font-bold text-base transition-all disabled:opacity-50 cta-hover-lift"
         >
           {loading ? (
             <Loader2 className="w-5 h-5 animate-spin" />
@@ -67,7 +67,7 @@ export function AddressLookup({ onAddressSelect, onManualEntry }: AddressLookupP
           </p>
           <Button 
             onClick={onManualEntry} 
-            className="bg-primary hover:bg-primary/90 text-white"
+            className="bg-[hsl(265,80%,35%)] hover:bg-[hsl(265,80%,28%)] text-white"
           >
             Enter details manually
             <ArrowRight className="w-4 h-4 ml-2" />
