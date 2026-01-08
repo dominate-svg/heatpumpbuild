@@ -69,7 +69,7 @@ export function SavingsCard({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-foreground">Annual savings</h2>
-          <p className="text-xs text-muted-foreground">Best-case potential on Octopus Cosy</p>
+          <p className="text-xs text-muted-foreground">Balanced estimate on Octopus Cosy</p>
         </div>
         <div className="flex items-center gap-2 text-success">
           <Leaf className="w-5 h-5 animate-bounce-in" style={{ animationDelay: '0.3s' }} />
@@ -87,7 +87,7 @@ export function SavingsCard({
                   <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-success" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-xs text-muted-foreground mb-1">You could save up to</p>
+                  <p className="text-xs text-muted-foreground mb-1">Estimated annual savings</p>
                   
                   <div className="space-y-2">
                     <div className="flex items-baseline gap-2 flex-wrap">
@@ -97,7 +97,7 @@ export function SavingsCard({
                       <span className="text-sm text-muted-foreground">/year</span>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Best-case estimate — final savings confirmed after your home survey.
+                      Balanced estimate using national averages and typical system performance. Survey confirms final savings.
                     </p>
                   </div>
                 </div>
@@ -142,8 +142,8 @@ export function SavingsCard({
 
               {/* Credibility microcopy */}
               <p className="text-[10px] sm:text-xs text-muted-foreground border-t border-border pt-3">
-                These savings assume good insulation, a properly sized system, and effective use of the Octopus Cosy tariff. 
-                Your survey confirms what's realistic for your home.
+                Based on typical insulation, a correctly sized system, and sensible use of cheap electricity hours. 
+                Your survey confirms final savings for your home.
               </p>
             </div>
           </div>
@@ -231,12 +231,12 @@ export function SavingsCard({
                   {/* Methodology explanation */}
                   <div className="space-y-2">
                     <p>
-                      We estimate your potential savings by comparing your current heating costs with a well-designed heat pump 
-                      running on the Octopus Cosy tariff.
+                      We use national average energy demand for homes in your EPC band and compare a typical boiler 
+                      with a well-designed heat pump on a time-of-use tariff.
                     </p>
                     <p>
-                      This estimate assumes optimal use of cheap-rate electricity windows and a properly sized system for your home.
-                      Your home survey will confirm the exact specification and realistic savings for your property.
+                      We assume moderate insulation, a correctly sized system, and sensible use of cheap electricity hours 
+                      — not best-case, not worst-case.
                     </p>
                   </div>
 

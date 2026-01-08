@@ -68,48 +68,48 @@ export interface EstimateInputs {
 }
 
 // ============================================
-// OPTIMISTIC SAVINGS CALCULATOR CONFIG
-// Upper-quartile homes, older boilers, best-case Cosy performance
+// BALANCED SAVINGS CALCULATOR CONFIG
+// Upper-mid quartile homes, typical boilers, reasonable Cosy performance
 // ============================================
 
-// Heat demand by EPC band (kWh/year) - upper quartile homes
+// Heat demand by EPC band (kWh/year) - upper-mid quartile
 const HEAT_DEMAND_BY_EPC: Record<string, number> = {
-  'A': 7000,
-  'B': 9000,
-  'C': 12000,
-  'D': 15000,
-  'E': 18000,
-  'F': 21000,
-  'G': 24000,
+  'A': 6500,
+  'B': 8500,
+  'C': 11000,
+  'D': 13500,
+  'E': 16000,
+  'F': 19000,
+  'G': 22000,
 };
 
-// Boiler efficiencies (older stock assumptions)
+// Boiler efficiencies (slightly pessimistic, common stock)
 const BOILER_EFFICIENCY: Record<string, number> = {
-  'gas': 0.80,
-  'oil': 0.75,
-  'lpg': 0.80,
+  'gas': 0.82,
+  'oil': 0.78,
+  'lpg': 0.82,
   'electric': 1.00,
 };
 
-// Fuel prices (£/kWh) - Ofgem cap, no standing charges
+// Fuel prices (£/kWh)
 const FUEL_RATES: Record<string, number> = {
   'gas': 0.0593,
-  'oil': 0.10,
-  'lpg': 0.11,
+  'oil': 0.095,
+  'lpg': 0.105,
   'electric': 0.2769,
 };
 
-// Cosy tariff - best-case smart shifting (75% cheap)
-const COSY_CHEAP_SHARE = 0.75;
+// Cosy tariff - reasonable shifting (65% cheap)
+const COSY_CHEAP_SHARE = 0.65;
 const COSY_CHEAP_RATE = 0.12;
-const COSY_STANDARD_RATE = 0.2769;
-const COSY_EFFECTIVE_RATE = (COSY_CHEAP_SHARE * COSY_CHEAP_RATE) + ((1 - COSY_CHEAP_SHARE) * COSY_STANDARD_RATE);
+const COSY_PEAK_RATE = 0.2769;
+const COSY_EFFECTIVE_RATE = (COSY_CHEAP_SHARE * COSY_CHEAP_RATE) + ((1 - COSY_CHEAP_SHARE) * COSY_PEAK_RATE);
 
-// Optimistic SCOP mapping (well-designed system)
+// Balanced SCOP mapping (good design)
 const SCOP_MAP: Record<number, number> = {
-  3.4: 3.6,
-  3.7: 3.9,
-  4.0: 4.2,
+  3.4: 3.5,
+  3.7: 3.8,
+  4.0: 4.1,
 };
 
 // Map efficiency (SCOP) to radiator count
