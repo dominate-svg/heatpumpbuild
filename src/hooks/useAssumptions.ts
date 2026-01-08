@@ -26,10 +26,10 @@ export function useAssumptions() {
       });
 
       return {
-        gas_rate: assumptions.gas_rate ?? 7,
-        boiler_efficiency: assumptions.boiler_efficiency ?? 0.88,
+        gas_rate: assumptions.gas_rate ?? 5.93,
+        boiler_efficiency: assumptions.boiler_efficiency ?? 0.90,
         cosy_blended_rate: assumptions.cosy_blended_rate ?? 0.18,
-        electricity_rate: assumptions.electricity_rate ?? 28,
+        electricity_rate: assumptions.electricity_rate ?? 27.69,
         full_load_hours: assumptions.full_load_hours ?? 2000,
         bus_grant_value: assumptions.bus_grant_value ?? 7500,
         install_base_3_5kw: assumptions.install_base_3_5kw ?? 8500,
@@ -45,7 +45,14 @@ export function useAssumptions() {
         included_radiators: assumptions.included_radiators ?? 2,
         rad_upgrade_cost: assumptions.rad_upgrade_cost ?? 350,
         min_customer_contribution: assumptions.min_customer_contribution ?? 2000,
-        // New savings engine assumptions
+        // New configurable defaults
+        base_useful_heat_kwh: assumptions.base_useful_heat_kwh ?? 11500,
+        oil_price_pence_per_litre: assumptions.oil_price_pence_per_litre ?? 60.63,
+        oil_kwh_per_litre: assumptions.oil_kwh_per_litre ?? 10.35,
+        dhw_cop: assumptions.dhw_cop ?? 2.2,
+        oil_rate_p_per_kwh: assumptions.oil_rate_p_per_kwh ?? 5.86,
+        lpg_rate_p_per_kwh: assumptions.lpg_rate_p_per_kwh ?? 12.2,
+        // Legacy fields (kept for compatibility)
         heat_intensity_kwh_per_m2: assumptions.heat_intensity_kwh_per_m2 ?? 110,
         boiler_efficiency_oil: assumptions.boiler_efficiency_oil ?? 0.85,
         hp_scop_default: assumptions.hp_scop_default ?? 3.2,
@@ -55,7 +62,6 @@ export function useAssumptions() {
         offpeak_share_default: assumptions.offpeak_share_default ?? 0.55,
         offpeak_share_min: assumptions.offpeak_share_min ?? 0.30,
         offpeak_share_max: assumptions.offpeak_share_max ?? 0.70,
-        oil_rate_p_per_kwh: assumptions.oil_rate_p_per_kwh ?? 10,
       };
     },
   });
