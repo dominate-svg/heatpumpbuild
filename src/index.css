@@ -16,12 +16,12 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 8%;
 
-    /* Primary = Octopus Purple */
-    --primary: 265 85% 45%;
+    /* Primary = Octopus Dark Purple */
+    --primary: 265 80% 35%;
     --primary-foreground: 0 0% 100%;
 
     /* Octopus Deep Purple (same as primary for consistency) */
-    --octopus: 265 85% 45%;
+    --octopus: 265 80% 35%;
     --octopus-foreground: 0 0% 100%;
 
     --secondary: 40 15% 96%;
@@ -39,7 +39,7 @@
     /* Controlled border/divider color */
     --border: 40 12% 88%;
     --input: 40 12% 88%;
-    --ring: 265 85% 45%;
+    --ring: 265 80% 35%;
 
     --radius: 0.75rem;
 
@@ -55,12 +55,12 @@
 
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 0 0% 15%;
-    --sidebar-primary: 265 85% 45%;
+    --sidebar-primary: 265 80% 35%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 40 15% 96%;
     --sidebar-accent-foreground: 0 0% 15%;
     --sidebar-border: 40 12% 88%;
-    --sidebar-ring: 265 85% 45%;
+    --sidebar-ring: 265 80% 35%;
   }
 
   .dark {
@@ -71,9 +71,9 @@
     --card-foreground: 0 0% 8%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 8%;
-    --primary: 265 85% 45%;
+    --primary: 265 80% 35%;
     --primary-foreground: 0 0% 100%;
-    --octopus: 265 85% 45%;
+    --octopus: 265 80% 35%;
     --octopus-foreground: 0 0% 100%;
     --secondary: 40 15% 96%;
     --secondary-foreground: 0 0% 15%;
@@ -85,7 +85,7 @@
     --destructive-foreground: 0 0% 100%;
     --border: 40 12% 88%;
     --input: 40 12% 88%;
-    --ring: 265 85% 45%;
+    --ring: 265 80% 35%;
     --success: 155 90% 35%;
     --success-foreground: 0 0% 100%;
     --warning: 38 95% 50%;
