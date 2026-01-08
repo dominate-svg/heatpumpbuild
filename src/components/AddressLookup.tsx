@@ -1,10 +1,13 @@
 import { useState } from 'react';
-import { Search, MapPin, Loader2, AlertCircle, ArrowRight } from 'lucide-react';
+import { Search, MapPin, Loader2, AlertCircle, ArrowRight, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { useEPCLookup } from '@/hooks/useEPCLookup';
 import type { EPCData } from '@/lib/calculations';
+import cosyPump from '@/assets/cosy-pump.jpeg';
+import octopusPartner from '@/assets/octopus-partner.png';
+import { CosyBadge } from './CosyBadge';
 
 interface AddressLookupProps {
   onAddressSelect: (epcData: EPCData) => void;
@@ -27,34 +30,63 @@ export function AddressLookup({ onAddressSelect, onManualEntry }: AddressLookupP
   };
 
   return (
-    <div className="space-y-5">
-      <div className="flex gap-3">
-        <div className="relative flex-1">
-          <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Enter your postcode"
-            value={postcode}
-            onChange={(e) => setPostcode(e.target.value.toUpperCase())}
-            onKeyDown={handleKeyDown}
-            className="pl-12 h-14 text-lg bg-background border-2 border-border focus:border-primary rounded-2xl font-medium"
+    <div className="space-y-6">
+      {/* Pulsing CTA Search Box */}
+      <div className="relative">
+        <div className="absolute -inset-2 bg-gradient-to-r from-primary/30 via-accent/30 to-primary/30 rounded-3xl animate-pulse-glow blur-xl" />
+        <div className="relative flex gap-3 p-2 bg-background/80 backdrop-blur-sm rounded-2xl border-2 border-primary/30 shadow-elevated animate-bounce-in">
+          <div className="relative flex-1">
+            <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 text-primary animate-float" />
+            <Input
+              type="text"
+              placeholder="Enter your postcode"
+              value={postcode}
+              onChange={(e) => setPostcode(e.target.value.toUpperCase())}
+              onKeyDown={handleKeyDown}
+              className="pl-14 h-16 text-xl bg-white border-2 border-muted focus:border-primary rounded-xl font-semibold placeholder:text-muted-foreground/60"
+            />
+            <Sparkles className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-accent animate-pulse" />
+          </div>
+          <Button 
+            onClick={handleSearch} 
+            disabled={loading || !postcode.trim()}
+            size="lg"
+            className="h-16 px-10 rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 hover:scale-105"
+          >
+            {loading ? (
+              <Loader2 className="w-6 h-6 animate-spin" />
+            ) : (
+              <>
+                <Search className="w-6 h-6 mr-2" />
+                Search
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+
+      {/* Trust Badges & Pump Image */}
+      <div className="flex flex-col md:flex-row items-center justify-center gap-6 animate-fade-in">
+        <div className="flex items-center gap-4">
+          <CosyBadge size="lg" className="animate-float" />
+          <img 
+            src={octopusPartner} 
+            alt="Octopus Trusted Partner" 
+            className="h-16 w-auto object-contain animate-float"
+            style={{ animationDelay: '0.5s' }}
           />
         </div>
-        <Button 
-          onClick={handleSearch} 
-          disabled={loading || !postcode.trim()}
-          size="lg"
-          className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white font-semibold shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
-        >
-          {loading ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
-          ) : (
-            <>
-              <Search className="w-5 h-5 mr-2" />
-              Search
-            </>
-          )}
-        </Button>
+        <div className="relative group">
+          <div className="absolute -inset-2 bg-gradient-to-r from-primary/20 to-accent/20 rounded-2xl blur-lg group-hover:blur-xl transition-all" />
+          <img 
+            src={cosyPump} 
+            alt="Cosy Heat Pump" 
+            className="relative h-32 md:h-40 w-auto object-cover rounded-xl shadow-card group-hover:scale-105 transition-transform duration-300"
+          />
+          <div className="absolute -bottom-2 -right-2 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg animate-bounce-in">
+            Cosy Heat Pump
+          </div>
+        </div>
       </div>
 
       {error && (
