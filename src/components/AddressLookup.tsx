@@ -27,29 +27,24 @@ export function AddressLookup({ onAddressSelect, onManualEntry }: AddressLookupP
   };
 
   return (
-    <div className="space-y-6">
-      <div className="text-center mb-2">
-        <h2 className="text-xl font-semibold text-foreground mb-1">Find your home</h2>
-        <p className="text-sm text-muted-foreground">We'll fetch your property details automatically</p>
-      </div>
-
+    <div className="space-y-5">
       <div className="flex gap-3">
         <div className="relative flex-1">
           <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="e.g. SW1A 1AA"
+            placeholder="Enter your postcode"
             value={postcode}
             onChange={(e) => setPostcode(e.target.value.toUpperCase())}
             onKeyDown={handleKeyDown}
-            className="pl-12 h-14 text-lg bg-background border-2 border-border focus:border-primary rounded-xl"
+            className="pl-12 h-14 text-lg bg-background border-2 border-border focus:border-primary rounded-2xl font-medium"
           />
         </div>
         <Button 
           onClick={handleSearch} 
           disabled={loading || !postcode.trim()}
           size="lg"
-          className="h-14 px-6 rounded-xl gradient-primary hover:opacity-90 hover-lift transition-all text-white font-semibold"
+          className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white font-semibold shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
         >
           {loading ? (
             <Loader2 className="w-5 h-5 animate-spin" />
