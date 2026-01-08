@@ -1,20 +1,18 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
+import { EstimateBanner } from '@/components/EstimateBanner';
 import { PropertyCard } from '@/components/PropertyCard';
-import { SystemCard } from '@/components/SystemCard';
 import { CostCard } from '@/components/CostCard';
 import { SavingsCard } from '@/components/SavingsCard';
 import { InstallOptions } from '@/components/InstallOptions';
 import { RadiatorSelector } from '@/components/RadiatorSelector';
 import { Timeline } from '@/components/Timeline';
-import { LeadCaptureForm } from '@/components/LeadCaptureForm';
 import { StickyCTA } from '@/components/StickyCTA';
 import { useAssumptions } from '@/hooks/useAssumptions';
 import { calculateEstimate } from '@/lib/calculations';
 import type { EPCData } from '@/lib/calculations';
-import { Loader2, ArrowLeft, Info } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 export default function Estimate() {
   const navigate = useNavigate();
@@ -41,7 +39,6 @@ export default function Estimate() {
       const parsed = JSON.parse(stored) as EPCData;
       setEpcData(parsed);
     } catch {
-      // If the stored value is corrupted, recover gracefully.
       sessionStorage.removeItem('epcData');
       navigate('/');
     }
@@ -87,98 +84,85 @@ export default function Estimate() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-24 lg:pb-8">
+    <div className="min-h-screen bg-background pb-32">
       <Header />
       
-      {/* Hero header */}
-      <div className="bg-card border-b border-border py-6">
-        <div className="max-w-6xl mx-auto px-4">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate('/')}
-            className="text-muted-foreground hover:text-foreground mb-4 -ml-2"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Start new estimate
-          </Button>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-            Your Cosy Heat Pump Estimate
+      <main className="max-w-5xl mx-auto px-4 py-8">
+        {/* Page title */}
+        <div className="mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
+            Our estimate to upgrade your home
           </h1>
-          <p className="text-muted-foreground mt-1">{epcData.address}, {epcData.postcode}</p>
+          <p className="text-muted-foreground">
+            Based on analysing your home digitally, here's our estimate for your upgrade
+          </p>
         </div>
-      </div>
-      
-      <main className="max-w-6xl mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Main content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Section A - Your home */}
+
+        {/* Estimate banner */}
+        <div className="mb-8">
+          <EstimateBanner />
+        </div>
+
+        {/* Estimate overview section */}
+        <section className="mb-12">
+          <div className="mb-6">
+            <h2 className="text-2xl font-semibold text-foreground">Estimate overview</h2>
+            <p className="text-sm text-muted-foreground">Here's your estimate at a glance</p>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-6">
+            {/* Left: Property cards */}
             <PropertyCard epcData={epcData} results={results} />
             
-            {/* Section B - Recommended system */}
-            <SystemCard results={results} />
-            
-            {/* Section C - Cost card */}
+            {/* Right: Cost card */}
             <CostCard 
               results={results} 
               assumptions={assumptions}
               scop={scop}
               cylinderOption={cylinderOption}
             />
-            
-            {/* Section D - Savings card */}
-            <SavingsCard 
-              results={results}
-              assumptions={assumptions}
-              scop={scop}
-              tariff={tariff}
-              onScopChange={setScop}
-              onTariffChange={setTariff}
-            />
-            
-            {/* Section E - Options */}
-            <InstallOptions
-              locationAdder={locationAdder}
-              cylinderOption={cylinderOption}
-              onLocationChange={setLocationAdder}
-              onCylinderChange={setCylinderOption}
-              assumptions={assumptions}
-            />
-            
-            {/* Section E2 - Radiator selector */}
-            <RadiatorSelector
-              selectedRadiators={effectiveRadiators}
-              onRadiatorChange={setSelectedRadiators}
-              assumptions={assumptions}
-            />
-            
-            {/* Section F - Timeline */}
-            <Timeline />
-            
-            {/* Disclaimer banner */}
-            <div className="bg-accent/5 border border-accent/20 rounded-xl p-4 flex items-start gap-3">
-              <Info className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-muted-foreground">
-                <span className="font-medium text-foreground">Digital estimate only</span> — final system design and grant eligibility confirmed after survey.
-              </p>
-            </div>
           </div>
-          
-          {/* Sticky sidebar - Desktop */}
-          <div className="lg:col-span-1 hidden lg:block">
-            <div className="lg:sticky lg:top-24">
-              <LeadCaptureForm
-                epcData={epcData}
-                results={results}
-                assumptions={assumptions}
-                inputs={inputs}
-              />
-            </div>
-          </div>
-        </div>
+        </section>
+
+        {/* Savings section */}
+        <section className="mb-12">
+          <SavingsCard 
+            results={results}
+            assumptions={assumptions}
+            scop={scop}
+            tariff={tariff}
+            onScopChange={setScop}
+            onTariffChange={setTariff}
+          />
+        </section>
+
+        {/* Options sections */}
+        <section className="mb-12">
+          <InstallOptions
+            locationAdder={locationAdder}
+            cylinderOption={cylinderOption}
+            onLocationChange={setLocationAdder}
+            onCylinderChange={setCylinderOption}
+            assumptions={assumptions}
+          />
+        </section>
+
+        {/* Radiator selector */}
+        <section className="mb-12">
+          <RadiatorSelector
+            selectedRadiators={effectiveRadiators}
+            onRadiatorChange={setSelectedRadiators}
+            assumptions={assumptions}
+          />
+        </section>
+
+        {/* Timeline */}
+        <section className="mb-12">
+          <Timeline />
+        </section>
       </main>
       
-      {/* Sticky CTA - Mobile */}
+      {/* Sticky CTA */}
       <StickyCTA 
         epcData={epcData}
         results={results}
