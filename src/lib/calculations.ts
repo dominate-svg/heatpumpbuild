@@ -68,47 +68,49 @@ export interface EstimateInputs {
 }
 
 // ============================================
-// CONSERVATIVE SAVINGS CALCULATOR CONFIG
-// Based on national averages and Ofgem cap pricing
+// OPTIMISTIC SAVINGS CALCULATOR CONFIG
+// Upper-quartile homes, older boilers, best-case Cosy performance
 // ============================================
 
-// National average heat demand by EPC band (kWh/year)
+// Heat demand by EPC band (kWh/year) - upper quartile homes
 const HEAT_DEMAND_BY_EPC: Record<string, number> = {
-  'A': 6000,
-  'B': 8000,
-  'C': 10000,
-  'D': 12000,
-  'E': 14000,
-  'F': 17000,
-  'G': 20000,
+  'A': 7000,
+  'B': 9000,
+  'C': 12000,
+  'D': 15000,
+  'E': 18000,
+  'F': 21000,
+  'G': 24000,
 };
 
-// Boiler efficiencies
+// Boiler efficiencies (older stock assumptions)
 const BOILER_EFFICIENCY: Record<string, number> = {
-  'gas': 0.85,
-  'oil': 0.80,
-  'lpg': 0.85,
+  'gas': 0.80,
+  'oil': 0.75,
+  'lpg': 0.80,
   'electric': 1.00,
 };
 
-// Ofgem cap tariffs (£/kWh and £/day)
-const OFGEM_RATES = {
-  gas_unit: 0.0593,
-  gas_standing: 0.3509,
-  electric_unit: 0.2769,
-  electric_standing: 0.5475,
+// Fuel prices (£/kWh) - Ofgem cap, no standing charges
+const FUEL_RATES: Record<string, number> = {
+  'gas': 0.0593,
+  'oil': 0.10,
+  'lpg': 0.11,
+  'electric': 0.2769,
 };
 
-// Cosy tariff assumption
-// 60% cheap rate (£0.12), 40% standard rate (£0.2769)
-const COSY_CHEAP_SHARE = 0.60;
+// Cosy tariff - best-case smart shifting (75% cheap)
+const COSY_CHEAP_SHARE = 0.75;
 const COSY_CHEAP_RATE = 0.12;
 const COSY_STANDARD_RATE = 0.2769;
-const COSY_WEIGHTED_RATE = (COSY_CHEAP_SHARE * COSY_CHEAP_RATE) + ((1 - COSY_CHEAP_SHARE) * COSY_STANDARD_RATE);
+const COSY_EFFECTIVE_RATE = (COSY_CHEAP_SHARE * COSY_CHEAP_RATE) + ((1 - COSY_CHEAP_SHARE) * COSY_STANDARD_RATE);
 
-// Oil and LPG rates (£/kWh)
-const OIL_RATE = 0.0586; // ~60.63p/litre ÷ 10.35 kWh/litre
-const LPG_RATE = 0.122;
+// Optimistic SCOP mapping (well-designed system)
+const SCOP_MAP: Record<number, number> = {
+  3.4: 3.6,
+  3.7: 3.9,
+  4.0: 4.2,
+};
 
 // Map efficiency (SCOP) to radiator count
 export function getRadiatorsForEfficiency(scop: number): number {
@@ -126,6 +128,7 @@ export interface SavingsCalculation {
   rawSavings: number;
   estimatedSavings: number;
   boilerEfficiency: number;
+  optimisticScop: number;
 }
 
 export interface EstimateResults {
@@ -161,6 +164,7 @@ export interface EstimateResults {
   boilerEfficiency: number;
   fuelInputKwh: number;
   cosyRate: number;
+  optimisticScop: number;
   confidenceLabel: string;
   epcBand: string;
   isOilFuel: boolean;
@@ -215,63 +219,45 @@ function getConfidenceLabel(epcBand: string): string {
   }
 }
 
-// Get fuel unit rate in £/kWh
+// Get fuel unit rate in £/kWh (no standing charges for clarity)
 function getFuelRate(fuelType: string): number {
-  switch (fuelType) {
-    case 'gas': return OFGEM_RATES.gas_unit;
-    case 'oil': return OIL_RATE;
-    case 'lpg': return LPG_RATE;
-    case 'electric': return OFGEM_RATES.electric_unit;
-    default: return OFGEM_RATES.gas_unit;
-  }
-}
-
-// Get standing charge per day in £
-function getStandingCharge(fuelType: string): number {
-  switch (fuelType) {
-    case 'gas': return OFGEM_RATES.gas_standing;
-    case 'electric': return OFGEM_RATES.electric_standing;
-    // Oil and LPG typically don't have standing charges
-    default: return 0;
-  }
+  return FUEL_RATES[fuelType] || FUEL_RATES['gas'];
 }
 
 /**
- * Calculate savings using the simplified national average model
+ * Calculate savings using the optimistic model
  * 
- * Step 1: heat_demand = lookup(EPC_band)
- * Step 2: fuel_kWh = heat_demand / boiler_efficiency
- *         current_cost = fuel_kWh × fuel_unit_rate + (fuel_standing × 365)
- * Step 3: hp_kWh = heat_demand / SCOP
- * Step 4: hp_cost = hp_kWh × cosy_rate + (electric_standing × 365)
- * Step 5: raw_savings = current_cost − hp_cost
- *         estimated_savings = raw_savings × 0.9 (rounded to nearest 10)
+ * Step 1: heat_demand = lookup(EPC_band) - upper quartile
+ * Step 2: fuel_kWh = heat_demand / boiler_efficiency (older stock)
+ *         current_cost = fuel_kWh × fuel_unit_rate (no standing charges)
+ * Step 3: hp_kWh = heat_demand / SCOP (optimistic mapping)
+ * Step 4: hp_cost = hp_kWh × cosy_effective_rate (75% cheap)
+ * Step 5: estimated_savings = current_cost − hp_cost (rounded to nearest 10)
  */
 function calculateSavings(
   epcBand: string,
   fuelType: string,
   scop: number
 ): SavingsCalculation {
-  // Step 1: Heat demand from EPC band
+  // Step 1: Heat demand from EPC band (upper quartile)
   const heatDemand = HEAT_DEMAND_BY_EPC[epcBand] || HEAT_DEMAND_BY_EPC['D'];
   
-  // Step 2: Current heating cost
-  const boilerEfficiency = BOILER_EFFICIENCY[fuelType] || 0.85;
+  // Step 2: Current heating cost (older boiler stock, no standing charges)
+  const boilerEfficiency = BOILER_EFFICIENCY[fuelType] || 0.80;
   const fuelKwh = heatDemand / boilerEfficiency;
   const fuelRate = getFuelRate(fuelType);
-  const fuelStanding = getStandingCharge(fuelType);
-  const currentCost = (fuelKwh * fuelRate) + (fuelStanding * 365);
+  const currentCost = fuelKwh * fuelRate;
   
-  // Step 3: Heat pump electricity use
-  const hpKwh = heatDemand / scop;
+  // Step 3: Heat pump electricity use (optimistic SCOP)
+  const optimisticScop = SCOP_MAP[scop] || scop;
+  const hpKwh = heatDemand / optimisticScop;
   
-  // Step 4: Heat pump annual cost
-  const hpCost = (hpKwh * COSY_WEIGHTED_RATE) + (OFGEM_RATES.electric_standing * 365);
+  // Step 4: Heat pump running cost (best-case Cosy performance)
+  const hpCost = hpKwh * COSY_EFFECTIVE_RATE;
   
-  // Step 5: Savings with conservative bias
+  // Step 5: Savings (no conservative reduction)
   const rawSavings = currentCost - hpCost;
-  let estimatedSavings = rawSavings * 0.9; // 10% conservative reduction
-  estimatedSavings = roundToNearest10(estimatedSavings);
+  const estimatedSavings = roundToNearest10(rawSavings);
   
   return {
     heatDemand,
@@ -282,6 +268,7 @@ function calculateSavings(
     rawSavings,
     estimatedSavings,
     boilerEfficiency,
+    optimisticScop,
   };
 }
 
@@ -406,7 +393,8 @@ export function calculateEstimate(
     currentFuelType: fuelType,
     boilerEfficiency: savings.boilerEfficiency,
     fuelInputKwh: roundToNearest10(savings.fuelKwh),
-    cosyRate: COSY_WEIGHTED_RATE,
+    cosyRate: COSY_EFFECTIVE_RATE,
+    optimisticScop: savings.optimisticScop,
     confidenceLabel: getConfidenceLabel(epcBand),
     epcBand,
     isOilFuel: fuelType === 'oil',

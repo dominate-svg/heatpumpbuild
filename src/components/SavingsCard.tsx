@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TrendingUp, TrendingDown, ChevronDown, ChevronUp, Info, Leaf, Calculator, Fuel, ArrowRight } from 'lucide-react';
+import { TrendingUp, ChevronDown, ChevronUp, Info, Leaf, Calculator, Fuel } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -55,9 +55,7 @@ export function SavingsCard({
   const [isCalculationOpen, setIsCalculationOpen] = useState(false);
   const { data: tariffs, isLoading: tariffsLoading } = useTariffs();
 
-  const { estimatedSavings, confidenceLabel, epcBand } = results;
-  
-  const showWarning = estimatedSavings < 0;
+  const { estimatedSavings, epcBand } = results;
 
   const handleTariffChange = (tariffId: string) => {
     const tariff = tariffs?.find(t => t.id === tariffId);
@@ -66,19 +64,12 @@ export function SavingsCard({
     }
   };
 
-  // Confidence badge color
-  const getConfidenceBadgeClass = () => {
-    if (['A', 'B', 'C'].includes(epcBand)) return 'bg-success/10 text-success';
-    if (['D', 'E'].includes(epcBand)) return 'bg-warning/10 text-warning';
-    return 'bg-muted text-muted-foreground';
-  };
-
   return (
     <div className="space-y-4 animate-fade-in" style={{ animationDelay: '0.2s' }}>
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-foreground">Annual savings</h2>
-          <p className="text-xs text-muted-foreground">Conservative estimate based on national averages</p>
+          <p className="text-xs text-muted-foreground">Best-case potential on Octopus Cosy</p>
         </div>
         <div className="flex items-center gap-2 text-success">
           <Leaf className="w-5 h-5 animate-bounce-in" style={{ animationDelay: '0.3s' }} />
@@ -87,69 +78,37 @@ export function SavingsCard({
 
       <Card className="border border-border shadow-card overflow-hidden">
         <CardContent className="p-0">
-          {/* Savings display */}
-          <div className={`p-4 md:p-5 border-b border-border ${
-            showWarning ? 'bg-warning/5' : 'bg-gradient-to-r from-success/5 to-accent/5'
-          }`}>
+          {/* Savings display - always positive framing */}
+          <div className="p-4 md:p-5 border-b border-border bg-gradient-to-r from-success/5 to-accent/5">
             <div className="flex flex-col gap-4">
-              {/* Main savings figure - ONE number only */}
+              {/* Main savings figure */}
               <div className="flex items-start gap-3">
-                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0 ${
-                  showWarning ? 'bg-warning/10' : 'bg-success/10'
-                }`}>
-                  {showWarning ? (
-                    <TrendingDown className="w-5 h-5 sm:w-6 sm:h-6 text-warning" />
-                  ) : (
-                    <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-success" />
-                  )}
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0 bg-success/10">
+                  <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-success" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-xs text-muted-foreground mb-1">
-                    {showWarning ? 'Estimated annual change' : 'Estimated annual savings'}
-                  </p>
+                  <p className="text-xs text-muted-foreground mb-1">You could save up to</p>
                   
                   <div className="space-y-2">
                     <div className="flex items-baseline gap-2 flex-wrap">
-                      <span className={`text-2xl sm:text-3xl md:text-4xl font-bold ${
-                        showWarning ? 'text-warning' : 'text-success'
-                      }`}>
-                        {showWarning 
-                          ? `£${Math.abs(estimatedSavings)} more`
-                          : `£${estimatedSavings}`
-                        }
+                      <span className="text-2xl sm:text-3xl md:text-4xl font-bold text-success">
+                        £{Math.max(0, estimatedSavings)}
                       </span>
                       <span className="text-sm text-muted-foreground">/year</span>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {showWarning 
-                        ? 'This is a cautious estimate. Many homes improve after system design optimisation.'
-                        : 'Based on national averages for your EPC band and fuel type. Final design may improve this.'
-                      }
+                      Best-case estimate — final savings confirmed after your home survey.
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Confidence label */}
+              {/* EPC badge */}
               <div className="flex items-center gap-2">
-                <Badge variant="secondary" className={`text-xs ${getConfidenceBadgeClass()}`}>
+                <Badge variant="secondary" className="text-xs bg-success/10 text-success">
                   EPC {epcBand}
                 </Badge>
-                <span className="text-xs text-muted-foreground">{confidenceLabel}</span>
               </div>
-
-              {/* See how to improve link */}
-              {showWarning && (
-                <button 
-                  className="flex items-center gap-1.5 text-xs text-primary hover:underline self-start"
-                  onClick={() => {
-                    document.getElementById('install-options')?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                >
-                  See how to improve this
-                  <ArrowRight className="w-3 h-3" />
-                </button>
-              )}
               
               {/* Tariff dropdown */}
               <div className="w-full">
@@ -171,7 +130,7 @@ export function SavingsCard({
                 </Select>
               </div>
 
-              {/* Cost breakdown - simplified */}
+              {/* Cost breakdown */}
               <div className="flex flex-col gap-2 text-xs text-muted-foreground">
                 <span>
                   Current heating: <span className="font-medium text-foreground">{formatCurrency(results.baselineCost)}/year</span>
@@ -181,9 +140,10 @@ export function SavingsCard({
                 </span>
               </div>
 
-              {/* Disclaimer */}
-              <p className="text-[10px] sm:text-xs text-muted-foreground italic border-t border-border pt-3">
-                This is a digital estimate based on national averages and public data. A home survey confirms final system design, costs, and savings.
+              {/* Credibility microcopy */}
+              <p className="text-[10px] sm:text-xs text-muted-foreground border-t border-border pt-3">
+                These savings assume good insulation, a properly sized system, and effective use of the Octopus Cosy tariff. 
+                Your survey confirms what's realistic for your home.
               </p>
             </div>
           </div>
@@ -247,7 +207,7 @@ export function SavingsCard({
               </CollapsibleTrigger>
               <CollapsibleContent className="pt-2">
                 <p className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
-                  Higher efficiency = more heat per unit of electricity. At 370% (SCOP 3.7), you get 3.7kWh of heat for every 1kWh used. 
+                  Higher efficiency = more heat per unit of electricity. At 370% (SCOP 3.9), you get 3.9kWh of heat for every 1kWh used. 
                   Higher efficiency typically requires more radiator upgrades to run at lower flow temperatures.
                 </p>
               </CollapsibleContent>
@@ -271,13 +231,12 @@ export function SavingsCard({
                   {/* Methodology explanation */}
                   <div className="space-y-2">
                     <p>
-                      We use national average energy demand for homes in your EPC band and compare the cost of running a heat pump 
-                      on the Octopus Cosy tariff with the cost of continuing to heat your home using standard Ofgem-capped gas prices 
-                      (or oil/LPG where relevant).
+                      We estimate your potential savings by comparing your current heating costs with a well-designed heat pump 
+                      running on the Octopus Cosy tariff.
                     </p>
                     <p>
-                      We assume realistic system efficiencies and conservative operating behaviour to avoid over-promising.
-                      Your final savings may improve after system design and optimisation.
+                      This estimate assumes optimal use of cheap-rate electricity windows and a properly sized system for your home.
+                      Your home survey will confirm the exact specification and realistic savings for your property.
                     </p>
                   </div>
 
@@ -313,8 +272,8 @@ export function SavingsCard({
                     <div className="pb-2 border-b border-border/50">
                       <p className="font-medium text-foreground/80 mb-1 text-[10px] uppercase tracking-wide">Heat pump</p>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
-                        <span>Efficiency (SCOP):</span>
-                        <span className="font-medium text-foreground text-right">{results.scopUsed.toFixed(1)}</span>
+                        <span>System efficiency (SCOP):</span>
+                        <span className="font-medium text-foreground text-right">{results.optimisticScop.toFixed(1)}</span>
                         <span>Electricity needed:</span>
                         <span className="font-medium text-foreground text-right">{results.hpElectricKwh.toLocaleString()} kWh</span>
                         <span>Cosy tariff rate:</span>
@@ -326,12 +285,10 @@ export function SavingsCard({
 
                     {/* Savings */}
                     <div>
-                      <p className="font-medium text-foreground/80 mb-1 text-[10px] uppercase tracking-wide">Savings</p>
+                      <p className="font-medium text-foreground/80 mb-1 text-[10px] uppercase tracking-wide">Potential savings</p>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
-                        <span>Raw savings:</span>
-                        <span className="font-medium text-foreground text-right">{formatCurrency(results.rawSavings)}</span>
-                        <span>Conservative estimate (×0.9):</span>
-                        <span className="font-medium text-foreground text-right">{formatCurrency(results.estimatedSavings)}</span>
+                        <span>Estimated annual savings:</span>
+                        <span className="font-medium text-success text-right">{formatCurrency(Math.max(0, results.estimatedSavings))}</span>
                       </div>
                     </div>
                   </div>
