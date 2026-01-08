@@ -26,24 +26,24 @@ export function AddressLookup({ onAddressSelect, onManualEntry }: AddressLookupP
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 md:space-y-4">
       {/* Postcode Input */}
-      <div className="space-y-3">
+      <div className="space-y-2.5 md:space-y-3">
         <div className="relative">
           <Input
             type="text"
-            placeholder="Enter your postcode (e.g. SW1A 1AA)"
+            placeholder="Enter postcode (e.g. SW1A 1AA)"
             value={postcode}
             onChange={(e) => setPostcode(e.target.value.toUpperCase())}
             onKeyDown={handleKeyDown}
-            className="h-14 text-base rounded-lg font-medium placeholder:text-muted-foreground border-2 border-border bg-background input-focus-glow text-center"
+            className="h-12 md:h-14 text-base rounded-lg font-medium placeholder:text-muted-foreground border-2 border-border bg-background input-focus-glow text-center"
           />
         </div>
         <Button 
           onClick={handleSearch} 
           disabled={loading || !postcode.trim()}
           size="lg"
-          className="w-full h-14 rounded-lg bg-primary hover:bg-primary text-primary-foreground font-bold text-base transition-all disabled:opacity-100 disabled:bg-primary disabled:text-primary-foreground disabled:cursor-not-allowed cta-hover-lift"
+          className="w-full h-12 md:h-14 rounded-lg bg-primary hover:bg-primary text-primary-foreground font-bold text-sm md:text-base transition-all disabled:opacity-100 disabled:bg-primary disabled:text-primary-foreground disabled:cursor-not-allowed cta-hover-lift"
         >
           {loading ? (
             <Loader2 className="w-5 h-5 animate-spin" />
@@ -76,30 +76,30 @@ export function AddressLookup({ onAddressSelect, onManualEntry }: AddressLookupP
       )}
 
       {results && results.length > 0 && (
-        <div className="space-y-3 animate-fade-in">
-          <p className="text-sm text-muted-foreground font-medium">
+        <div className="space-y-2.5 md:space-y-3 animate-fade-in">
+          <p className="text-xs md:text-sm text-muted-foreground font-medium">
             Select your address:
           </p>
-          <div className="space-y-2 max-h-64 overflow-y-auto">
+          <div className="space-y-2 max-h-56 md:max-h-64 overflow-y-auto">
             {results.map((result, index) => (
               <div 
                 key={index}
-                className="cursor-pointer border border-border hover:border-primary rounded-lg p-4 transition-all duration-200 group bg-background"
+                className="cursor-pointer border border-border hover:border-primary rounded-lg p-3 md:p-4 transition-all duration-200 group bg-background active:bg-muted"
                 onClick={() => onAddressSelect(result)}
               >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-foreground group-hover:text-primary transition-colors">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm md:text-base text-foreground group-hover:text-primary transition-colors truncate">
                       {result.address}
                     </p>
-                    <p className="text-sm text-muted-foreground">{result.postcode}</p>
+                    <p className="text-xs md:text-sm text-muted-foreground">{result.postcode}</p>
                     {result.totalFloorArea && (
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="text-[10px] md:text-xs text-muted-foreground mt-0.5 md:mt-1">
                         Floor area: {result.totalFloorArea}m²
                       </p>
                     )}
                   </div>
-                  <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all flex-shrink-0" />
+                  <ArrowRight className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all flex-shrink-0" />
                 </div>
               </div>
             ))}
@@ -107,7 +107,7 @@ export function AddressLookup({ onAddressSelect, onManualEntry }: AddressLookupP
           <Button 
             variant="ghost" 
             onClick={onManualEntry}
-            className="text-muted-foreground hover:text-foreground w-full"
+            className="text-xs md:text-sm text-muted-foreground hover:text-foreground w-full py-2.5"
           >
             My address isn't listed
           </Button>
