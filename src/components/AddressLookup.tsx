@@ -1,13 +1,10 @@
 import { useState } from 'react';
-import { Search, MapPin, Loader2, AlertCircle, ArrowRight, Sparkles } from 'lucide-react';
+import { Search, MapPin, Loader2, AlertCircle, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { useEPCLookup } from '@/hooks/useEPCLookup';
 import type { EPCData } from '@/lib/calculations';
-import cosyPump from '@/assets/cosy-pump.jpeg';
-import octopusPartner from '@/assets/octopus-partner.png';
-import { CosyBadge } from './CosyBadge';
 
 interface AddressLookupProps {
   onAddressSelect: (epcData: EPCData) => void;
@@ -30,62 +27,35 @@ export function AddressLookup({ onAddressSelect, onManualEntry }: AddressLookupP
   };
 
   return (
-    <div className="space-y-8">
-      {/* Pulsing CTA Search Box */}
-      <div className="relative">
-        <div className="absolute -inset-3 bg-gradient-to-r from-primary/40 via-accent/40 to-primary/40 rounded-3xl animate-pulse blur-2xl" />
-        <div className="relative flex gap-3 p-1.5 bg-white rounded-2xl shadow-elevated">
-          <div className="relative flex-1">
-            <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 text-primary" />
-            <Input
-              type="text"
-              placeholder="Enter your postcode"
-              value={postcode}
-              onChange={(e) => setPostcode(e.target.value.toUpperCase())}
-              onKeyDown={handleKeyDown}
-              className="pl-14 h-16 text-xl bg-transparent border-0 focus-visible:ring-0 font-semibold placeholder:text-muted-foreground/50"
-            />
-          </div>
-          <Button 
-            onClick={handleSearch} 
-            disabled={loading || !postcode.trim()}
-            size="lg"
-            className="h-16 px-10 rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 animate-pulse-glow"
-          >
-            {loading ? (
-              <Loader2 className="w-6 h-6 animate-spin" />
-            ) : (
-              <>
-                <Search className="w-6 h-6 mr-2" />
-                Search
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
-
-      {/* Social Proof Section - Clean & Professional */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
-        <div className="flex flex-col items-center text-center p-4 rounded-xl bg-muted/30">
-          <CosyBadge size="lg" />
-          <p className="mt-3 text-sm font-medium text-muted-foreground">Cosy Accredited Installer</p>
-        </div>
-        <div className="flex flex-col items-center text-center p-4 rounded-xl bg-muted/30">
-          <img 
-            src={octopusPartner} 
-            alt="Octopus Trusted Partner" 
-            className="h-14 w-auto object-contain"
+    <div className="space-y-6">
+      {/* Clean Search Box */}
+      <div className="flex gap-2 p-2 bg-white rounded-full shadow-xl border border-muted/50">
+        <div className="relative flex-1">
+          <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
+          <Input
+            type="text"
+            placeholder="Enter your postcode"
+            value={postcode}
+            onChange={(e) => setPostcode(e.target.value.toUpperCase())}
+            onKeyDown={handleKeyDown}
+            className="pl-14 h-14 text-lg bg-transparent border-0 focus-visible:ring-0 font-medium placeholder:text-muted-foreground/50 rounded-full"
           />
-          <p className="mt-3 text-sm font-medium text-muted-foreground">Official Octopus Partner</p>
         </div>
-        <div className="flex flex-col items-center text-center p-4 rounded-xl bg-muted/30">
-          <img 
-            src={cosyPump} 
-            alt="Cosy Heat Pump" 
-            className="h-14 w-auto object-contain rounded-lg"
-          />
-          <p className="mt-3 text-sm font-medium text-muted-foreground">Premium Heat Pumps</p>
-        </div>
+        <Button 
+          onClick={handleSearch} 
+          disabled={loading || !postcode.trim()}
+          size="lg"
+          className="h-14 px-8 rounded-full bg-primary hover:bg-primary/90 text-white font-semibold text-base shadow-md transition-all hover:shadow-lg"
+        >
+          {loading ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <>
+              <Search className="w-5 h-5 mr-2" />
+              Search
+            </>
+          )}
+        </Button>
       </div>
 
       {error && (
