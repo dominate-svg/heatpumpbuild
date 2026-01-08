@@ -77,35 +77,26 @@ export default function Index() {
 
           {/* Search Card */}
           <div className="max-w-xl mx-auto">
-            {/* Card with solid colour background */}
-            <div className="relative">
-              {/* Solid colour block behind card */}
-              <div 
-                className="absolute -inset-4 rounded-[2.5rem] bg-primary"
-                aria-hidden="true"
-              />
-              
-              {/* Main card */}
-              <div className="relative bg-white rounded-3xl p-8 md:p-10 animate-card-entrance">
-                <div className="text-center mb-6">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary mb-4">
-                    <Search className="w-7 h-7 text-white" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-foreground">Find your home</h2>
+            {/* Main card */}
+            <div className="bg-white rounded-3xl p-8 md:p-10 shadow-xl animate-card-entrance">
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary mb-4">
+                  <Search className="w-7 h-7 text-white" />
                 </div>
-                
-                {showManualEntry ? (
-                  <ManualEntryForm
-                    onSubmit={handleAddressSelect}
-                    onBack={() => setShowManualEntry(false)}
-                  />
-                ) : (
-                  <AddressLookup
-                    onAddressSelect={handleAddressSelect}
-                    onManualEntry={() => setShowManualEntry(true)}
-                  />
-                )}
+                <h2 className="text-2xl font-bold text-foreground">Find your home</h2>
               </div>
+              
+              {showManualEntry ? (
+                <ManualEntryForm
+                  onSubmit={handleAddressSelect}
+                  onBack={() => setShowManualEntry(false)}
+                />
+              ) : (
+                <AddressLookup
+                  onAddressSelect={handleAddressSelect}
+                  onManualEntry={() => setShowManualEntry(true)}
+                />
+              )}
             </div>
 
             {/* Directional micro-cue */}
