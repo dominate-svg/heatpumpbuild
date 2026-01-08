@@ -42,18 +42,14 @@ export default function Index() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[hsl(290,40%,97%)] via-background to-[hsl(280,30%,96%)]">
+    <div className="min-h-screen bg-background">
       <Header />
       
-      {/* Hero Section - Octopus Style */}
-      <section className="relative overflow-hidden">
-        {/* Soft gradient orbs */}
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl -translate-y-1/2" />
-        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-accent/10 rounded-full blur-3xl translate-y-1/2" />
-        
-        <div className="relative max-w-3xl mx-auto px-4 pt-10 pb-16 md:pt-16 md:pb-20">
+      {/* Hero Section */}
+      <section className="bg-muted/30">
+        <div className="max-w-3xl mx-auto px-4 pt-10 pb-16 md:pt-16 md:pb-20">
           
-          {/* Big Friendly Headline */}
+          {/* Headline */}
           <div className="text-center mb-10">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight mb-5">
               See what a{' '}
@@ -65,12 +61,12 @@ export default function Index() {
               Powered by your EPC data. Instant estimate. No obligation.
             </p>
 
-            {/* Trust badges - playful pills */}
+            {/* Trust badges */}
             <div className="flex flex-wrap justify-center gap-3">
               {TRUST_BADGES.map((badge, i) => (
                 <div 
                   key={i} 
-                  className="flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-full px-4 py-2 shadow-sm border border-primary/10"
+                  className="flex items-center gap-2 bg-white rounded-full px-4 py-2 border border-border"
                 >
                   <badge.icon className="w-4 h-4 text-primary" />
                   <span className="text-sm font-medium text-foreground">{badge.label}</span>
@@ -79,33 +75,27 @@ export default function Index() {
             </div>
           </div>
 
-          {/* Octopus-style Floating Card */}
+          {/* Search Card */}
           <div className="max-w-xl mx-auto">
-            <div className="relative">
-              {/* Pink glow shadow */}
-              <div className="absolute -inset-4 bg-gradient-to-br from-primary/20 to-accent/10 rounded-[2rem] blur-2xl" />
-              
-              {/* Main Card */}
-              <div className="relative bg-white rounded-3xl p-8 md:p-10 shadow-xl">
-                <div className="text-center mb-6">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/70 mb-4 shadow-lg shadow-primary/30">
-                    <Search className="w-7 h-7 text-white" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-foreground">Find your home</h2>
+            <div className="bg-white rounded-3xl p-8 md:p-10 shadow-lg border border-border">
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary mb-4">
+                  <Search className="w-7 h-7 text-white" />
                 </div>
-                
-                {showManualEntry ? (
-                  <ManualEntryForm
-                    onSubmit={handleAddressSelect}
-                    onBack={() => setShowManualEntry(false)}
-                  />
-                ) : (
-                  <AddressLookup
-                    onAddressSelect={handleAddressSelect}
-                    onManualEntry={() => setShowManualEntry(true)}
-                  />
-                )}
+                <h2 className="text-2xl font-bold text-foreground">Find your home</h2>
               </div>
+              
+              {showManualEntry ? (
+                <ManualEntryForm
+                  onSubmit={handleAddressSelect}
+                  onBack={() => setShowManualEntry(false)}
+                />
+              ) : (
+                <AddressLookup
+                  onAddressSelect={handleAddressSelect}
+                  onManualEntry={() => setShowManualEntry(true)}
+                />
+              )}
             </div>
 
             {/* Trust line below */}
@@ -123,17 +113,17 @@ export default function Index() {
         </div>
       </section>
 
-      {/* 3-Step Row - Octopus Style */}
-      <section className="py-10 bg-white/50 backdrop-blur-sm border-y border-primary/5">
+      {/* 3-Step Row */}
+      <section className="py-10 bg-white border-y border-border">
         <div className="max-w-3xl mx-auto px-4">
           <div className="flex items-center justify-center gap-4 md:gap-8">
             {STEPS.map((step, i) => (
               <div key={i} className="flex items-center gap-4 md:gap-6">
                 <div className="flex flex-col items-center text-center">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-2 shadow-md ${
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-2 ${
                     step.active 
-                      ? 'bg-gradient-to-br from-primary to-primary/80 shadow-primary/30' 
-                      : 'bg-white border-2 border-primary/20'
+                      ? 'bg-primary' 
+                      : 'bg-muted border-2 border-border'
                   }`}>
                     <step.icon className={`w-6 h-6 ${step.active ? 'text-white' : 'text-primary'}`} />
                   </div>
@@ -141,7 +131,7 @@ export default function Index() {
                   <span className="text-xs text-muted-foreground">{step.label}</span>
                 </div>
                 {i < STEPS.length - 1 && (
-                  <div className="w-8 md:w-16 h-0.5 bg-gradient-to-r from-primary/30 to-primary/10 rounded-full" />
+                  <div className="w-8 md:w-16 h-0.5 bg-border rounded-full" />
                 )}
               </div>
             ))}
@@ -149,19 +139,19 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Social Proof - Bold & Friendly */}
-      <section className="py-14 bg-gradient-to-b from-transparent to-white/50">
+      {/* Social Proof */}
+      <section className="py-14">
         <div className="max-w-3xl mx-auto px-4">
           <h3 className="text-center text-xl font-bold text-foreground mb-8">
             Trusted by homeowners across the UK
           </h3>
           
-          {/* Colourful Stats */}
+          {/* Stats */}
           <div className="grid grid-cols-3 gap-4 mb-10">
             {STATS.map((stat, i) => (
               <div 
                 key={i} 
-                className={`text-center p-5 rounded-2xl ${stat.bg} border border-white/50`}
+                className="text-center p-5 rounded-2xl bg-muted border border-border"
               >
                 <div className="text-3xl md:text-4xl font-bold text-foreground mb-1">{stat.value}</div>
                 <div className="text-sm text-muted-foreground font-medium">{stat.label}</div>
