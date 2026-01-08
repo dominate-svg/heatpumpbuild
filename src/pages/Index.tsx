@@ -3,7 +3,7 @@ import { Header } from '@/components/Header';
 import { AddressLookup } from '@/components/AddressLookup';
 import { ManualEntryForm } from '@/components/ManualEntryForm';
 import { CosyBadge } from '@/components/CosyBadge';
-import { Award, BadgeCheck, Percent, Search, ClipboardCheck, CalendarCheck, Lock, ShieldCheck } from 'lucide-react';
+import { Award, BadgeCheck, Percent, Search, ClipboardCheck, CalendarCheck, Lock, ShieldCheck, ChevronDown } from 'lucide-react';
 import type { EPCData } from '@/lib/calculations';
 import { useNavigate } from 'react-router-dom';
 import octopusPartner from '@/assets/octopus-partner.png';
@@ -77,29 +77,49 @@ export default function Index() {
 
           {/* Search Card */}
           <div className="max-w-xl mx-auto">
-            <div className="bg-white rounded-3xl p-8 md:p-10 shadow-lg border border-border">
-              <div className="text-center mb-6">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary mb-4">
-                  <Search className="w-7 h-7 text-white" />
-                </div>
-                <h2 className="text-2xl font-bold text-foreground">Find your home</h2>
-              </div>
+            {/* Card with animated halo */}
+            <div className="relative">
+              {/* Animated halo ring */}
+              <div 
+                className="absolute -inset-3 rounded-[2rem] bg-primary/20 blur-xl animate-halo-pulse pointer-events-none"
+                aria-hidden="true"
+              />
               
-              {showManualEntry ? (
-                <ManualEntryForm
-                  onSubmit={handleAddressSelect}
-                  onBack={() => setShowManualEntry(false)}
-                />
-              ) : (
-                <AddressLookup
-                  onAddressSelect={handleAddressSelect}
-                  onManualEntry={() => setShowManualEntry(true)}
-                />
-              )}
+              {/* Main card */}
+              <div className="relative bg-white rounded-3xl p-8 md:p-10 shadow-xl border border-primary/10 animate-card-entrance"
+                   style={{ 
+                     boxShadow: '0 8px 32px -8px hsl(290 70% 55% / 0.2), 0 4px 16px -4px hsl(290 70% 55% / 0.1)',
+                     background: 'radial-gradient(ellipse at center, hsl(0 0% 100%) 0%, hsl(290 30% 99%) 100%)'
+                   }}>
+                <div className="text-center mb-6">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary mb-4">
+                    <Search className="w-7 h-7 text-white" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-foreground">Find your home</h2>
+                </div>
+                
+                {showManualEntry ? (
+                  <ManualEntryForm
+                    onSubmit={handleAddressSelect}
+                    onBack={() => setShowManualEntry(false)}
+                  />
+                ) : (
+                  <AddressLookup
+                    onAddressSelect={handleAddressSelect}
+                    onManualEntry={() => setShowManualEntry(true)}
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Directional micro-cue */}
+            <div className="flex flex-col items-center mt-6 text-muted-foreground">
+              <span className="text-xs font-medium mb-1">Start here 👇</span>
+              <ChevronDown className="w-5 h-5 animate-bounce-subtle" />
             </div>
 
             {/* Trust line below */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6 text-sm text-muted-foreground">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-primary" />
                 <span>No sales calls. No obligation.</span>
