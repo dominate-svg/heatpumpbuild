@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2, Calendar, Phone, Shield } from 'lucide-react';
+import { Loader2, Calendar, Phone, Shield, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,6 +25,12 @@ interface LeadCaptureFormProps {
 }
 
 const BOOKING_URL = 'https://example.com/book-survey';
+
+const BENEFITS = [
+  'No obligation',
+  'Fully refundable',
+  'Takes 2 minutes',
+];
 
 export function LeadCaptureForm({ epcData, results, assumptions, inputs }: LeadCaptureFormProps) {
   const [name, setName] = useState('');
@@ -80,14 +86,14 @@ export function LeadCaptureForm({ epcData, results, assumptions, inputs }: LeadC
   };
 
   return (
-    <Card className="border-0 shadow-xl shadow-primary/10 overflow-hidden">
-      <CardHeader className="gradient-accent text-white pb-4">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Calendar className="w-5 h-5" />
-          Book your free survey
+    <Card className="border border-border shadow-soft overflow-hidden bg-card">
+      <CardHeader className="bg-primary/5 border-b border-primary/10 pb-4">
+        <CardTitle className="flex items-center gap-2 text-lg text-foreground">
+          <Calendar className="w-5 h-5 text-primary" />
+          Ready for the next step?
         </CardTitle>
-        <p className="text-white/80 text-sm mt-1">
-          No obligation • Takes 30 minutes
+        <p className="text-muted-foreground text-sm mt-1">
+          Book your free home survey
         </p>
       </CardHeader>
       <CardContent className="p-6">
@@ -99,7 +105,7 @@ export function LeadCaptureForm({ epcData, results, assumptions, inputs }: LeadC
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="John Smith"
-              className="h-12 bg-background border-2 focus:border-accent"
+              className="h-12 bg-background border-2 focus:border-primary"
               required
             />
           </div>
@@ -111,7 +117,7 @@ export function LeadCaptureForm({ epcData, results, assumptions, inputs }: LeadC
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="john@example.com"
-              className="h-12 bg-background border-2 focus:border-accent"
+              className="h-12 bg-background border-2 focus:border-primary"
               required
             />
           </div>
@@ -123,7 +129,7 @@ export function LeadCaptureForm({ epcData, results, assumptions, inputs }: LeadC
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="07xxx xxxxxx"
-              className="h-12 bg-background border-2 focus:border-accent"
+              className="h-12 bg-background border-2 focus:border-primary"
               required
             />
           </div>
@@ -140,7 +146,7 @@ export function LeadCaptureForm({ epcData, results, assumptions, inputs }: LeadC
           </div>
           <Button 
             type="submit" 
-            className="w-full h-14 text-lg font-semibold gradient-accent hover:opacity-90 transition-opacity"
+            className="w-full h-14 text-lg font-semibold gradient-primary hover:opacity-90 hover-lift transition-all"
             disabled={!isValid || isLoading}
           >
             {isLoading ? (
@@ -148,12 +154,22 @@ export function LeadCaptureForm({ epcData, results, assumptions, inputs }: LeadC
             ) : (
               <>
                 <Phone className="w-5 h-5 mr-2" />
-                Book a survey
+                Book my home survey
               </>
             )}
           </Button>
           
-          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground pt-2">
+          {/* Benefits */}
+          <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground pt-2">
+            {BENEFITS.map((benefit, i) => (
+              <span key={i} className="flex items-center gap-1">
+                <Check className="w-3 h-3 text-success" />
+                {benefit}
+              </span>
+            ))}
+          </div>
+          
+          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
             <Shield className="w-4 h-4" />
             <span>Your details are secure and never shared</span>
           </div>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TrendingUp, TrendingDown, ChevronDown, ChevronUp, Zap, PiggyBank } from 'lucide-react';
+import { TrendingUp, TrendingDown, ChevronDown, ChevronUp, Leaf, PiggyBank } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -18,7 +18,7 @@ import {
 import { formatCurrency } from '@/lib/calculations';
 import type { EstimateResults, Assumptions } from '@/lib/calculations';
 
-interface SavingsCalculatorProps {
+interface SavingsCardProps {
   results: EstimateResults;
   assumptions: Assumptions;
   scop: number;
@@ -33,42 +33,45 @@ const EFFICIENCY_OPTIONS = [
   { value: '4.0', label: '400%', scop: 4.0 },
 ];
 
-export function SavingsCalculator({
+export function SavingsCard({
   results,
   assumptions,
   scop,
   tariff,
   onScopChange,
   onTariffChange,
-}: SavingsCalculatorProps) {
+}: SavingsCardProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const isNegativeSavings = results.annualSavings < 0;
   const displaySavings = Math.abs(results.annualSavings);
+  
+  // Rough CO2 estimate (kg CO2 per kWh: gas ~0.2, electricity ~0.15)
+  const co2Saved = Math.round((results.annualHeatKwh * 0.2 - results.hpElectricKwh * 0.15) / 1000 * 10) / 10;
 
   return (
-    <Card className="border shadow-sm bg-card">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <div className="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center">
-            <PiggyBank className="w-4 h-4 text-success" />
+    <Card className="border-0 shadow-cool overflow-hidden animate-fade-in" style={{ animationDelay: '0.3s' }}>
+      {/* Cool gradient header */}
+      <div className="gradient-cool p-6 border-b border-accent/10">
+        <CardTitle className="flex items-center gap-3 text-lg mb-4">
+          <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+            <PiggyBank className="w-5 h-5 text-accent" />
           </div>
-          Running Cost Comparison
+          Running cost comparison
         </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
+        
         {/* Cost comparison */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="p-4 bg-muted/50 rounded-xl border-2 border-transparent">
-            <p className="text-sm text-muted-foreground mb-2">Current heating</p>
-            <p className="text-3xl font-bold text-foreground">
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="p-4 bg-card rounded-xl border border-border">
+            <p className="text-sm text-muted-foreground mb-1">Your current heating cost</p>
+            <p className="text-2xl font-bold text-foreground animate-count-up">
               {formatCurrency(results.baselineCost)}
             </p>
             <p className="text-xs text-muted-foreground">per year</p>
           </div>
-          <div className="p-4 bg-success/5 rounded-xl border-2 border-success/30">
-            <p className="text-sm text-muted-foreground mb-2">With heat pump</p>
-            <p className="text-3xl font-bold text-success">
+          <div className="p-4 bg-card rounded-xl border-2 border-success">
+            <p className="text-sm text-muted-foreground mb-1">With heat pump</p>
+            <p className="text-2xl font-bold text-success animate-count-up">
               {formatCurrency(results.hpCost)}
             </p>
             <p className="text-xs text-muted-foreground">per year</p>
@@ -76,10 +79,10 @@ export function SavingsCalculator({
         </div>
 
         {/* Savings highlight */}
-        <div className={`rounded-xl p-5 flex items-center gap-4 ${
+        <div className={`rounded-xl p-4 flex items-center gap-4 ${
           isNegativeSavings 
-            ? 'bg-warning/10 border-2 border-warning/30' 
-            : 'bg-success/10 border-2 border-success/30'
+            ? 'bg-warning/10 border border-warning/30' 
+            : 'bg-success/10 border border-success/30'
         }`}>
           <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
             isNegativeSavings ? 'bg-warning/20' : 'bg-success/20'
@@ -92,18 +95,27 @@ export function SavingsCalculator({
           </div>
           <div>
             <p className="text-sm text-foreground font-medium">
-              {isNegativeSavings ? 'Estimated change in running cost' : 'Estimated annual savings'}
+              {isNegativeSavings ? 'Estimated change' : 'You could save'}
             </p>
             <p className={`text-3xl font-bold ${isNegativeSavings ? 'text-warning' : 'text-success'}`}>
-              {isNegativeSavings ? '+' : ''}{formatCurrency(displaySavings)}/yr
+              ~{formatCurrency(displaySavings)}/yr
             </p>
           </div>
         </div>
 
+        {co2Saved > 0 && (
+          <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+            <Leaf className="w-4 h-4 text-success" />
+            <span>~{co2Saved} tonnes CO₂ saved each year</span>
+          </div>
+        )}
+      </div>
+
+      <CardContent className="p-6 bg-card space-y-4">
         {/* Controls */}
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label className="text-sm text-muted-foreground">Efficiency (SCOP)</Label>
+            <Label className="text-sm text-muted-foreground">Efficiency level</Label>
             <div className="flex gap-1">
               {EFFICIENCY_OPTIONS.map((option) => (
                 <Button
@@ -111,7 +123,7 @@ export function SavingsCalculator({
                   variant={scop === option.scop ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => onScopChange(option.scop)}
-                  className={`flex-1 ${scop === option.scop ? 'gradient-primary border-0' : ''}`}
+                  className={`flex-1 ${scop === option.scop ? 'gradient-primary border-0 text-white' : ''}`}
                 >
                   {option.label}
                 </Button>
@@ -147,7 +159,7 @@ export function SavingsCalculator({
                 <span className="font-medium">{Math.round(results.annualHeatKwh).toLocaleString()} kWh</span>
               </div>
               <div className="flex justify-between text-foreground">
-                <span>HP electricity usage</span>
+                <span>Heat pump electricity</span>
                 <span className="font-medium">{Math.round(results.hpElectricKwh).toLocaleString()} kWh</span>
               </div>
               <div className="flex justify-between text-foreground">
@@ -165,7 +177,7 @@ export function SavingsCalculator({
                 </span>
               </div>
               <div className="flex justify-between text-foreground">
-                <span>SCOP</span>
+                <span>Efficiency level</span>
                 <span className="font-medium">{scop}</span>
               </div>
             </div>
