@@ -125,8 +125,8 @@ export function useCreateEstimate() {
           tariff_offpeak_rate: input.results.tariffOffpeakRate,
           heat_demand_kwh: input.results.annualHeatKwh,
           current_heating_cost: input.results.baselineCost,
-          weighted_rate: input.results.weightedRate,
-          offpeak_share_used: input.results.offpeakShareUsed,
+          weighted_rate: input.results.cosyRate,
+          offpeak_share_used: 0.60, // Fixed Cosy assumption
           heat_demand_source: input.results.heatDemandSource,
         })
         .select()

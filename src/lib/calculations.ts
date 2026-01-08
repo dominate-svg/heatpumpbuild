@@ -69,76 +69,46 @@ export interface EstimateInputs {
 
 // ============================================
 // CONSERVATIVE SAVINGS CALCULATOR CONFIG
-// Based on national averages and research-anchored assumptions
+// Based on national averages and Ofgem cap pricing
 // ============================================
 
-// Base useful heat for a medium UK home (space + hot water)
-const BASE_USEFUL_HEAT_KWH = 11500;
-
-// EPC multiplier: scales base heat by EPC band
-const EPC_MULTIPLIER: Record<string, number> = {
-  'A': 0.60,
-  'B': 0.70,
-  'C': 0.85,
-  'D': 1.00,
-  'E': 1.20,
-  'F': 1.40,
-  'G': 1.60,
+// National average heat demand by EPC band (kWh/year)
+const HEAT_DEMAND_BY_EPC: Record<string, number> = {
+  'A': 6000,
+  'B': 8000,
+  'C': 10000,
+  'D': 12000,
+  'E': 14000,
+  'F': 17000,
+  'G': 20000,
 };
 
-// DHW share by EPC band (worse insulation = higher DHW share of total)
-const DHW_SHARE: Record<string, number> = {
-  'A': 0.15,
-  'B': 0.15,
-  'C': 0.15,
-  'D': 0.18,
-  'E': 0.18,
-  'F': 0.20,
-  'G': 0.20,
-};
-
-// Fixed DHW COP (lower than space heating due to higher temps)
-const DHW_COP = 2.2;
-
-// EPC derate factors for space heating SCOP
-// Worse insulation = harder to achieve rated SCOP
-const EPC_DERATE: Record<string, number> = {
-  'A': 1.00,
-  'B': 1.00,
-  'C': 0.95,
-  'D': 0.90,
-  'E': 0.85,
-  'F': 0.78,
-  'G': 0.72,
-};
-
-// Fuel unit rates (£/kWh) - based on Ofgem cap typical
-const FUEL_UNIT_RATES: Record<string, number> = {
-  'gas': 0.0593,
-  'lpg': 0.122,
-  'electric': 0.2769,
-};
-
-// Oil pricing: pence per litre and kWh per litre
-const OIL_PRICE_PENCE_PER_LITRE = 60.63;
-const OIL_KWH_PER_LITRE = 10.35;
-const OIL_RATE = OIL_PRICE_PENCE_PER_LITRE / OIL_KWH_PER_LITRE / 100;
-
-// Boiler efficiencies - realistic for typical UK stock
+// Boiler efficiencies
 const BOILER_EFFICIENCY: Record<string, number> = {
-  'gas': 0.90,
-  'oil_modern': 0.85,
-  'oil_old': 0.70,
+  'gas': 0.85,
+  'oil': 0.80,
   'lpg': 0.85,
   'electric': 1.00,
 };
 
-// Base cheap share by efficiency level
-const BASE_CHEAP_SHARE: Record<number, number> = {
-  3.4: 0.45,
-  3.7: 0.55,
-  4.0: 0.65,
+// Ofgem cap tariffs (£/kWh and £/day)
+const OFGEM_RATES = {
+  gas_unit: 0.0593,
+  gas_standing: 0.3509,
+  electric_unit: 0.2769,
+  electric_standing: 0.5475,
 };
+
+// Cosy tariff assumption
+// 60% cheap rate (£0.12), 40% standard rate (£0.2769)
+const COSY_CHEAP_SHARE = 0.60;
+const COSY_CHEAP_RATE = 0.12;
+const COSY_STANDARD_RATE = 0.2769;
+const COSY_WEIGHTED_RATE = (COSY_CHEAP_SHARE * COSY_CHEAP_RATE) + ((1 - COSY_CHEAP_SHARE) * COSY_STANDARD_RATE);
+
+// Oil and LPG rates (£/kWh)
+const OIL_RATE = 0.0586; // ~60.63p/litre ÷ 10.35 kWh/litre
+const LPG_RATE = 0.122;
 
 // Map efficiency (SCOP) to radiator count
 export function getRadiatorsForEfficiency(scop: number): number {
@@ -147,44 +117,15 @@ export function getRadiatorsForEfficiency(scop: number): number {
   return 2;
 }
 
-export interface SavingsScenario {
+export interface SavingsCalculation {
+  heatDemand: number;
+  fuelKwh: number;
   currentCost: number;
+  hpKwh: number;
   hpCost: number;
-  savings: number;
-  hpElectricKwh: number;
-  spaceScopAdj: number;
-  cheapShareUsed: number;
-  effectiveRate: number;
-}
-
-export interface OilSavingsResult {
-  modernBoiler: SavingsScenario;
-  oldBoiler: SavingsScenario;
-}
-
-export interface SavingsResult {
-  // Core figures
-  usefulHeatKwh: number;
-  spaceHeatKwh: number;
-  dhwHeatKwh: number;
-  fuelInputKwh: number;
-  
-  // Scenarios
-  typical: SavingsScenario;
-  best: SavingsScenario;
-  worst: SavingsScenario;
-  
-  // Oil-specific (only populated for oil fuel)
-  oilScenarios?: {
-    typical: OilSavingsResult;
-    best: OilSavingsResult;
-    worst: OilSavingsResult;
-  };
-  
-  // Metadata
-  isOil: boolean;
+  rawSavings: number;
+  estimatedSavings: number;
   boilerEfficiency: number;
-  epcDerateApplied: number;
 }
 
 export interface EstimateResults {
@@ -195,6 +136,8 @@ export interface EstimateResults {
   hpElectricKwh: number;
   hpCost: number;
   annualSavings: number;
+  estimatedSavings: number;
+  rawSavings: number;
   installBase: number;
   adders: { location: number; cylinder: number; radiator: number };
   grossInstallPrice: number;
@@ -209,45 +152,18 @@ export interface EstimateResults {
   efficiencySelected: number;
   heatDemandSource: 'national_average' | 'epc';
   scopUsed: number;
-  scopAdjusted: number;
-  offpeakShareUsed: number;
-  weightedRate: number;
   isBestCase: boolean;
   tariffId?: string;
   tariffPeakRate?: number;
   tariffOffpeakRate?: number;
-  // Detailed transparency fields
+  // Transparency fields
   currentFuelType: string;
   boilerEfficiency: number;
   fuelInputKwh: number;
-  spaceHeatKwh: number;
-  dhwHeatKwh: number;
-  dhwCop: number;
-  epcDerateApplied: number;
-  savingsCouldIncrease: boolean;
+  cosyRate: number;
   confidenceLabel: string;
   epcBand: string;
-  // Savings ranges
-  savingsRange: {
-    typical: number;
-    best: number;
-    worst: number;
-  };
-  hpCostRange: {
-    typical: number;
-    best: number;
-    worst: number;
-  };
-  // Oil-specific
   isOilFuel: boolean;
-  oilSavings?: {
-    modernBoiler: { typical: number; best: number; worst: number };
-    oldBoiler: { typical: number; best: number; worst: number };
-  };
-  oilCurrentCost?: {
-    modernBoiler: number;
-    oldBoiler: number;
-  };
 }
 
 // Floor area estimates by range (for manual entry)
@@ -299,174 +215,73 @@ function getConfidenceLabel(epcBand: string): string {
   }
 }
 
-function calculateCheapShare(baseScop: number, epcBand: string, adjustment: number = 0): number {
-  let baseShare = BASE_CHEAP_SHARE[baseScop] || 0.45;
-  
-  // Apply EPC penalty
-  if (epcBand === 'E') {
-    baseShare -= 0.05;
-  } else if (['F', 'G'].includes(epcBand)) {
-    baseShare -= 0.10;
+// Get fuel unit rate in £/kWh
+function getFuelRate(fuelType: string): number {
+  switch (fuelType) {
+    case 'gas': return OFGEM_RATES.gas_unit;
+    case 'oil': return OIL_RATE;
+    case 'lpg': return LPG_RATE;
+    case 'electric': return OFGEM_RATES.electric_unit;
+    default: return OFGEM_RATES.gas_unit;
   }
-  
-  // Apply scenario adjustment
-  baseShare += adjustment;
-  
-  // Clamp between 0.25 and 0.70
-  return clamp(baseShare, 0.25, 0.70);
 }
 
-function calculateEffectiveRate(
-  cheapShare: number,
-  tariff: Tariff | null,
-  fallbackRate: number
-): number {
-  if (tariff && tariff.offpeak_hours_per_day && tariff.offpeak_hours_per_day > 0 && tariff.offpeak_rate_p_per_kwh !== null) {
-    const peakRate = tariff.peak_rate_p_per_kwh / 100;
-    const offpeakRate = tariff.offpeak_rate_p_per_kwh / 100;
-    return (cheapShare * offpeakRate) + ((1 - cheapShare) * peakRate);
-  } else if (tariff) {
-    return tariff.peak_rate_p_per_kwh / 100;
+// Get standing charge per day in £
+function getStandingCharge(fuelType: string): number {
+  switch (fuelType) {
+    case 'gas': return OFGEM_RATES.gas_standing;
+    case 'electric': return OFGEM_RATES.electric_standing;
+    // Oil and LPG typically don't have standing charges
+    default: return 0;
   }
-  return fallbackRate / 100;
 }
 
-function calculateScenario(
-  spaceHeatKwh: number,
-  dhwHeatKwh: number,
-  baseScop: number,
-  epcBand: string,
-  tariff: Tariff | null,
-  fallbackElecRate: number,
-  scopAdjustment: number,
-  cheapShareAdjustment: number
-): SavingsScenario {
-  const epcDerate = EPC_DERATE[epcBand] || 0.90;
-  const adjustedScop = baseScop * (1 + scopAdjustment);
-  const spaceScopAdj = adjustedScop * epcDerate;
-  
-  const spaceElecKwh = spaceHeatKwh / spaceScopAdj;
-  const dhwElecKwh = dhwHeatKwh / DHW_COP;
-  const hpElectricKwh = spaceElecKwh + dhwElecKwh;
-  
-  const cheapShareUsed = calculateCheapShare(baseScop, epcBand, cheapShareAdjustment);
-  const effectiveRate = calculateEffectiveRate(cheapShareUsed, tariff, fallbackElecRate);
-  const hpCost = hpElectricKwh * effectiveRate;
-  
-  return {
-    currentCost: 0, // Will be set by caller
-    hpCost,
-    savings: 0, // Will be set by caller
-    hpElectricKwh,
-    spaceScopAdj,
-    cheapShareUsed,
-    effectiveRate,
-  };
-}
-
+/**
+ * Calculate savings using the simplified national average model
+ * 
+ * Step 1: heat_demand = lookup(EPC_band)
+ * Step 2: fuel_kWh = heat_demand / boiler_efficiency
+ *         current_cost = fuel_kWh × fuel_unit_rate + (fuel_standing × 365)
+ * Step 3: hp_kWh = heat_demand / SCOP
+ * Step 4: hp_cost = hp_kWh × cosy_rate + (electric_standing × 365)
+ * Step 5: raw_savings = current_cost − hp_cost
+ *         estimated_savings = raw_savings × 0.9 (rounded to nearest 10)
+ */
 function calculateSavings(
-  usefulHeat: number,
   epcBand: string,
   fuelType: string,
-  selectedScop: number,
-  tariff: Tariff | null,
-  assumptions: Assumptions
-): SavingsResult {
-  // 1. Split into space heat + hot water
-  const dhwShare = DHW_SHARE[epcBand] || 0.18;
-  const dhwHeatKwh = usefulHeat * dhwShare;
-  const spaceHeatKwh = usefulHeat - dhwHeatKwh;
+  scop: number
+): SavingsCalculation {
+  // Step 1: Heat demand from EPC band
+  const heatDemand = HEAT_DEMAND_BY_EPC[epcBand] || HEAT_DEMAND_BY_EPC['D'];
   
-  const epcDerate = EPC_DERATE[epcBand] || 0.90;
-  const fallbackElecRate = assumptions.electricity_rate || 28;
-  const isOil = fuelType === 'oil';
+  // Step 2: Current heating cost
+  const boilerEfficiency = BOILER_EFFICIENCY[fuelType] || 0.85;
+  const fuelKwh = heatDemand / boilerEfficiency;
+  const fuelRate = getFuelRate(fuelType);
+  const fuelStanding = getStandingCharge(fuelType);
+  const currentCost = (fuelKwh * fuelRate) + (fuelStanding * 365);
   
-  // Calculate typical, best, worst scenarios
-  const typicalScenario = calculateScenario(
-    spaceHeatKwh, dhwHeatKwh, selectedScop, epcBand, tariff, fallbackElecRate, 0, 0
-  );
-  const bestScenario = calculateScenario(
-    spaceHeatKwh, dhwHeatKwh, selectedScop, epcBand, tariff, fallbackElecRate, 0.10, 0.05
-  );
-  const worstScenario = calculateScenario(
-    spaceHeatKwh, dhwHeatKwh, selectedScop, epcBand, tariff, fallbackElecRate, -0.10, -0.05
-  );
+  // Step 3: Heat pump electricity use
+  const hpKwh = heatDemand / scop;
   
-  let boilerEfficiency: number;
-  let fuelInputKwh: number;
-  let currentCost: number;
-  let oilScenarios: SavingsResult['oilScenarios'];
+  // Step 4: Heat pump annual cost
+  const hpCost = (hpKwh * COSY_WEIGHTED_RATE) + (OFGEM_RATES.electric_standing * 365);
   
-  if (isOil) {
-    // Oil has two baselines: modern and old boiler
-    const modernEff = BOILER_EFFICIENCY['oil_modern'];
-    const oldEff = BOILER_EFFICIENCY['oil_old'];
-    
-    const modernFuelKwh = usefulHeat / modernEff;
-    const oldFuelKwh = usefulHeat / oldEff;
-    
-    const modernCost = modernFuelKwh * OIL_RATE;
-    const oldCost = oldFuelKwh * OIL_RATE;
-    
-    // Use modern as the primary for display
-    boilerEfficiency = modernEff;
-    fuelInputKwh = modernFuelKwh;
-    currentCost = modernCost;
-    
-    // Create oil-specific scenarios
-    const createOilResult = (scenario: SavingsScenario): OilSavingsResult => ({
-      modernBoiler: {
-        ...scenario,
-        currentCost: modernCost,
-        savings: modernCost - scenario.hpCost,
-      },
-      oldBoiler: {
-        ...scenario,
-        currentCost: oldCost,
-        savings: oldCost - scenario.hpCost,
-      },
-    });
-    
-    oilScenarios = {
-      typical: createOilResult(typicalScenario),
-      best: createOilResult(bestScenario),
-      worst: createOilResult(worstScenario),
-    };
-    
-    // Set typical savings using modern boiler
-    typicalScenario.currentCost = modernCost;
-    typicalScenario.savings = modernCost - typicalScenario.hpCost;
-    bestScenario.currentCost = modernCost;
-    bestScenario.savings = modernCost - bestScenario.hpCost;
-    worstScenario.currentCost = modernCost;
-    worstScenario.savings = modernCost - worstScenario.hpCost;
-  } else {
-    // Non-oil fuels
-    boilerEfficiency = BOILER_EFFICIENCY[fuelType] || 0.90;
-    fuelInputKwh = usefulHeat / boilerEfficiency;
-    const fuelRate = FUEL_UNIT_RATES[fuelType] || 0.0593;
-    currentCost = fuelInputKwh * fuelRate;
-    
-    typicalScenario.currentCost = currentCost;
-    typicalScenario.savings = currentCost - typicalScenario.hpCost;
-    bestScenario.currentCost = currentCost;
-    bestScenario.savings = currentCost - bestScenario.hpCost;
-    worstScenario.currentCost = currentCost;
-    worstScenario.savings = currentCost - worstScenario.hpCost;
-  }
+  // Step 5: Savings with conservative bias
+  const rawSavings = currentCost - hpCost;
+  let estimatedSavings = rawSavings * 0.9; // 10% conservative reduction
+  estimatedSavings = roundToNearest10(estimatedSavings);
   
   return {
-    usefulHeatKwh: usefulHeat,
-    spaceHeatKwh,
-    dhwHeatKwh,
-    fuelInputKwh,
-    typical: typicalScenario,
-    best: bestScenario,
-    worst: worstScenario,
-    oilScenarios,
-    isOil,
+    heatDemand,
+    fuelKwh,
+    currentCost,
+    hpKwh,
+    hpCost,
+    rawSavings,
+    estimatedSavings,
     boilerEfficiency,
-    epcDerateApplied: epcDerate,
   };
 }
 
@@ -478,34 +293,12 @@ export function calculateEstimate(
   const fuelType = getFuelType(inputs.currentFuel);
   
   // ============================================
-  // 1. Determine annual useful heat demand
-  // Use BASE × EPC multiplier
+  // 1. Calculate savings using simplified model
   // ============================================
-  const baseHeat = assumptions.base_useful_heat_kwh || BASE_USEFUL_HEAT_KWH;
-  const multiplier = EPC_MULTIPLIER[epcBand] || 1.0;
-  const annualHeatKwh = Math.round(baseHeat * multiplier);
-  const heatDemandSource: 'national_average' | 'epc' = 'national_average';
-
-  // ============================================
-  // 2. Calculate savings using conservative model
-  // ============================================
-  const savingsResult = calculateSavings(
-    annualHeatKwh,
-    epcBand,
-    fuelType,
-    inputs.scop,
-    inputs.tariff,
-    assumptions
-  );
-
-  const typicalSavings = roundToNearest10(savingsResult.typical.savings);
-  const bestSavings = roundToNearest10(savingsResult.best.savings);
-  const worstSavings = roundToNearest10(savingsResult.worst.savings);
+  const savings = calculateSavings(epcBand, fuelType, inputs.scop);
   
-  const baselineCost = roundToNearest10(savingsResult.typical.currentCost);
-  const hpCost = roundToNearest10(savingsResult.typical.hpCost);
-  const hpElectricKwh = roundToNearest10(savingsResult.typical.hpElectricKwh);
-  const savingsCouldIncrease = worstSavings < 0;
+  const annualHeatKwh = savings.heatDemand;
+  const heatDemandSource: 'national_average' | 'epc' = 'national_average';
 
   // ============================================
   // Heat loss calculation (for install sizing)
@@ -581,37 +374,16 @@ export function calculateEstimate(
     tariffOffpeakRate = inputs.tariff.offpeak_rate_p_per_kwh ?? inputs.tariff.peak_rate_p_per_kwh;
   }
 
-  // Oil-specific data
-  let oilSavings: EstimateResults['oilSavings'];
-  let oilCurrentCost: EstimateResults['oilCurrentCost'];
-  
-  if (savingsResult.oilScenarios) {
-    oilSavings = {
-      modernBoiler: {
-        typical: roundToNearest10(savingsResult.oilScenarios.typical.modernBoiler.savings),
-        best: roundToNearest10(savingsResult.oilScenarios.best.modernBoiler.savings),
-        worst: roundToNearest10(savingsResult.oilScenarios.worst.modernBoiler.savings),
-      },
-      oldBoiler: {
-        typical: roundToNearest10(savingsResult.oilScenarios.typical.oldBoiler.savings),
-        best: roundToNearest10(savingsResult.oilScenarios.best.oldBoiler.savings),
-        worst: roundToNearest10(savingsResult.oilScenarios.worst.oldBoiler.savings),
-      },
-    };
-    oilCurrentCost = {
-      modernBoiler: roundToNearest10(savingsResult.oilScenarios.typical.modernBoiler.currentCost),
-      oldBoiler: roundToNearest10(savingsResult.oilScenarios.typical.oldBoiler.currentCost),
-    };
-  }
-
   return {
     floorArea: inputs.floorArea,
     annualHeatKwh,
     heatLossKw,
-    baselineCost,
-    hpElectricKwh,
-    hpCost,
-    annualSavings: typicalSavings,
+    baselineCost: roundToNearest10(savings.currentCost),
+    hpElectricKwh: roundToNearest10(savings.hpKwh),
+    hpCost: roundToNearest10(savings.hpCost),
+    annualSavings: savings.estimatedSavings,
+    estimatedSavings: savings.estimatedSavings,
+    rawSavings: roundToNearest10(savings.rawSavings),
     installBase,
     adders,
     grossInstallPrice,
@@ -626,39 +398,18 @@ export function calculateEstimate(
     efficiencySelected: inputs.scop * 100,
     heatDemandSource,
     scopUsed: inputs.scop,
-    scopAdjusted: savingsResult.typical.spaceScopAdj,
-    offpeakShareUsed: savingsResult.typical.cheapShareUsed,
-    weightedRate: savingsResult.typical.effectiveRate,
     isBestCase: false,
     tariffId,
     tariffPeakRate,
     tariffOffpeakRate,
-    // Detailed transparency fields
+    // Transparency fields
     currentFuelType: fuelType,
-    boilerEfficiency: savingsResult.boilerEfficiency,
-    fuelInputKwh: roundToNearest10(savingsResult.fuelInputKwh),
-    spaceHeatKwh: roundToNearest10(savingsResult.spaceHeatKwh),
-    dhwHeatKwh: roundToNearest10(savingsResult.dhwHeatKwh),
-    dhwCop: DHW_COP,
-    epcDerateApplied: savingsResult.epcDerateApplied,
-    savingsCouldIncrease,
+    boilerEfficiency: savings.boilerEfficiency,
+    fuelInputKwh: roundToNearest10(savings.fuelKwh),
+    cosyRate: COSY_WEIGHTED_RATE,
     confidenceLabel: getConfidenceLabel(epcBand),
     epcBand,
-    // Savings ranges
-    savingsRange: {
-      typical: typicalSavings,
-      best: bestSavings,
-      worst: worstSavings,
-    },
-    hpCostRange: {
-      typical: hpCost,
-      best: roundToNearest10(savingsResult.best.hpCost),
-      worst: roundToNearest10(savingsResult.worst.hpCost),
-    },
-    // Oil-specific
-    isOilFuel: savingsResult.isOil,
-    oilSavings,
-    oilCurrentCost,
+    isOilFuel: fuelType === 'oil',
   };
 }
 
