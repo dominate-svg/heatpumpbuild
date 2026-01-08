@@ -16,11 +16,11 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 8%;
 
-    /* Smart Energy Homes Hot Pink (Primary CTA) - STRONGER */
-    --primary: 338 100% 50%;
+    /* Primary = Octopus Purple */
+    --primary: 265 85% 45%;
     --primary-foreground: 0 0% 100%;
 
-    /* Octopus Deep Purple (Trust/Partnership) - STRONGER */
+    /* Octopus Deep Purple (same as primary for consistency) */
     --octopus: 265 85% 45%;
     --octopus-foreground: 0 0% 100%;
 
@@ -39,7 +39,7 @@
     /* Controlled border/divider color */
     --border: 40 12% 88%;
     --input: 40 12% 88%;
-    --ring: 338 100% 50%;
+    --ring: 265 85% 45%;
 
     --radius: 0.75rem;
 
@@ -55,12 +55,12 @@
 
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 0 0% 15%;
-    --sidebar-primary: 338 100% 50%;
+    --sidebar-primary: 265 85% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 40 15% 96%;
     --sidebar-accent-foreground: 0 0% 15%;
     --sidebar-border: 40 12% 88%;
-    --sidebar-ring: 338 100% 50%;
+    --sidebar-ring: 265 85% 45%;
   }
 
   .dark {
@@ -71,7 +71,7 @@
     --card-foreground: 0 0% 8%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 8%;
-    --primary: 338 100% 50%;
+    --primary: 265 85% 45%;
     --primary-foreground: 0 0% 100%;
     --octopus: 265 85% 45%;
     --octopus-foreground: 0 0% 100%;
@@ -85,7 +85,7 @@
     --destructive-foreground: 0 0% 100%;
     --border: 40 12% 88%;
     --input: 40 12% 88%;
-    --ring: 338 100% 50%;
+    --ring: 265 85% 45%;
     --success: 155 90% 35%;
     --success-foreground: 0 0% 100%;
     --warning: 38 95% 50%;
