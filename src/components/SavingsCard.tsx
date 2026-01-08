@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { TrendingUp, ChevronDown, ChevronUp, Info, Leaf, AlertTriangle, Calculator } from 'lucide-react';
+import { TrendingUp, TrendingDown, ChevronDown, ChevronUp, Info, Leaf, Calculator, Fuel } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Collapsible,
   CollapsibleContent,
@@ -14,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { formatCurrency } from '@/lib/calculations';
+import { formatCurrency, getFuelDisplayName } from '@/lib/calculations';
 import type { EstimateResults, Assumptions } from '@/lib/calculations';
 import { useTariffs, formatTariffLabel, type Tariff } from '@/hooks/useTariffs';
 
@@ -23,8 +25,12 @@ interface SavingsCardProps {
   assumptions: Assumptions;
   scop: number;
   selectedTariff: Tariff | null;
+  currentFuel: string;
+  userAnnualCost: number | undefined;
   onScopChange: (scop: number) => void;
   onTariffChange: (tariff: Tariff) => void;
+  onFuelChange: (fuel: string) => void;
+  onUserAnnualCostChange: (cost: number | undefined) => void;
 }
 
 const EFFICIENCY_OPTIONS = [
@@ -33,25 +39,46 @@ const EFFICIENCY_OPTIONS = [
   { value: 4.0, label: '400%', recommended: false, radiators: 11 },
 ];
 
+const FUEL_OPTIONS = [
+  { value: 'gas', label: 'Mains gas' },
+  { value: 'oil', label: 'Oil' },
+  { value: 'lpg', label: 'LPG' },
+  { value: 'electric', label: 'Electric' },
+];
+
 export function SavingsCard({
   results,
   assumptions,
   scop,
   selectedTariff,
+  currentFuel,
+  userAnnualCost,
   onScopChange,
   onTariffChange,
+  onFuelChange,
+  onUserAnnualCostChange,
 }: SavingsCardProps) {
   const [isEfficiencyOpen, setIsEfficiencyOpen] = useState(false);
   const [isCalculationOpen, setIsCalculationOpen] = useState(false);
   const { data: tariffs, isLoading: tariffsLoading } = useTariffs();
 
-  const isNegativeSavings = results.annualSavings < 0;
-  const displaySavings = Math.abs(results.annualSavings);
+  const { savingsRange, savingsCouldIncrease } = results;
+  const typicalSavings = savingsRange.typical.savings;
+  const isNegativeSavings = typicalSavings < 0;
 
   const handleTariffChange = (tariffId: string) => {
     const tariff = tariffs?.find(t => t.id === tariffId);
     if (tariff) {
       onTariffChange(tariff);
+    }
+  };
+
+  const handleAnnualCostChange = (value: string) => {
+    const parsed = parseFloat(value);
+    if (value === '' || isNaN(parsed)) {
+      onUserAnnualCostChange(undefined);
+    } else {
+      onUserAnnualCostChange(parsed);
     }
   };
 
@@ -69,68 +96,128 @@ export function SavingsCard({
 
       <Card className="border border-border shadow-card overflow-hidden">
         <CardContent className="p-0">
-          {/* Savings display - prominent */}
+          {/* Savings display with range */}
           <div className="p-4 md:p-5 bg-gradient-to-r from-success/5 to-accent/5 border-b border-border">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-success/10 flex items-center justify-center animate-pulse-glow flex-shrink-0">
-                  <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-success" />
+            <div className="flex flex-col gap-4">
+              {/* Main savings figure - range display */}
+              <div className="flex items-start gap-3">
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0 ${
+                  isNegativeSavings ? 'bg-warning/10' : 'bg-success/10'
+                }`}>
+                  {isNegativeSavings ? (
+                    <TrendingDown className="w-5 h-5 sm:w-6 sm:h-6 text-warning" />
+                  ) : (
+                    <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-success" />
+                  )}
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">You could save</p>
-                  <p className={`text-xl sm:text-2xl md:text-3xl font-bold ${isNegativeSavings ? 'text-warning' : 'text-success'}`}>
-                    {isNegativeSavings ? '-' : ''}{formatCurrency(displaySavings)}
-                    <span className="text-xs sm:text-sm font-normal text-muted-foreground">/year</span>
+                <div className="flex-1">
+                  <p className="text-xs text-muted-foreground mb-1">
+                    {savingsCouldIncrease ? 'Your costs could increase by' : 'You could save'}
                   </p>
+                  
+                  {/* Savings range */}
+                  <div className="space-y-1">
+                    <div className="flex items-baseline gap-2 flex-wrap">
+                      <span className={`text-xl sm:text-2xl md:text-3xl font-bold ${
+                        isNegativeSavings ? 'text-warning' : 'text-success'
+                      }`}>
+                        {formatCurrency(Math.abs(savingsRange.worst.savings))}
+                        <span className="text-base font-normal mx-1">–</span>
+                        {formatCurrency(Math.abs(savingsRange.best.savings))}
+                      </span>
+                      <span className="text-xs sm:text-sm text-muted-foreground">/year</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Typical: <span className="font-medium text-foreground">{formatCurrency(Math.abs(typicalSavings))}</span>
+                    </p>
+                  </div>
                 </div>
               </div>
               
               {/* Tariff dropdown */}
-              <Select 
-                value={selectedTariff?.id || ''} 
-                onValueChange={handleTariffChange}
-                disabled={tariffsLoading}
-              >
-                <SelectTrigger className="w-full sm:w-[240px] text-xs">
-                  <SelectValue placeholder="Select tariff..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {tariffs?.map((tariff) => (
-                    <SelectItem key={tariff.id} value={tariff.id} className="text-xs">
-                      {formatTariffLabel(tariff)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Cost breakdown */}
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-3 text-xs text-muted-foreground">
-              <span>
-                Current heating: <span className="font-medium text-foreground">{formatCurrency(results.baselineCost)}/year</span>
-              </span>
-              <span>
-                Heat pump: <span className="font-medium text-foreground">{formatCurrency(results.hpCost)}/year</span>
-              </span>
-            </div>
-
-            {/* Disclaimer */}
-            <p className="text-[10px] sm:text-xs text-muted-foreground mt-3 italic">
-              This is an estimate. Real savings depend on insulation, system design, and how you use electricity.
-            </p>
-
-            {/* Best-case badge */}
-            {results.isBestCase && (
-              <div className="mt-2">
-                <Badge variant="outline" className="text-[10px] bg-warning/10 text-warning border-warning/30">
-                  <AlertTriangle className="w-3 h-3 mr-1" />
-                  Best-case scenario — survey will confirm
-                </Badge>
+              <div className="w-full">
+                <Select 
+                  value={selectedTariff?.id || ''} 
+                  onValueChange={handleTariffChange}
+                  disabled={tariffsLoading}
+                >
+                  <SelectTrigger className="w-full text-xs">
+                    <SelectValue placeholder="Select tariff..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tariffs?.map((tariff) => (
+                      <SelectItem key={tariff.id} value={tariff.id} className="text-xs">
+                        {formatTariffLabel(tariff)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            )}
+
+              {/* Cost breakdown */}
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 text-xs text-muted-foreground">
+                <span>
+                  Current heating: <span className="font-medium text-foreground">{formatCurrency(results.baselineCost)}/year</span>
+                </span>
+                <span>
+                  Heat pump: <span className="font-medium text-foreground">{formatCurrency(results.hpCost)}/year</span>
+                </span>
+              </div>
+
+              {/* Disclaimer */}
+              <p className="text-[10px] sm:text-xs text-muted-foreground italic">
+                Digital estimate — a survey confirms the final design and savings.
+              </p>
+            </div>
           </div>
 
-          {/* Efficiency selector - compact */}
+          {/* Current fuel selector */}
+          <div className="p-4 md:p-5 border-b border-border">
+            <div className="flex items-center gap-2 mb-3">
+              <Fuel className="w-4 h-4 text-muted-foreground" />
+              <p className="text-sm font-medium text-foreground">Current heating fuel</p>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1.5 block">Fuel type</Label>
+                <Select value={currentFuel} onValueChange={onFuelChange}>
+                  <SelectTrigger className="w-full text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {FUEL_OPTIONS.map((fuel) => (
+                      <SelectItem key={fuel.value} value={fuel.value} className="text-xs">
+                        {fuel.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Detected: {getFuelDisplayName(results.currentFuelType)}
+                </p>
+              </div>
+              
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1.5 block">Your annual bill (optional)</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">£</span>
+                  <Input
+                    type="number"
+                    placeholder="e.g. 1200"
+                    value={userAnnualCost ?? ''}
+                    onChange={(e) => handleAnnualCostChange(e.target.value)}
+                    className="pl-7 text-xs"
+                  />
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Overrides our estimate
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Efficiency selector */}
           <div className="p-4 md:p-5 border-b border-border">
             <p className="text-sm font-medium text-foreground mb-3">Choose efficiency level:</p>
             <div className="grid grid-cols-3 gap-2">
@@ -165,7 +252,7 @@ export function SavingsCard({
               </CollapsibleTrigger>
               <CollapsibleContent className="pt-2">
                 <p className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
-                  Higher efficiency = more heat per unit of electricity. At 370% (SCOP 3.7), you get 3.7kWh of heat for every 1kWh used.
+                  Higher efficiency = more heat per unit of electricity. At 370% (SCOP 3.7), you get 3.7kWh of heat for every 1kWh used. We adjust for your home's EPC rating — less efficient homes may not achieve the full rated SCOP.
                 </p>
               </CollapsibleContent>
             </Collapsible>
@@ -186,18 +273,27 @@ export function SavingsCard({
               <CollapsibleContent className="pt-3">
                 <div className="bg-muted/50 p-3 rounded-lg space-y-2 text-xs text-muted-foreground">
                   <div className="flex justify-between">
-                    <span>Estimated annual heat demand:</span>
-                    <span className="font-medium text-foreground">{results.annualHeatKwh.toLocaleString()} kWh</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Heat demand source:</span>
+                    <span>Heat demand:</span>
                     <span className="font-medium text-foreground">
-                      {results.heatDemandSource === 'epc' ? 'From EPC' : 'Estimated from floor area'}
+                      {results.annualHeatKwh.toLocaleString()} kWh
+                      <span className="text-muted-foreground ml-1">
+                        ({results.heatDemandSource === 'epc' ? 'from EPC' : 'estimated'})
+                      </span>
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Heat pump efficiency (SCOP):</span>
-                    <span className="font-medium text-foreground">{results.scopUsed.toFixed(1)}</span>
+                    <span>Current fuel:</span>
+                    <span className="font-medium text-foreground">
+                      {getFuelDisplayName(results.currentFuelType)} ({Math.round(results.boilerEfficiency * 100)}% eff.)
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Rated SCOP:</span>
+                    <span className="font-medium text-foreground">{scop.toFixed(1)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Adjusted SCOP (for your home):</span>
+                    <span className="font-medium text-foreground">{results.scopAdjusted.toFixed(2)}</span>
                   </div>
                   {results.offpeakShareUsed > 0 && (
                     <div className="flex justify-between">
@@ -206,13 +302,18 @@ export function SavingsCard({
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span>Tariff weighted rate:</span>
+                    <span>Effective electricity rate:</span>
                     <span className="font-medium text-foreground">{(results.weightedRate * 100).toFixed(1)}p/kWh</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Heat pump electricity use:</span>
                     <span className="font-medium text-foreground">{results.hpElectricKwh.toLocaleString()} kWh/year</span>
                   </div>
+                  {results.savingsClamped && (
+                    <p className="text-[10px] text-muted-foreground mt-2 pt-2 border-t border-border">
+                      Note: Gas savings are capped at realistic levels based on typical switching outcomes.
+                    </p>
+                  )}
                 </div>
               </CollapsibleContent>
             </Collapsible>

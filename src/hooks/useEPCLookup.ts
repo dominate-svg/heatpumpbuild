@@ -13,6 +13,8 @@ interface EPCResponse {
     'main-fuel'?: string;
     'property-type'?: string;
     'local-authority'?: string;
+    'current-energy-rating'?: string;
+    'space-heating-demand'?: string;
   }>;
 }
 
@@ -47,6 +49,8 @@ export function useEPCLookup() {
         mainFuel: row['main-fuel'],
         propertyType: row['property-type'],
         region: determineRegion(row['local-authority'] || row.postcode),
+        epcBand: row['current-energy-rating'],
+        spaceHeatingDemand: row['space-heating-demand'] ? parseFloat(row['space-heating-demand']) : undefined,
       }));
     } catch (err) {
       console.error('EPC lookup error:', err);

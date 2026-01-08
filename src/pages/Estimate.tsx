@@ -24,6 +24,8 @@ export default function Estimate() {
   const [selectedTariff, setSelectedTariff] = useState<Tariff | null>(null);
   const [locationAdder, setLocationAdder] = useState<'included' | '6m' | '9m'>('included');
   const [cylinderOption, setCylinderOption] = useState<'existing' | '150l' | '210l'>('existing');
+  const [currentFuel, setCurrentFuel] = useState<string>('gas');
+  const [userAnnualCost, setUserAnnualCost] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     const stored = sessionStorage.getItem('epcData');
@@ -35,6 +37,14 @@ export default function Estimate() {
     try {
       const parsed = JSON.parse(stored) as EPCData;
       setEpcData(parsed);
+      // Set initial fuel from EPC data
+      if (parsed.mainFuel) {
+        const fuel = parsed.mainFuel.toLowerCase();
+        if (fuel.includes('oil')) setCurrentFuel('oil');
+        else if (fuel.includes('lpg') || fuel.includes('bottled')) setCurrentFuel('lpg');
+        else if (fuel.includes('electric')) setCurrentFuel('electric');
+        else setCurrentFuel('gas');
+      }
     } catch {
       sessionStorage.removeItem('epcData');
       navigate('/');
@@ -57,15 +67,17 @@ export default function Estimate() {
       floorArea: epcData.totalFloorArea || 100,
       heatingCostCurrent: epcData.heatingCostCurrent,
       spaceHeatingDemand: epcData.spaceHeatingDemand,
-      currentFuel: epcData.mainFuel || 'gas',
+      currentFuel: currentFuel,
       propertyType: epcData.propertyType,
       region: epcData.region || 'England',
+      epcBand: epcData.epcBand,
       scop,
       tariff: selectedTariff,
       locationAdder,
       cylinderOption,
+      userProvidedAnnualCost: userAnnualCost,
     }, assumptions);
-  }, [epcData, assumptions, scop, selectedTariff, locationAdder, cylinderOption]);
+  }, [epcData, assumptions, scop, selectedTariff, locationAdder, cylinderOption, currentFuel, userAnnualCost]);
 
   const isLoading = assumptionsLoading || tariffsLoading;
 
@@ -85,7 +97,7 @@ export default function Estimate() {
   const inputs = {
     scop,
     tariff: selectedTariff,
-    currentFuel: epcData.mainFuel || 'gas',
+    currentFuel: currentFuel,
     propertyType: epcData.propertyType,
     region: epcData.region,
     locationAdder,
@@ -140,8 +152,12 @@ export default function Estimate() {
             assumptions={assumptions}
             scop={scop}
             selectedTariff={selectedTariff}
+            currentFuel={currentFuel}
+            userAnnualCost={userAnnualCost}
             onScopChange={setScop}
             onTariffChange={setSelectedTariff}
+            onFuelChange={setCurrentFuel}
+            onUserAnnualCostChange={setUserAnnualCost}
           />
         </div>
 

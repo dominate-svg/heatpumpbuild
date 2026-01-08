@@ -101,7 +101,7 @@ export function useCreateEstimate() {
           gas_rate: input.assumptions.gas_rate,
           cosy_blended_rate: input.assumptions.cosy_blended_rate,
           electricity_rate: input.assumptions.electricity_rate,
-          boiler_efficiency: input.assumptions.boiler_efficiency,
+          boiler_efficiency: input.results.boilerEfficiency,
           full_load_hours: input.assumptions.full_load_hours,
           current_fuel: input.inputs.currentFuel,
           property_type: input.inputs.propertyType,
@@ -119,7 +119,7 @@ export function useCreateEstimate() {
           efficiency_selected: input.results.efficiencySelected,
           extra_rads: input.results.extraRads,
           radiator_adder: input.results.radiatorAdder,
-          // New savings engine fields
+          // Savings engine fields
           tariff_id: input.results.tariffId,
           tariff_peak_rate: input.results.tariffPeakRate,
           tariff_offpeak_rate: input.results.tariffOffpeakRate,
