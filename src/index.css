@@ -2,97 +2,91 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Smart Energy Homes - Bright, Friendly Design System */
+/* Smart Energy Homes - Heat Geek Style Design System */
 
 @layer base {
   :root {
-    /* Light, warm backgrounds */
-    --background: 30 25% 98%;
-    --foreground: 220 20% 20%;
+    /* Clean white backgrounds */
+    --background: 0 0% 100%;
+    --foreground: 220 15% 20%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 20% 20%;
+    --card-foreground: 220 15% 20%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 20%;
+    --popover-foreground: 220 15% 20%;
 
-    /* Warm coral/pink primary CTA */
-    --primary: 12 85% 60%;
+    /* Bright pink primary (Heat Geek style) */
+    --primary: 340 82% 52%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 200 20% 96%;
-    --secondary-foreground: 220 20% 30%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 15% 30%;
 
-    --muted: 30 15% 94%;
-    --muted-foreground: 220 10% 45%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 10% 46%;
 
-    /* Sky blue accent */
-    --accent: 200 85% 55%;
+    /* Pink accent matching primary */
+    --accent: 340 82% 52%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 30 15% 90%;
-    --input: 30 15% 90%;
-    --ring: 12 85% 60%;
+    --border: 220 14% 91%;
+    --input: 220 14% 91%;
+    --ring: 340 82% 52%;
 
-    --radius: 1rem;
+    --radius: 0.75rem;
 
-    /* Mint/green success */
-    --success: 160 60% 45%;
+    /* Success green */
+    --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
     
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(12 85% 60%), hsl(350 75% 55%));
-    --gradient-accent: linear-gradient(135deg, hsl(200 85% 55%), hsl(180 70% 50%));
-    --gradient-hero: linear-gradient(180deg, hsl(200 85% 55%) 0%, hsl(200 75% 60%) 100%);
-    --gradient-warm: linear-gradient(135deg, hsl(30 100% 97%), hsl(12 60% 95%));
-    --gradient-cool: linear-gradient(135deg, hsl(200 60% 97%), hsl(160 50% 95%));
+    /* Pink tinted backgrounds */
+    --primary-light: 340 100% 97%;
+    --primary-muted: 340 60% 95%;
 
-    --sidebar-background: 30 25% 98%;
-    --sidebar-foreground: 220 20% 25%;
-    --sidebar-primary: 12 85% 60%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 220 15% 25%;
+    --sidebar-primary: 340 82% 52%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 200 20% 94%;
-    --sidebar-accent-foreground: 220 20% 25%;
-    --sidebar-border: 30 15% 90%;
-    --sidebar-ring: 12 85% 60%;
+    --sidebar-accent: 220 14% 96%;
+    --sidebar-accent-foreground: 220 15% 25%;
+    --sidebar-border: 220 14% 91%;
+    --sidebar-ring: 340 82% 52%;
   }
 
   .dark {
-    /* Keep light mode - no dark mode for this friendly brand */
-    --background: 30 25% 98%;
-    --foreground: 220 20% 20%;
+    /* Keep light mode only */
+    --background: 0 0% 100%;
+    --foreground: 220 15% 20%;
     --card: 0 0% 100%;
-    --card-foreground: 220 20% 20%;
+    --card-foreground: 220 15% 20%;
     --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 20%;
-    --primary: 12 85% 60%;
+    --popover-foreground: 220 15% 20%;
+    --primary: 340 82% 52%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 200 20% 96%;
-    --secondary-foreground: 220 20% 30%;
-    --muted: 30 15% 94%;
-    --muted-foreground: 220 10% 45%;
-    --accent: 200 85% 55%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 15% 30%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 10% 46%;
+    --accent: 340 82% 52%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 30 15% 90%;
-    --input: 30 15% 90%;
-    --ring: 12 85% 60%;
-    --success: 160 60% 45%;
+    --border: 220 14% 91%;
+    --input: 220 14% 91%;
+    --ring: 340 82% 52%;
+    --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
-    --gradient-primary: linear-gradient(135deg, hsl(12 85% 60%), hsl(350 75% 55%));
-    --gradient-accent: linear-gradient(135deg, hsl(200 85% 55%), hsl(180 70% 50%));
-    --gradient-hero: linear-gradient(180deg, hsl(200 85% 55%) 0%, hsl(200 75% 60%) 100%);
-    --gradient-warm: linear-gradient(135deg, hsl(30 100% 97%), hsl(12 60% 95%));
-    --gradient-cool: linear-gradient(135deg, hsl(200 60% 97%), hsl(160 50% 95%));
+    --primary-light: 340 100% 97%;
+    --primary-muted: 340 60% 95%;
   }
 }
 
@@ -108,54 +102,37 @@
 }
 
 @layer utilities {
-  .gradient-primary {
-    background: var(--gradient-primary);
-  }
-  
-  .gradient-accent {
-    background: var(--gradient-accent);
-  }
-  
-  .gradient-hero {
-    background: var(--gradient-hero);
+  /* Pink tinted backgrounds */
+  .bg-primary-light {
+    background-color: hsl(340 100% 97%);
   }
 
-  .gradient-warm {
-    background: var(--gradient-warm);
+  .bg-primary-muted {
+    background-color: hsl(340 60% 95%);
   }
 
-  .gradient-cool {
-    background: var(--gradient-cool);
-  }
-  
   .text-gradient {
-    background: var(--gradient-primary);
+    background: linear-gradient(135deg, hsl(340 82% 52%), hsl(340 70% 45%));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
   
-  .glass {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.8);
-  }
-  
   .shadow-soft {
-    box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.08), 0 2px 8px -2px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
   }
 
-  .shadow-warm {
-    box-shadow: 0 4px 30px -8px hsl(12 85% 60% / 0.2);
+  .shadow-card {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
   }
 
-  .shadow-cool {
-    box-shadow: 0 4px 30px -8px hsl(200 85% 55% / 0.2);
+  .shadow-elevated {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
   }
 
   /* Shimmer loading animation */
   .shimmer {
-    background: linear-gradient(90deg, hsl(30 15% 94%) 0%, hsl(30 15% 98%) 50%, hsl(30 15% 94%) 100%);
+    background: linear-gradient(90deg, hsl(220 14% 96%) 0%, hsl(220 14% 98%) 50%, hsl(220 14% 96%) 100%);
     background-size: 200% 100%;
     animation: shimmer 1.5s ease-in-out infinite;
   }
@@ -167,40 +144,36 @@
 
   /* Fade in animation */
   .animate-fade-in {
-    animation: fadeIn 0.5s ease-out forwards;
+    animation: fadeIn 0.4s ease-out forwards;
   }
 
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
   /* Count up animation helper */
   .animate-count-up {
-    animation: countUp 0.8s ease-out forwards;
+    animation: countUp 0.6s ease-out forwards;
   }
 
   @keyframes countUp {
-    from { opacity: 0; transform: translateY(5px); }
+    from { opacity: 0; transform: translateY(4px); }
     to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* Button hover lift */
-  .hover-lift {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-
-  .hover-lift:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px -8px rgba(0, 0, 0, 0.15);
   }
 
   /* Card selection transition */
   .card-selectable {
-    transition: all 0.2s ease;
+    transition: all 0.15s ease;
   }
 
   .card-selectable:hover {
-    transform: translateY(-1px);
+    border-color: hsl(340 82% 52% / 0.5);
+  }
+
+  /* Selected card state */
+  .card-selected {
+    border-color: hsl(340 82% 52%);
+    background-color: hsl(340 100% 97%);
   }
 }
