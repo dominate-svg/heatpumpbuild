@@ -8,11 +8,64 @@ interface PropertyCardProps {
   results: EstimateResults;
 }
 
+const EPC_BANDS = ['A', 'B', 'C', 'D', 'E', 'F', 'G'] as const;
+
+const EPC_COLORS: Record<string, string> = {
+  'A': 'bg-[#008054]',
+  'B': 'bg-[#19b459]',
+  'C': 'bg-[#8dce46]',
+  'D': 'bg-[#ffd500]',
+  'E': 'bg-[#fcaa65]',
+  'F': 'bg-[#ef8023]',
+  'G': 'bg-[#e9153b]',
+};
+
+function EPCScale({ band }: { band: string }) {
+  const normalizedBand = band.toUpperCase().charAt(0);
+  const activeBandIndex = EPC_BANDS.indexOf(normalizedBand as typeof EPC_BANDS[number]);
+  
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-0.5">
+        {EPC_BANDS.map((b, index) => {
+          const isActive = b === normalizedBand;
+          const width = 100 - (index * 8); // A is widest, G is narrowest
+          
+          return (
+            <div
+              key={b}
+              className="relative flex items-center"
+              style={{ width: `${width}%`, maxWidth: isActive ? '100%' : `${width}%` }}
+            >
+              <div
+                className={`h-5 flex items-center justify-start pl-1.5 text-[10px] font-bold text-white transition-all ${EPC_COLORS[b]} ${
+                  isActive ? 'ring-2 ring-foreground ring-offset-1 scale-105 z-10' : 'opacity-70'
+                }`}
+                style={{ 
+                  width: '100%',
+                  clipPath: 'polygon(0 0, calc(100% - 6px) 0, 100% 50%, calc(100% - 6px) 100%, 0 100%)'
+                }}
+              >
+                {b}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <p className="text-[10px] text-muted-foreground mt-1">
+        Your home: <span className="font-semibold text-foreground">EPC {normalizedBand}</span>
+      </p>
+    </div>
+  );
+}
+
 export function PropertyCard({ epcData, results }: PropertyCardProps) {
   const [unit, setUnit] = useState<'m2' | 'ft2'>('m2');
   const floorAreaDisplay = unit === 'm2' 
     ? `${results.floorArea} m²` 
     : `${Math.round(results.floorArea * 10.764)} ft²`;
+
+  const epcBand = results.epcBand || epcData.epcBand || 'D';
 
   return (
     <div className="space-y-3">
@@ -58,6 +111,14 @@ export function PropertyCard({ epcData, results }: PropertyCardProps) {
               </div>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* EPC Rating card */}
+      <Card className="border border-border shadow-card bg-card animate-fade-in" style={{ animationDelay: '0.05s' }}>
+        <CardContent className="p-4">
+          <p className="text-xs text-muted-foreground mb-2">Energy rating</p>
+          <EPCScale band={epcBand} />
         </CardContent>
       </Card>
 
