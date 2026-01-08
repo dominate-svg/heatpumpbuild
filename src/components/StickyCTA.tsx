@@ -17,13 +17,15 @@ import { formatCurrency } from '@/lib/calculations';
 import type { EPCData, EstimateResults, Assumptions } from '@/lib/calculations';
 import { CosyBadge } from './CosyBadge';
 
+import type { Tariff } from '@/hooks/useTariffs';
+
 interface StickyCTAProps {
   epcData: EPCData;
   results: EstimateResults;
   assumptions: Assumptions;
   inputs: {
     scop: number;
-    tariff: string;
+    tariff: Tariff | null;
     currentFuel: string;
     propertyType?: string;
     region?: string;

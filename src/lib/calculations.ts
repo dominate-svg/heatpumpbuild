@@ -1,3 +1,5 @@
+import type { Tariff } from '@/hooks/useTariffs';
+
 export interface Assumptions {
   gas_rate: number;
   boiler_efficiency: number;
@@ -18,6 +20,17 @@ export interface Assumptions {
   included_radiators: number;
   rad_upgrade_cost: number;
   min_customer_contribution: number;
+  // New savings engine assumptions
+  heat_intensity_kwh_per_m2: number;
+  boiler_efficiency_oil: number;
+  hp_scop_default: number;
+  hp_scop_min: number;
+  hp_scop_max: number;
+  hp_aux_factor: number;
+  offpeak_share_default: number;
+  offpeak_share_min: number;
+  offpeak_share_max: number;
+  oil_rate_p_per_kwh: number;
 }
 
 export interface EPCData {
@@ -30,16 +43,18 @@ export interface EPCData {
   mainFuel?: string;
   propertyType?: string;
   region?: string;
+  spaceHeatingDemand?: number; // EPC space heating demand in kWh
 }
 
 export interface EstimateInputs {
   floorArea: number;
   heatingCostCurrent?: number;
+  spaceHeatingDemand?: number;
   currentFuel: string;
   propertyType?: string;
   region?: string;
   scop: number;
-  tariff: 'cosy' | 'standard';
+  tariff: Tariff | null;
   locationAdder: 'included' | '6m' | '9m';
   cylinderOption: 'existing' | '150l' | '210l';
 }
@@ -72,6 +87,16 @@ export interface EstimateResults {
   rawCustomerContribution: number;
   customerContribution: number;
   efficiencySelected: number;
+  // Transparency fields for "How we calculated this"
+  heatDemandSource: 'epc' | 'floor_area';
+  scopUsed: number;
+  offpeakShareUsed: number;
+  weightedRate: number;
+  isBestCase: boolean;
+  // Tariff details for storage
+  tariffId?: string;
+  tariffPeakRate?: number;
+  tariffOffpeakRate?: number;
 }
 
 // Default heat intensity by property type (kWh/m²/year)
@@ -108,40 +133,117 @@ export function calculateEstimate(
   inputs: EstimateInputs,
   assumptions: Assumptions
 ): EstimateResults {
+  // ============================================
+  // 3.1 Heat demand (kWh heat)
+  // ============================================
   let annualHeatKwh: number;
-  let baselineCost: number;
+  let heatDemandSource: 'epc' | 'floor_area';
 
-  // Preferred path: Use heating cost from EPC if available
-  if (inputs.heatingCostCurrent && inputs.heatingCostCurrent > 0) {
-    baselineCost = inputs.heatingCostCurrent;
-    annualHeatKwh = (baselineCost / assumptions.gas_rate) * assumptions.boiler_efficiency;
+  if (inputs.spaceHeatingDemand && inputs.spaceHeatingDemand > 0) {
+    // Prefer EPC space heating demand if available
+    annualHeatKwh = inputs.spaceHeatingDemand;
+    heatDemandSource = 'epc';
   } else {
-    // Fallback: Use floor area × heat intensity
-    const propertyType = inputs.propertyType?.toLowerCase() || 'default';
-    const intensity = HEAT_INTENSITY[propertyType] || HEAT_INTENSITY.default;
+    // Fallback: floor area × heat intensity
+    const intensity = assumptions.heat_intensity_kwh_per_m2 || 110;
     annualHeatKwh = inputs.floorArea * intensity;
-    baselineCost = (annualHeatKwh / assumptions.boiler_efficiency) * assumptions.gas_rate;
+    heatDemandSource = 'floor_area';
   }
 
-  // Heat loss calculation
-  let heatLossKw = annualHeatKwh / assumptions.full_load_hours;
+  // ============================================
+  // 3.2 Current annual cost baseline
+  // ============================================
+  let baselineCost: number;
+  const fuelType = (inputs.currentFuel || 'gas').toLowerCase();
+
+  if (inputs.heatingCostCurrent && inputs.heatingCostCurrent > 0) {
+    // Prefer EPC current heating cost if available
+    baselineCost = inputs.heatingCostCurrent;
+  } else {
+    // Calculate from fuel type and heat demand
+    const gasRate = (assumptions.gas_rate || 7) / 100; // convert p to £
+    const oilRate = (assumptions.oil_rate_p_per_kwh || 10) / 100;
+    const electricRate = (assumptions.electricity_rate || 28) / 100;
+    const boilerEffGas = assumptions.boiler_efficiency || 0.88;
+    const boilerEffOil = assumptions.boiler_efficiency_oil || 0.85;
+
+    if (fuelType.includes('oil')) {
+      const fuelInputKwh = annualHeatKwh / boilerEffOil;
+      baselineCost = fuelInputKwh * oilRate;
+    } else if (fuelType.includes('electric')) {
+      baselineCost = annualHeatKwh * electricRate;
+    } else {
+      // Default to gas/LPG model
+      const fuelInputKwh = annualHeatKwh / boilerEffGas;
+      baselineCost = fuelInputKwh * gasRate;
+    }
+  }
+
+  // ============================================
+  // 3.3 Heat pump electricity use
+  // ============================================
+  const scopMin = assumptions.hp_scop_min || 2.8;
+  const scopMax = assumptions.hp_scop_max || 3.6;
+  const scopUsed = clamp(inputs.scop, scopMin, scopMax);
+  const auxFactor = assumptions.hp_aux_factor || 1.05;
+  
+  const hpElectricKwh = (annualHeatKwh / scopUsed) * auxFactor;
+
+  // ============================================
+  // 3.4 Weighted tariff rate
+  // ============================================
+  let weightedRate: number;
+  let offpeakShareUsed = 0;
+  let tariffId: string | undefined;
+  let tariffPeakRate: number | undefined;
+  let tariffOffpeakRate: number | undefined;
+
+  if (inputs.tariff) {
+    const tariff = inputs.tariff;
+    tariffId = tariff.id;
+    tariffPeakRate = tariff.peak_rate_p_per_kwh;
+    tariffOffpeakRate = tariff.offpeak_rate_p_per_kwh ?? tariff.peak_rate_p_per_kwh;
+
+    const hasOffpeak = tariff.offpeak_hours_per_day > 0 && tariff.offpeak_rate_p_per_kwh !== null;
+
+    if (hasOffpeak) {
+      const offpeakDefault = assumptions.offpeak_share_default || 0.55;
+      const offpeakMin = assumptions.offpeak_share_min || 0.30;
+      const offpeakMax = assumptions.offpeak_share_max || 0.70;
+      offpeakShareUsed = clamp(offpeakDefault, offpeakMin, offpeakMax);
+
+      const peakRatePounds = tariff.peak_rate_p_per_kwh / 100;
+      const offpeakRatePounds = (tariff.offpeak_rate_p_per_kwh ?? tariff.peak_rate_p_per_kwh) / 100;
+      
+      weightedRate = (offpeakShareUsed * offpeakRatePounds) + ((1 - offpeakShareUsed) * peakRatePounds);
+    } else {
+      weightedRate = tariff.peak_rate_p_per_kwh / 100;
+    }
+  } else {
+    // Fallback if no tariff selected
+    weightedRate = (assumptions.electricity_rate || 28) / 100;
+  }
+
+  // ============================================
+  // 3.5 Heat pump running cost and savings
+  // ============================================
+  const hpCost = hpElectricKwh * weightedRate;
+  let annualSavings = Math.max(baselineCost - hpCost, 0);
+  annualSavings = roundToNearest10(annualSavings);
+
+  // Best-case scenario flag: if savings > 40% of current cost
+  const isBestCase = annualSavings > 0.4 * baselineCost;
+
+  // ============================================
+  // Heat loss calculation (for install sizing)
+  // ============================================
+  let heatLossKw = annualHeatKwh / (assumptions.full_load_hours || 2000);
   heatLossKw = clamp(heatLossKw, 3, 16);
   heatLossKw = Math.round(heatLossKw * 10) / 10;
 
-  // Heat pump electricity usage
-  const hpElectricKwh = annualHeatKwh / inputs.scop;
-
-  // Running cost based on tariff
-  const rate = inputs.tariff === 'cosy' 
-    ? assumptions.cosy_blended_rate 
-    : assumptions.electricity_rate;
-  const hpCost = hpElectricKwh * rate;
-
-  // Savings calculation
-  let annualSavings = baselineCost - hpCost;
-  annualSavings = roundToNearest10(annualSavings);
-
+  // ============================================
   // Install price by heat loss band
+  // ============================================
   let installBase: number;
   if (heatLossKw <= 5) {
     installBase = assumptions.install_base_3_5kw;
@@ -153,7 +255,9 @@ export function calculateEstimate(
     installBase = assumptions.install_base_12_16kw;
   }
 
+  // ============================================
   // Adders
+  // ============================================
   const locationAdder = 
     inputs.locationAdder === '6m' ? assumptions.adder_location_6m :
     inputs.locationAdder === '9m' ? assumptions.adder_location_9m : 0;
@@ -180,7 +284,9 @@ export function calculateEstimate(
   const adders = { location: locationAdder, cylinder: cylinderAdder, radiator: radiatorAdder };
   const grossInstallPrice = installBase + locationAdder + cylinderAdder;
 
-  // Grant eligibility: England/Wales and gas/oil/LPG
+  // ============================================
+  // Grant eligibility
+  // ============================================
   const eligibleFuels = ['gas', 'mains gas', 'oil', 'lpg', 'bottled gas'];
   const eligibleRegions = ['england', 'wales'];
   const fuelLower = inputs.currentFuel?.toLowerCase() || '';
@@ -195,11 +301,11 @@ export function calculateEstimate(
 
   return {
     floorArea: inputs.floorArea,
-    annualHeatKwh,
+    annualHeatKwh: roundToNearest10(annualHeatKwh),
     heatLossKw,
-    baselineCost,
-    hpElectricKwh,
-    hpCost,
+    baselineCost: roundToNearest10(baselineCost),
+    hpElectricKwh: roundToNearest10(hpElectricKwh),
+    hpCost: roundToNearest10(hpCost),
     annualSavings,
     installBase,
     adders,
@@ -213,6 +319,15 @@ export function calculateEstimate(
     rawCustomerContribution,
     customerContribution,
     efficiencySelected: inputs.scop * 100,
+    // Transparency fields
+    heatDemandSource,
+    scopUsed,
+    offpeakShareUsed,
+    weightedRate,
+    isBestCase,
+    tariffId,
+    tariffPeakRate,
+    tariffOffpeakRate,
   };
 }
 

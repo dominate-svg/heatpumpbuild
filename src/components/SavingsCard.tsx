@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TrendingUp, ChevronDown, ChevronUp, Info, Leaf } from 'lucide-react';
+import { TrendingUp, ChevronDown, ChevronUp, Info, Leaf, AlertTriangle, Calculator } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -7,16 +7,24 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { formatCurrency } from '@/lib/calculations';
 import type { EstimateResults, Assumptions } from '@/lib/calculations';
+import { useTariffs, formatTariffLabel, type Tariff } from '@/hooks/useTariffs';
 
 interface SavingsCardProps {
   results: EstimateResults;
   assumptions: Assumptions;
   scop: number;
-  tariff: 'cosy' | 'standard';
+  selectedTariff: Tariff | null;
   onScopChange: (scop: number) => void;
-  onTariffChange: (tariff: 'cosy' | 'standard') => void;
+  onTariffChange: (tariff: Tariff) => void;
 }
 
 const EFFICIENCY_OPTIONS = [
@@ -29,14 +37,23 @@ export function SavingsCard({
   results,
   assumptions,
   scop,
-  tariff,
+  selectedTariff,
   onScopChange,
   onTariffChange,
 }: SavingsCardProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isEfficiencyOpen, setIsEfficiencyOpen] = useState(false);
+  const [isCalculationOpen, setIsCalculationOpen] = useState(false);
+  const { data: tariffs, isLoading: tariffsLoading } = useTariffs();
 
   const isNegativeSavings = results.annualSavings < 0;
   const displaySavings = Math.abs(results.annualSavings);
+
+  const handleTariffChange = (tariffId: string) => {
+    const tariff = tariffs?.find(t => t.id === tariffId);
+    if (tariff) {
+      onTariffChange(tariff);
+    }
+  };
 
   return (
     <div className="space-y-4 animate-fade-in" style={{ animationDelay: '0.2s' }}>
@@ -67,22 +84,54 @@ export function SavingsCard({
                   </p>
                 </div>
               </div>
-              <select 
-                value={tariff}
-                onChange={(e) => onTariffChange(e.target.value as 'cosy' | 'standard')}
-                className="text-xs p-2 rounded-lg border border-border bg-background text-muted-foreground w-full sm:w-auto sm:max-w-[140px]"
+              
+              {/* Tariff dropdown */}
+              <Select 
+                value={selectedTariff?.id || ''} 
+                onValueChange={handleTariffChange}
+                disabled={tariffsLoading}
               >
-                <option value="cosy">Octopus Cosy</option>
-                <option value="standard">Standard tariff</option>
-              </select>
+                <SelectTrigger className="w-full sm:w-[240px] text-xs">
+                  <SelectValue placeholder="Select tariff..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {tariffs?.map((tariff) => (
+                    <SelectItem key={tariff.id} value={tariff.id} className="text-xs">
+                      {formatTariffLabel(tariff)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Current heating: <span className="font-medium text-foreground">{formatCurrency(results.baselineCost)}/year</span>
+
+            {/* Cost breakdown */}
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-3 text-xs text-muted-foreground">
+              <span>
+                Current heating: <span className="font-medium text-foreground">{formatCurrency(results.baselineCost)}/year</span>
+              </span>
+              <span>
+                Heat pump: <span className="font-medium text-foreground">{formatCurrency(results.hpCost)}/year</span>
+              </span>
+            </div>
+
+            {/* Disclaimer */}
+            <p className="text-[10px] sm:text-xs text-muted-foreground mt-3 italic">
+              This is an estimate. Real savings depend on insulation, system design, and how you use electricity.
             </p>
+
+            {/* Best-case badge */}
+            {results.isBestCase && (
+              <div className="mt-2">
+                <Badge variant="outline" className="text-[10px] bg-warning/10 text-warning border-warning/30">
+                  <AlertTriangle className="w-3 h-3 mr-1" />
+                  Best-case scenario — survey will confirm
+                </Badge>
+              </div>
+            )}
           </div>
 
           {/* Efficiency selector - compact */}
-          <div className="p-4 md:p-5">
+          <div className="p-4 md:p-5 border-b border-border">
             <p className="text-sm font-medium text-foreground mb-3">Choose efficiency level:</p>
             <div className="grid grid-cols-3 gap-2">
               {EFFICIENCY_OPTIONS.map((option) => (
@@ -106,18 +155,65 @@ export function SavingsCard({
               ))}
             </div>
 
-            <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+            <Collapsible open={isEfficiencyOpen} onOpenChange={setIsEfficiencyOpen}>
               <CollapsibleTrigger asChild>
                 <button className="flex items-center gap-1.5 text-xs text-primary hover:underline mt-3">
                   <Info className="w-3 h-3" />
                   What does efficiency mean?
-                  {isOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                  {isEfficiencyOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                 </button>
               </CollapsibleTrigger>
               <CollapsibleContent className="pt-2">
                 <p className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
                   Higher efficiency = more heat per unit of electricity. At 370% (SCOP 3.7), you get 3.7kWh of heat for every 1kWh used.
                 </p>
+              </CollapsibleContent>
+            </Collapsible>
+          </div>
+
+          {/* Transparency accordion */}
+          <div className="p-4 md:p-5">
+            <Collapsible open={isCalculationOpen} onOpenChange={setIsCalculationOpen}>
+              <CollapsibleTrigger asChild>
+                <button className="flex items-center gap-1.5 text-xs text-primary hover:underline w-full justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Calculator className="w-3 h-3" />
+                    How we calculated this
+                  </span>
+                  {isCalculationOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-3">
+                <div className="bg-muted/50 p-3 rounded-lg space-y-2 text-xs text-muted-foreground">
+                  <div className="flex justify-between">
+                    <span>Estimated annual heat demand:</span>
+                    <span className="font-medium text-foreground">{results.annualHeatKwh.toLocaleString()} kWh</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Heat demand source:</span>
+                    <span className="font-medium text-foreground">
+                      {results.heatDemandSource === 'epc' ? 'From EPC' : 'Estimated from floor area'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Heat pump efficiency (SCOP):</span>
+                    <span className="font-medium text-foreground">{results.scopUsed.toFixed(1)}</span>
+                  </div>
+                  {results.offpeakShareUsed > 0 && (
+                    <div className="flex justify-between">
+                      <span>Off-peak usage share:</span>
+                      <span className="font-medium text-foreground">{Math.round(results.offpeakShareUsed * 100)}%</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span>Tariff weighted rate:</span>
+                    <span className="font-medium text-foreground">{(results.weightedRate * 100).toFixed(1)}p/kWh</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Heat pump electricity use:</span>
+                    <span className="font-medium text-foreground">{results.hpElectricKwh.toLocaleString()} kWh/year</span>
+                  </div>
+                </div>
               </CollapsibleContent>
             </Collapsible>
           </div>

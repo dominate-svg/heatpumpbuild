@@ -9,17 +9,19 @@ import { InstallOptions } from '@/components/InstallOptions';
 import { Timeline } from '@/components/Timeline';
 import { StickyCTA } from '@/components/StickyCTA';
 import { useAssumptions } from '@/hooks/useAssumptions';
+import { useTariffs, type Tariff } from '@/hooks/useTariffs';
 import { calculateEstimate } from '@/lib/calculations';
 import type { EPCData } from '@/lib/calculations';
 import { Loader2, Sparkles } from 'lucide-react';
 
 export default function Estimate() {
   const navigate = useNavigate();
-  const { data: assumptions, isLoading } = useAssumptions();
+  const { data: assumptions, isLoading: assumptionsLoading } = useAssumptions();
+  const { data: tariffs, isLoading: tariffsLoading } = useTariffs();
   
   const [epcData, setEpcData] = useState<EPCData | null>(null);
   const [scop, setScop] = useState(3.4);
-  const [tariff, setTariff] = useState<'cosy' | 'standard'>('cosy');
+  const [selectedTariff, setSelectedTariff] = useState<Tariff | null>(null);
   const [locationAdder, setLocationAdder] = useState<'included' | '6m' | '9m'>('included');
   const [cylinderOption, setCylinderOption] = useState<'existing' | '150l' | '210l'>('existing');
 
@@ -39,21 +41,33 @@ export default function Estimate() {
     }
   }, [navigate]);
 
+  // Set default tariff when tariffs load
+  useEffect(() => {
+    if (tariffs && tariffs.length > 0 && !selectedTariff) {
+      // Default to first tariff (usually Octopus Cosy based on sort order)
+      const defaultTariff = tariffs.find(t => t.name.toLowerCase().includes('cosy')) || tariffs[0];
+      setSelectedTariff(defaultTariff);
+    }
+  }, [tariffs, selectedTariff]);
+
   const results = useMemo(() => {
     if (!epcData || !assumptions) return null;
     
     return calculateEstimate({
       floorArea: epcData.totalFloorArea || 100,
       heatingCostCurrent: epcData.heatingCostCurrent,
+      spaceHeatingDemand: epcData.spaceHeatingDemand,
       currentFuel: epcData.mainFuel || 'gas',
       propertyType: epcData.propertyType,
       region: epcData.region || 'England',
       scop,
-      tariff,
+      tariff: selectedTariff,
       locationAdder,
       cylinderOption,
     }, assumptions);
-  }, [epcData, assumptions, scop, tariff, locationAdder, cylinderOption]);
+  }, [epcData, assumptions, scop, selectedTariff, locationAdder, cylinderOption]);
+
+  const isLoading = assumptionsLoading || tariffsLoading;
 
   if (isLoading || !epcData || !results || !assumptions) {
     return (
@@ -70,7 +84,7 @@ export default function Estimate() {
 
   const inputs = {
     scop,
-    tariff,
+    tariff: selectedTariff,
     currentFuel: epcData.mainFuel || 'gas',
     propertyType: epcData.propertyType,
     region: epcData.region,
@@ -125,9 +139,9 @@ export default function Estimate() {
             results={results}
             assumptions={assumptions}
             scop={scop}
-            tariff={tariff}
+            selectedTariff={selectedTariff}
             onScopChange={setScop}
-            onTariffChange={setTariff}
+            onTariffChange={setSelectedTariff}
           />
         </div>
 
