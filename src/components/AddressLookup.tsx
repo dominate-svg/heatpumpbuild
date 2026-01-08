@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { Search, MapPin, Loader2, AlertCircle, ArrowRight } from 'lucide-react';
+import { Loader2, AlertCircle, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
 import { useEPCLookup } from '@/hooks/useEPCLookup';
 import type { EPCData } from '@/lib/calculations';
 
@@ -28,24 +27,23 @@ export function AddressLookup({ onAddressSelect, onManualEntry }: AddressLookupP
 
   return (
     <div className="space-y-4">
-      {/* Clean Search Input */}
+      {/* Postcode Input */}
       <div className="space-y-3">
         <div className="relative">
-          <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Enter your postcode"
+            placeholder="Enter your postcode (e.g. SW1A 1AA)"
             value={postcode}
             onChange={(e) => setPostcode(e.target.value.toUpperCase())}
             onKeyDown={handleKeyDown}
-            className="pl-12 h-14 text-lg rounded-lg font-medium placeholder:text-muted-foreground border-2 border-border bg-background focus:border-primary focus:ring-0"
+            className="h-14 text-base rounded-lg font-medium placeholder:text-muted-foreground border-2 border-border bg-background input-focus-glow text-center"
           />
         </div>
         <Button 
           onClick={handleSearch} 
           disabled={loading || !postcode.trim()}
           size="lg"
-          className="w-full h-14 rounded-lg bg-primary hover:bg-primary/90 text-white font-bold text-lg transition-all disabled:opacity-50"
+          className="w-full h-14 rounded-lg bg-primary hover:bg-primary/90 text-white font-bold text-base transition-all disabled:opacity-50 cta-hover-lift"
         >
           {loading ? (
             <Loader2 className="w-5 h-5 animate-spin" />
@@ -56,26 +54,25 @@ export function AddressLookup({ onAddressSelect, onManualEntry }: AddressLookupP
       </div>
 
       {error && (
-        <Card className="border-destructive/50 bg-destructive/5">
-          <CardContent className="p-4 flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-destructive" />
-            <p className="text-sm text-foreground">{error}</p>
-          </CardContent>
-        </Card>
+        <div className="p-4 rounded-lg border border-destructive/30 bg-destructive/5 flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0" />
+          <p className="text-sm text-foreground">{error}</p>
+        </div>
       )}
 
       {results !== null && results.length === 0 && (
-        <Card className="border-amber-200 bg-amber-50">
-          <CardContent className="p-4 space-y-3">
-            <p className="text-sm text-foreground">
-              No EPC data found for this postcode. You can still get an estimate.
-            </p>
-            <Button onClick={onManualEntry} className="bg-primary hover:bg-primary/90 text-white">
-              Enter details manually
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="p-4 rounded-lg border border-border bg-muted space-y-3">
+          <p className="text-sm text-foreground">
+            No EPC data found for this postcode. You can still get an estimate.
+          </p>
+          <Button 
+            onClick={onManualEntry} 
+            className="bg-primary hover:bg-primary/90 text-white"
+          >
+            Enter details manually
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
+        </div>
       )}
 
       {results && results.length > 0 && (
@@ -85,12 +82,12 @@ export function AddressLookup({ onAddressSelect, onManualEntry }: AddressLookupP
           </p>
           <div className="space-y-2 max-h-64 overflow-y-auto">
             {results.map((result, index) => (
-              <Card 
+              <div 
                 key={index}
-                className="cursor-pointer border border-border hover:border-primary hover:shadow-soft transition-all duration-200 group"
+                className="cursor-pointer border border-border hover:border-primary rounded-lg p-4 transition-all duration-200 group bg-background"
                 onClick={() => onAddressSelect(result)}
               >
-                <CardContent className="p-4 flex items-center justify-between">
+                <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium text-foreground group-hover:text-primary transition-colors">
                       {result.address}
@@ -102,9 +99,9 @@ export function AddressLookup({ onAddressSelect, onManualEntry }: AddressLookupP
                       </p>
                     )}
                   </div>
-                  <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-                </CardContent>
-              </Card>
+                  <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all flex-shrink-0" />
+                </div>
+              </div>
             ))}
           </div>
           <Button 
