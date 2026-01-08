@@ -78,7 +78,7 @@ export default function Index() {
           {/* Search Card */}
           <div className="max-w-xl mx-auto">
             {/* Main card */}
-            <div className="bg-white rounded-3xl p-8 md:p-10 shadow-xl animate-card-entrance">
+            <div className="bg-card rounded-3xl p-8 md:p-10 shadow-glow-primary ring-1 ring-primary/10 animate-card-entrance">
               <div className="text-center mb-6">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary mb-4">
                   <Search className="w-7 h-7 text-white" />

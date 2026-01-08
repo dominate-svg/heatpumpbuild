@@ -38,15 +38,14 @@ export function AddressLookup({ onAddressSelect, onManualEntry }: AddressLookupP
             value={postcode}
             onChange={(e) => setPostcode(e.target.value.toUpperCase())}
             onKeyDown={handleKeyDown}
-            className="pl-12 h-14 text-lg bg-muted border-2 border-border focus:border-primary focus:bg-white rounded-2xl font-medium placeholder:text-muted-foreground transition-all"
+            className="pl-12 h-14 text-lg rounded-2xl font-semibold placeholder:text-muted-foreground transition-all border-2 bg-card input-pop input-focus-glow"
           />
         </div>
         <Button 
           onClick={handleSearch} 
           disabled={loading || !postcode.trim()}
           size="lg"
-          className="w-full h-14 rounded-full text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
-          style={{ backgroundColor: 'hsl(290, 70%, 50%)', }}
+          className="w-full h-14 rounded-full text-white font-extrabold text-lg cta-solid ring-1 ring-primary/30 animate-shimmer-sweep cta-hover-lift disabled:opacity-70"
         >
           {loading ? (
             <Loader2 className="w-5 h-5 animate-spin" />
