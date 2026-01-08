@@ -67,7 +67,49 @@ export default function Index() {
 
               {/* Form Card - Mobile visible */}
               <div className="lg:hidden">
-                <div className="bg-card rounded-2xl p-6 shadow-soft border border-border">
+                <div className="relative">
+                  <div className="absolute -inset-2 bg-gradient-to-r from-primary/15 via-accent/15 to-primary/15 rounded-3xl blur-lg animate-pulse opacity-70" />
+                  <div className="relative bg-card rounded-2xl p-5 shadow-elevated border-2 border-primary/20 animate-scale-in">
+                    <div className="text-center mb-4">
+                      <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary/70 mb-3 animate-float shadow-md">
+                        <Search className="w-6 h-6 text-white" />
+                      </div>
+                      <h2 className="text-lg font-bold text-foreground mb-1">Find your home</h2>
+                      <p className="text-sm text-muted-foreground">Enter your postcode to get started</p>
+                    </div>
+                    
+                    {showManualEntry ? (
+                      <ManualEntryForm
+                        onSubmit={handleAddressSelect}
+                        onBack={() => setShowManualEntry(false)}
+                      />
+                    ) : (
+                      <AddressLookup
+                        onAddressSelect={handleAddressSelect}
+                        onManualEntry={() => setShowManualEntry(true)}
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column - Big CTA Form on desktop */}
+            <div className="hidden lg:block">
+              <div className="relative">
+                {/* Animated glow behind */}
+                <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 rounded-[2rem] blur-xl animate-pulse opacity-60" />
+                
+                {/* Main CTA Card */}
+                <div className="relative bg-card rounded-3xl p-8 shadow-elevated border-2 border-primary/20 animate-scale-in">
+                  <div className="text-center mb-6">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/70 mb-4 animate-float shadow-lg">
+                      <Search className="w-8 h-8 text-white" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-foreground mb-2">Find your home</h2>
+                    <p className="text-muted-foreground">We'll fetch your property details automatically</p>
+                  </div>
+                  
                   {showManualEntry ? (
                     <ManualEntryForm
                       onSubmit={handleAddressSelect}
@@ -80,44 +122,6 @@ export default function Index() {
                     />
                   )}
                 </div>
-              </div>
-            </div>
-
-            {/* Right Column - Illustration + Form on desktop */}
-            <div className="hidden lg:block space-y-6">
-              {/* Illustration */}
-              <div className="relative bg-gradient-to-br from-accent/10 to-success/10 rounded-3xl p-8 border border-accent/20">
-                <div className="flex items-center justify-center gap-6">
-                  <div className="w-24 h-24 rounded-2xl bg-card shadow-soft flex items-center justify-center">
-                    <Home className="w-12 h-12 text-foreground" />
-                  </div>
-                  <div className="flex flex-col gap-3">
-                    <div className="w-16 h-16 rounded-xl bg-success/20 flex items-center justify-center animate-pulse">
-                      <Leaf className="w-8 h-8 text-success" />
-                    </div>
-                    <div className="w-16 h-16 rounded-xl bg-warning/20 flex items-center justify-center">
-                      <Sun className="w-8 h-8 text-warning" />
-                    </div>
-                  </div>
-                </div>
-                <p className="text-center text-muted-foreground text-sm mt-6">
-                  Warm, efficient, sustainable heating
-                </p>
-              </div>
-
-              {/* Form Card */}
-              <div className="bg-card rounded-2xl p-6 shadow-soft border border-border">
-                {showManualEntry ? (
-                  <ManualEntryForm
-                    onSubmit={handleAddressSelect}
-                    onBack={() => setShowManualEntry(false)}
-                  />
-                ) : (
-                  <AddressLookup
-                    onAddressSelect={handleAddressSelect}
-                    onManualEntry={() => setShowManualEntry(true)}
-                  />
-                )}
               </div>
             </div>
           </div>
