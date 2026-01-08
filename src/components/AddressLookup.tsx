@@ -29,8 +29,8 @@ export function AddressLookup({ onAddressSelect, onManualEntry }: AddressLookupP
   return (
     <div className="space-y-6">
       <div className="text-center mb-2">
-        <h2 className="text-xl font-semibold text-foreground mb-1">Enter your postcode</h2>
-        <p className="text-sm text-muted-foreground">We'll find your property's EPC data automatically</p>
+        <h2 className="text-xl font-semibold text-foreground mb-1">Find your home</h2>
+        <p className="text-sm text-muted-foreground">We'll fetch your property details automatically</p>
       </div>
 
       <div className="flex gap-3">
@@ -42,14 +42,14 @@ export function AddressLookup({ onAddressSelect, onManualEntry }: AddressLookupP
             value={postcode}
             onChange={(e) => setPostcode(e.target.value.toUpperCase())}
             onKeyDown={handleKeyDown}
-            className="pl-12 h-14 text-lg bg-background border-2 border-border focus:border-accent rounded-xl"
+            className="pl-12 h-14 text-lg bg-background border-2 border-border focus:border-primary rounded-xl"
           />
         </div>
         <Button 
           onClick={handleSearch} 
           disabled={loading || !postcode.trim()}
           size="lg"
-          className="h-14 px-8 rounded-xl gradient-accent hover:opacity-90 transition-opacity text-white font-semibold"
+          className="h-14 px-6 rounded-xl gradient-primary hover:opacity-90 hover-lift transition-all text-white font-semibold"
         >
           {loading ? (
             <Loader2 className="w-5 h-5 animate-spin" />
@@ -77,7 +77,7 @@ export function AddressLookup({ onAddressSelect, onManualEntry }: AddressLookupP
             <p className="text-sm text-foreground">
               No EPC data found for this postcode. You can still get an estimate.
             </p>
-            <Button onClick={onManualEntry} className="gradient-accent text-white">
+            <Button onClick={onManualEntry} className="gradient-primary text-white hover-lift">
               Enter details manually
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
@@ -86,7 +86,7 @@ export function AddressLookup({ onAddressSelect, onManualEntry }: AddressLookupP
       )}
 
       {results && results.length > 0 && (
-        <div className="space-y-3">
+        <div className="space-y-3 animate-fade-in">
           <p className="text-sm text-muted-foreground font-medium">
             Select your address:
           </p>
@@ -94,12 +94,12 @@ export function AddressLookup({ onAddressSelect, onManualEntry }: AddressLookupP
             {results.map((result, index) => (
               <Card 
                 key={index}
-                className="cursor-pointer border-2 border-transparent hover:border-accent hover:shadow-md transition-all duration-200 group"
+                className="cursor-pointer border-2 border-transparent hover:border-primary hover:shadow-warm transition-all duration-200 group card-selectable"
                 onClick={() => onAddressSelect(result)}
               >
                 <CardContent className="p-4 flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-foreground group-hover:text-accent transition-colors">
+                    <p className="font-medium text-foreground group-hover:text-primary transition-colors">
                       {result.address}
                     </p>
                     <p className="text-sm text-muted-foreground">{result.postcode}</p>
@@ -109,7 +109,7 @@ export function AddressLookup({ onAddressSelect, onManualEntry }: AddressLookupP
                       </p>
                     )}
                   </div>
-                  <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-accent group-hover:translate-x-1 transition-all" />
+                  <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
                 </CardContent>
               </Card>
             ))}

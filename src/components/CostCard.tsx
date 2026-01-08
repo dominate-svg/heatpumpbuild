@@ -11,46 +11,46 @@ import {
 import { formatCurrency } from '@/lib/calculations';
 import type { EstimateResults } from '@/lib/calculations';
 
-interface InstallPriceCardProps {
+interface CostCardProps {
   results: EstimateResults;
 }
 
 const INCLUDED_ITEMS = [
-  'Cosy heat pump sized for your home',
-  'Standard installation',
-  'Re-use existing cylinder (if compatible)',
-  'Allowance for 2 radiator upgrades',
+  'Survey & design',
+  'Supply & install',
+  'Radiator allowance',
+  'System commissioning',
 ];
 
-export function InstallPriceCard({ results }: InstallPriceCardProps) {
+export function CostCard({ results }: CostCardProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <Card className="border-0 shadow-xl shadow-accent/10 overflow-hidden">
-      {/* Gradient header */}
-      <div className="gradient-accent p-6 text-white">
+    <Card className="border-0 shadow-warm overflow-hidden animate-fade-in" style={{ animationDelay: '0.2s' }}>
+      {/* Warm gradient header */}
+      <div className="gradient-warm p-6 border-b border-primary/10">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5" />
-            <span className="font-semibold">Estimated Install Price</span>
+            <Sparkles className="w-5 h-5 text-primary" />
+            <span className="font-semibold text-foreground">Estimated installation cost</span>
           </div>
-          <Badge className="bg-white/20 text-white border-0 hover:bg-white/30">
+          <Badge className="bg-success/10 text-success border-success/30 hover:bg-success/20">
             0% VAT
           </Badge>
         </div>
         
         <div className="flex items-baseline gap-2">
-          <span className="text-5xl md:text-6xl font-bold">
+          <span className="text-5xl md:text-6xl font-bold text-foreground animate-count-up">
             {formatCurrency(results.netInstallPrice)}
           </span>
         </div>
 
         {results.grantApplied > 0 && (
-          <div className="flex items-center gap-2 mt-4 text-white/90">
-            <Award className="w-5 h-5" />
-            <span>
-              Includes {formatCurrency(results.grantApplied)} BUS grant
-              {!results.grantEligible && ' (if eligible — confirmed at survey)'}
+          <div className="flex items-center gap-2 mt-4 text-muted-foreground">
+            <Award className="w-5 h-5 text-success" />
+            <span className="text-sm">
+              after {formatCurrency(results.grantApplied)} grant · 0% VAT
+              {!results.grantEligible && ' (eligibility confirmed at survey)'}
             </span>
           </div>
         )}
@@ -58,12 +58,12 @@ export function InstallPriceCard({ results }: InstallPriceCardProps) {
 
       <CardContent className="p-6 bg-card">
         <div className="space-y-3 mb-4">
-          <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+          <p className="text-sm font-medium text-muted-foreground">
             What's included
           </p>
-          <ul className="space-y-3">
+          <ul className="grid grid-cols-2 gap-3">
             {INCLUDED_ITEMS.map((item, index) => (
-              <li key={index} className="flex items-center gap-3 text-foreground">
+              <li key={index} className="flex items-center gap-2 text-foreground text-sm">
                 <div className="w-5 h-5 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0">
                   <Check className="w-3 h-3 text-success" />
                 </div>
@@ -75,8 +75,8 @@ export function InstallPriceCard({ results }: InstallPriceCardProps) {
 
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" className="w-full justify-between text-muted-foreground hover:text-foreground">
-              What affects this price?
+            <Button variant="ghost" className="w-full justify-between text-primary hover:text-primary hover:bg-primary/5">
+              What could change this price?
               {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </Button>
           </CollapsibleTrigger>
@@ -88,7 +88,7 @@ export function InstallPriceCard({ results }: InstallPriceCardProps) {
               </div>
               {results.adders.location > 0 && (
                 <div className="flex justify-between text-foreground">
-                  <span>Heat pump location adder</span>
+                  <span>Heat pump location</span>
                   <span>+{formatCurrency(results.adders.location)}</span>
                 </div>
               )}

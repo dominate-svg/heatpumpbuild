@@ -2,116 +2,97 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Smart Energy Homes - Bright, Friendly Design System */
 
 @layer base {
   :root {
-    /* Smart Energy Homes - Light, modern theme */
-    --background: 270 20% 98%;
-    --foreground: 270 40% 15%;
+    /* Light, warm backgrounds */
+    --background: 30 25% 98%;
+    --foreground: 220 20% 20%;
 
     --card: 0 0% 100%;
-    --card-foreground: 270 40% 15%;
+    --card-foreground: 220 20% 20%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 270 40% 15%;
+    --popover-foreground: 220 20% 20%;
 
-    /* Deep purple primary */
-    --primary: 270 60% 35%;
+    /* Warm coral/pink primary CTA */
+    --primary: 12 85% 60%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 270 30% 95%;
-    --secondary-foreground: 270 40% 25%;
+    --secondary: 200 20% 96%;
+    --secondary-foreground: 220 20% 30%;
 
-    --muted: 270 20% 94%;
-    --muted-foreground: 270 15% 45%;
+    --muted: 30 15% 94%;
+    --muted-foreground: 220 10% 45%;
 
-    /* Vibrant pink/magenta accent */
-    --accent: 330 85% 55%;
+    /* Sky blue accent */
+    --accent: 200 85% 55%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 270 20% 90%;
-    --input: 270 20% 90%;
-    --ring: 330 85% 55%;
+    --border: 30 15% 90%;
+    --input: 30 15% 90%;
+    --ring: 12 85% 60%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
-    /* Custom utility colors */
-    --highlight: 330 85% 55%;
-    --highlight-foreground: 0 0% 100%;
-    --success: 152 60% 40%;
+    /* Mint/green success */
+    --success: 160 60% 45%;
     --success-foreground: 0 0% 100%;
+    
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(270 60% 35%), hsl(290 50% 45%));
-    --gradient-accent: linear-gradient(135deg, hsl(330 85% 55%), hsl(350 80% 60%));
-    --gradient-hero: linear-gradient(180deg, hsl(270 40% 20%) 0%, hsl(280 50% 30%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(12 85% 60%), hsl(350 75% 55%));
+    --gradient-accent: linear-gradient(135deg, hsl(200 85% 55%), hsl(180 70% 50%));
+    --gradient-hero: linear-gradient(180deg, hsl(200 85% 55%) 0%, hsl(200 75% 60%) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(30 100% 97%), hsl(12 60% 95%));
+    --gradient-cool: linear-gradient(135deg, hsl(200 60% 97%), hsl(160 50% 95%));
 
-    --sidebar-background: 270 30% 98%;
-    --sidebar-foreground: 270 40% 25%;
-    --sidebar-primary: 330 85% 55%;
+    --sidebar-background: 30 25% 98%;
+    --sidebar-foreground: 220 20% 25%;
+    --sidebar-primary: 12 85% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 270 20% 94%;
-    --sidebar-accent-foreground: 270 40% 25%;
-    --sidebar-border: 270 20% 90%;
-    --sidebar-ring: 330 85% 55%;
+    --sidebar-accent: 200 20% 94%;
+    --sidebar-accent-foreground: 220 20% 25%;
+    --sidebar-border: 30 15% 90%;
+    --sidebar-ring: 12 85% 60%;
   }
 
   .dark {
-    --background: 270 30% 8%;
-    --foreground: 0 0% 98%;
-
-    --card: 270 25% 12%;
-    --card-foreground: 0 0% 98%;
-
-    --popover: 270 25% 12%;
-    --popover-foreground: 0 0% 98%;
-
-    --primary: 330 85% 60%;
+    /* Keep light mode - no dark mode for this friendly brand */
+    --background: 30 25% 98%;
+    --foreground: 220 20% 20%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 20%;
+    --primary: 12 85% 60%;
     --primary-foreground: 0 0% 100%;
-
-    --secondary: 270 20% 18%;
-    --secondary-foreground: 0 0% 98%;
-
-    --muted: 270 15% 20%;
-    --muted-foreground: 270 10% 65%;
-
-    --accent: 330 85% 60%;
+    --secondary: 200 20% 96%;
+    --secondary-foreground: 220 20% 30%;
+    --muted: 30 15% 94%;
+    --muted-foreground: 220 10% 45%;
+    --accent: 200 85% 55%;
     --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 62% 30%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-
-    --border: 270 15% 22%;
-    --input: 270 15% 22%;
-    --ring: 330 85% 60%;
-
-    --highlight: 330 85% 60%;
-    --highlight-foreground: 0 0% 100%;
-    --success: 152 60% 40%;
+    --border: 30 15% 90%;
+    --input: 30 15% 90%;
+    --ring: 12 85% 60%;
+    --success: 160 60% 45%;
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
-
-    --gradient-primary: linear-gradient(135deg, hsl(270 50% 40%), hsl(290 50% 50%));
-    --gradient-accent: linear-gradient(135deg, hsl(330 85% 55%), hsl(350 80% 60%));
-    --gradient-hero: linear-gradient(180deg, hsl(270 40% 12%) 0%, hsl(280 50% 18%) 100%);
-
-    --sidebar-background: 270 30% 10%;
-    --sidebar-foreground: 0 0% 90%;
-    --sidebar-primary: 330 85% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 270 20% 18%;
-    --sidebar-accent-foreground: 0 0% 90%;
-    --sidebar-border: 270 15% 20%;
-    --sidebar-ring: 330 85% 60%;
+    --gradient-primary: linear-gradient(135deg, hsl(12 85% 60%), hsl(350 75% 55%));
+    --gradient-accent: linear-gradient(135deg, hsl(200 85% 55%), hsl(180 70% 50%));
+    --gradient-hero: linear-gradient(180deg, hsl(200 85% 55%) 0%, hsl(200 75% 60%) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(30 100% 97%), hsl(12 60% 95%));
+    --gradient-cool: linear-gradient(135deg, hsl(200 60% 97%), hsl(160 50% 95%));
   }
 }
 
@@ -122,6 +103,7 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
@@ -137,31 +119,88 @@ All colors MUST be HSL.
   .gradient-hero {
     background: var(--gradient-hero);
   }
+
+  .gradient-warm {
+    background: var(--gradient-warm);
+  }
+
+  .gradient-cool {
+    background: var(--gradient-cool);
+  }
   
   .text-gradient {
-    background: var(--gradient-accent);
+    background: var(--gradient-primary);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
   
   .glass {
-    background: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.8);
   }
   
-  .shadow-glow {
-    box-shadow: 0 0 40px -10px hsl(330 85% 55% / 0.3);
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border;
+  .shadow-soft {
+    box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.08), 0 2px 8px -2px rgba(0, 0, 0, 0.04);
   }
 
-  body {
-    @apply bg-background text-foreground;
+  .shadow-warm {
+    box-shadow: 0 4px 30px -8px hsl(12 85% 60% / 0.2);
+  }
+
+  .shadow-cool {
+    box-shadow: 0 4px 30px -8px hsl(200 85% 55% / 0.2);
+  }
+
+  /* Shimmer loading animation */
+  .shimmer {
+    background: linear-gradient(90deg, hsl(30 15% 94%) 0%, hsl(30 15% 98%) 50%, hsl(30 15% 94%) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Fade in animation */
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Count up animation helper */
+  .animate-count-up {
+    animation: countUp 0.8s ease-out forwards;
+  }
+
+  @keyframes countUp {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Button hover lift */
+  .hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px -8px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Card selection transition */
+  .card-selectable {
+    transition: all 0.2s ease;
+  }
+
+  .card-selectable:hover {
+    transform: translateY(-1px);
   }
 }
