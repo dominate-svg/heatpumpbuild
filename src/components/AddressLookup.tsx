@@ -30,28 +30,27 @@ export function AddressLookup({ onAddressSelect, onManualEntry }: AddressLookupP
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Pulsing CTA Search Box */}
       <div className="relative">
-        <div className="absolute -inset-2 bg-gradient-to-r from-primary/30 via-accent/30 to-primary/30 rounded-3xl animate-pulse-glow blur-xl" />
-        <div className="relative flex gap-3 p-2 bg-background/80 backdrop-blur-sm rounded-2xl border-2 border-primary/30 shadow-elevated animate-bounce-in">
+        <div className="absolute -inset-3 bg-gradient-to-r from-primary/40 via-accent/40 to-primary/40 rounded-3xl animate-pulse blur-2xl" />
+        <div className="relative flex gap-3 p-1.5 bg-white rounded-2xl shadow-elevated">
           <div className="relative flex-1">
-            <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 text-primary animate-float" />
+            <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 text-primary" />
             <Input
               type="text"
               placeholder="Enter your postcode"
               value={postcode}
               onChange={(e) => setPostcode(e.target.value.toUpperCase())}
               onKeyDown={handleKeyDown}
-              className="pl-14 h-16 text-xl bg-white border-2 border-muted focus:border-primary rounded-xl font-semibold placeholder:text-muted-foreground/60"
+              className="pl-14 h-16 text-xl bg-transparent border-0 focus-visible:ring-0 font-semibold placeholder:text-muted-foreground/50"
             />
-            <Sparkles className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-accent animate-pulse" />
           </div>
           <Button 
             onClick={handleSearch} 
             disabled={loading || !postcode.trim()}
             size="lg"
-            className="h-16 px-10 rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 hover:scale-105"
+            className="h-16 px-10 rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 animate-pulse-glow"
           >
             {loading ? (
               <Loader2 className="w-6 h-6 animate-spin" />
@@ -65,27 +64,27 @@ export function AddressLookup({ onAddressSelect, onManualEntry }: AddressLookupP
         </div>
       </div>
 
-      {/* Trust Badges & Pump Image */}
-      <div className="flex flex-col md:flex-row items-center justify-center gap-6 animate-fade-in">
-        <div className="flex items-center gap-4">
-          <CosyBadge size="lg" className="animate-float" />
+      {/* Social Proof Section - Clean & Professional */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+        <div className="flex flex-col items-center text-center p-4 rounded-xl bg-muted/30">
+          <CosyBadge size="lg" />
+          <p className="mt-3 text-sm font-medium text-muted-foreground">Cosy Accredited Installer</p>
+        </div>
+        <div className="flex flex-col items-center text-center p-4 rounded-xl bg-muted/30">
           <img 
             src={octopusPartner} 
             alt="Octopus Trusted Partner" 
-            className="h-16 w-auto object-contain animate-float"
-            style={{ animationDelay: '0.5s' }}
+            className="h-14 w-auto object-contain"
           />
+          <p className="mt-3 text-sm font-medium text-muted-foreground">Official Octopus Partner</p>
         </div>
-        <div className="relative group">
-          <div className="absolute -inset-2 bg-gradient-to-r from-primary/20 to-accent/20 rounded-2xl blur-lg group-hover:blur-xl transition-all" />
+        <div className="flex flex-col items-center text-center p-4 rounded-xl bg-muted/30">
           <img 
             src={cosyPump} 
             alt="Cosy Heat Pump" 
-            className="relative h-32 md:h-40 w-auto object-cover rounded-xl shadow-card group-hover:scale-105 transition-transform duration-300"
+            className="h-14 w-auto object-contain rounded-lg"
           />
-          <div className="absolute -bottom-2 -right-2 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg animate-bounce-in">
-            Cosy Heat Pump
-          </div>
+          <p className="mt-3 text-sm font-medium text-muted-foreground">Premium Heat Pumps</p>
         </div>
       </div>
 
