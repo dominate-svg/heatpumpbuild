@@ -13,10 +13,11 @@ serve(async (req) => {
 
   try {
     const { postcode, address } = await req.json();
-    const apiKey = Deno.env.get('EPC_API_KEY');
+    const epcEmail = Deno.env.get('EPC_EMAIL');
+    const epcApiKey = Deno.env.get('EPC_API_KEY');
 
-    if (!apiKey) {
-      throw new Error('EPC_API_KEY not configured');
+    if (!epcEmail || !epcApiKey) {
+      throw new Error('EPC_EMAIL and EPC_API_KEY must be configured');
     }
 
     if (!postcode) {
@@ -37,9 +38,13 @@ serve(async (req) => {
       params.append('address', address);
     }
 
+    // EPC API requires Base64 encoding of "email:api-key"
+    const credentials = `${epcEmail}:${epcApiKey}`;
+    const encodedCredentials = btoa(credentials);
+
     const response = await fetch(`${baseUrl}?${params}`, {
       headers: {
-        'Authorization': `Basic ${btoa(apiKey + ':')}`,
+        'Authorization': `Basic ${encodedCredentials}`,
         'Accept': 'application/json',
       },
     });
