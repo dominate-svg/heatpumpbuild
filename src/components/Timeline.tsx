@@ -19,23 +19,23 @@ export function Timeline() {
       </div>
 
       {/* Horizontal timeline - mobile friendly */}
-      <div className="bg-card border border-border rounded-2xl p-4 shadow-card overflow-x-auto">
-        <div className="flex items-start gap-1 min-w-max md:min-w-0 md:justify-between">
+      <div className="bg-card border border-border rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-card overflow-x-auto -mx-4 sm:mx-0">
+        <div className="flex items-start gap-0.5 sm:gap-1 min-w-[320px] px-4 sm:px-0 sm:min-w-0 sm:justify-between">
           {TIMELINE_STEPS.map((step, index) => (
-            <div key={index} className="flex items-center">
-              <div className="flex flex-col items-center text-center w-16 md:w-auto md:flex-1">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-2 transition-all ${
+            <div key={index} className="flex items-center flex-1">
+              <div className="flex flex-col items-center text-center w-full">
+                <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center mb-1.5 sm:mb-2 transition-all ${
                   step.active 
                     ? 'bg-primary text-white animate-pulse-glow' 
                     : 'bg-muted text-muted-foreground'
                 }`}>
-                  <step.icon className="w-5 h-5" />
+                  <step.icon className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <p className="text-xs font-medium text-foreground">{step.label}</p>
-                <p className="text-[10px] text-muted-foreground">{step.sublabel}</p>
+                <p className="text-[10px] sm:text-xs font-medium text-foreground">{step.label}</p>
+                <p className="text-[9px] sm:text-[10px] text-muted-foreground">{step.sublabel}</p>
               </div>
               {index < TIMELINE_STEPS.length - 1 && (
-                <ChevronRight className="w-4 h-4 text-border mx-1 flex-shrink-0" />
+                <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-border mx-0.5 flex-shrink-0" />
               )}
             </div>
           ))}

@@ -47,43 +47,43 @@ export default function Index() {
       
       {/* Hero Section */}
       <section className="bg-muted/30">
-        <div className="max-w-3xl mx-auto px-4 pt-10 pb-16 md:pt-16 md:pb-20">
+        <div className="max-w-3xl mx-auto px-4 pt-8 pb-12 md:pt-16 md:pb-20">
           
           {/* Headline */}
-          <div className="text-center mb-10">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight mb-5">
+          <div className="text-center mb-8 md:mb-10">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight mb-4 md:mb-5">
               See what a{' '}
-              <span className="text-primary">Cosy</span> heat pump<br />
-              could do for your home
+              <span className="text-primary">Cosy</span> heat pump<br className="hidden sm:block" />
+              <span className="sm:hidden"> </span>could do for your home
             </h1>
             
-            <p className="text-lg md:text-xl text-muted-foreground max-w-lg mx-auto mb-8">
+            <p className="text-base md:text-xl text-muted-foreground max-w-lg mx-auto mb-6 md:mb-8 px-2">
               Powered by your EPC data. Instant estimate. No obligation.
             </p>
 
-            {/* Trust badges */}
-            <div className="flex flex-wrap justify-center gap-3">
+            {/* Trust badges - stack on small mobile */}
+            <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-2 sm:gap-3 px-2">
               {TRUST_BADGES.map((badge, i) => (
                 <div 
                   key={i} 
-                  className="flex items-center gap-2 bg-white rounded-full px-4 py-2 border border-border"
+                  className="flex items-center justify-center gap-2 bg-white rounded-full px-3 py-2 border border-border"
                 >
-                  <badge.icon className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-medium text-foreground">{badge.label}</span>
+                  <badge.icon className="w-4 h-4 text-primary flex-shrink-0" />
+                  <span className="text-xs sm:text-sm font-medium text-foreground">{badge.label}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Search Card */}
-          <div className="max-w-xl mx-auto">
+          <div className="max-w-xl mx-auto px-2 sm:px-0">
             {/* Main card */}
-            <div className="bg-card rounded-3xl p-8 md:p-10 shadow-glow-primary ring-1 ring-primary/10 animate-card-entrance">
-              <div className="text-center mb-6">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary mb-4">
-                  <Search className="w-7 h-7 text-white" />
+            <div className="bg-card rounded-2xl sm:rounded-3xl p-5 sm:p-8 md:p-10 shadow-glow-primary ring-1 ring-primary/10 animate-card-entrance">
+              <div className="text-center mb-5 sm:mb-6">
+                <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-primary mb-3 sm:mb-4">
+                  <Search className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
                 </div>
-                <h2 className="text-2xl font-bold text-foreground">Find your home</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-foreground">Find your home</h2>
               </div>
               
               {showManualEntry ? (
@@ -121,24 +121,24 @@ export default function Index() {
       </section>
 
       {/* 3-Step Row */}
-      <section className="py-10 bg-white border-y border-border">
+      <section className="py-8 md:py-10 bg-white border-y border-border overflow-x-auto">
         <div className="max-w-3xl mx-auto px-4">
-          <div className="flex items-center justify-center gap-4 md:gap-8">
+          <div className="flex items-center justify-between min-w-[280px] gap-2 md:gap-8">
             {STEPS.map((step, i) => (
-              <div key={i} className="flex items-center gap-4 md:gap-6">
-                <div className="flex flex-col items-center text-center">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-2 ${
+              <div key={i} className="flex items-center gap-2 md:gap-6 flex-1">
+                <div className="flex flex-col items-center text-center flex-1">
+                  <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center mb-1.5 sm:mb-2 ${
                     step.active 
                       ? 'bg-primary' 
                       : 'bg-muted border-2 border-border'
                   }`}>
-                    <step.icon className={`w-6 h-6 ${step.active ? 'text-white' : 'text-primary'}`} />
+                    <step.icon className={`w-4 h-4 sm:w-6 sm:h-6 ${step.active ? 'text-white' : 'text-primary'}`} />
                   </div>
-                  <span className="text-xs font-bold text-primary">Step {step.num}</span>
-                  <span className="text-xs text-muted-foreground">{step.label}</span>
+                  <span className="text-[10px] sm:text-xs font-bold text-primary">Step {step.num}</span>
+                  <span className="text-[10px] sm:text-xs text-muted-foreground leading-tight">{step.label}</span>
                 </div>
                 {i < STEPS.length - 1 && (
-                  <div className="w-8 md:w-16 h-0.5 bg-border rounded-full" />
+                  <div className="w-4 sm:w-8 md:w-16 h-0.5 bg-border rounded-full flex-shrink-0" />
                 )}
               </div>
             ))}
@@ -147,21 +147,21 @@ export default function Index() {
       </section>
 
       {/* Social Proof */}
-      <section className="py-14">
+      <section className="py-10 md:py-14">
         <div className="max-w-3xl mx-auto px-4">
-          <h3 className="text-center text-xl font-bold text-foreground mb-8">
+          <h3 className="text-center text-lg sm:text-xl font-bold text-foreground mb-6 md:mb-8">
             Trusted by homeowners across the UK
           </h3>
           
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-4 mb-10">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-8 md:mb-10">
             {STATS.map((stat, i) => (
               <div 
                 key={i} 
-                className="text-center p-5 rounded-2xl bg-muted border border-border"
+                className="text-center p-3 sm:p-5 rounded-xl sm:rounded-2xl bg-muted border border-border"
               >
-                <div className="text-3xl md:text-4xl font-bold text-foreground mb-1">{stat.value}</div>
-                <div className="text-sm text-muted-foreground font-medium">{stat.label}</div>
+                <div className="text-xl sm:text-3xl md:text-4xl font-bold text-foreground mb-0.5 sm:mb-1">{stat.value}</div>
+                <div className="text-xs sm:text-sm text-muted-foreground font-medium">{stat.label}</div>
               </div>
             ))}
           </div>

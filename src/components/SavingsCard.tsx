@@ -54,23 +54,23 @@ export function SavingsCard({
         <CardContent className="p-0">
           {/* Savings display - prominent */}
           <div className="p-4 md:p-5 bg-gradient-to-r from-success/5 to-accent/5 border-b border-border">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-success/10 flex items-center justify-center animate-pulse-glow">
-                  <TrendingUp className="w-6 h-6 text-success" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-success/10 flex items-center justify-center animate-pulse-glow flex-shrink-0">
+                  <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-success" />
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">You could save</p>
-                  <p className={`text-2xl md:text-3xl font-bold ${isNegativeSavings ? 'text-warning' : 'text-success'}`}>
+                  <p className={`text-xl sm:text-2xl md:text-3xl font-bold ${isNegativeSavings ? 'text-warning' : 'text-success'}`}>
                     {isNegativeSavings ? '-' : ''}{formatCurrency(displaySavings)}
-                    <span className="text-sm font-normal text-muted-foreground">/year</span>
+                    <span className="text-xs sm:text-sm font-normal text-muted-foreground">/year</span>
                   </p>
                 </div>
               </div>
               <select 
                 value={tariff}
                 onChange={(e) => onTariffChange(e.target.value as 'cosy' | 'standard')}
-                className="text-xs p-2 rounded-lg border border-border bg-background text-muted-foreground max-w-[140px]"
+                className="text-xs p-2 rounded-lg border border-border bg-background text-muted-foreground w-full sm:w-auto sm:max-w-[140px]"
               >
                 <option value="cosy">Octopus Cosy</option>
                 <option value="standard">Standard tariff</option>
@@ -84,24 +84,24 @@ export function SavingsCard({
           {/* Efficiency selector - compact */}
           <div className="p-4 md:p-5">
             <p className="text-sm font-medium text-foreground mb-3">Choose efficiency level:</p>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {EFFICIENCY_OPTIONS.map((option) => (
                 <button
                   key={option.value}
                   onClick={() => onScopChange(option.value)}
-                  className={`flex-1 relative py-3 px-2 rounded-xl border-2 text-center transition-all card-selectable ${
+                  className={`relative py-2.5 sm:py-3 px-1.5 sm:px-2 rounded-lg sm:rounded-xl border-2 text-center transition-all card-selectable ${
                     scop === option.value
                       ? 'border-primary bg-primary-light'
                       : 'border-border bg-card hover:border-primary/50'
                   }`}
                 >
                   {option.recommended && (
-                    <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-primary text-white text-[10px] px-2 py-0.5 whitespace-nowrap">
+                    <Badge className="absolute -top-2 sm:-top-2.5 left-1/2 -translate-x-1/2 bg-primary text-white text-[8px] sm:text-[10px] px-1.5 sm:px-2 py-0 sm:py-0.5 whitespace-nowrap">
                       Best value
                     </Badge>
                   )}
-                  <span className="block text-lg font-bold text-foreground">{option.label}</span>
-                  <span className="block text-[10px] text-muted-foreground">{option.radiators} radiators</span>
+                  <span className="block text-base sm:text-lg font-bold text-foreground">{option.label}</span>
+                  <span className="block text-[9px] sm:text-[10px] text-muted-foreground">{option.radiators} rads</span>
                 </button>
               ))}
             </div>
