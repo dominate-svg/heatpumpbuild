@@ -96,9 +96,9 @@ export default function Estimate() {
     <div className="min-h-screen bg-background pb-28 sm:pb-24 lg:pb-28">
       <Header />
       
-      <main className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8">
+      <main className="max-w-4xl mx-auto px-4 sm:px-4 py-6 sm:py-6 md:py-8">
         {/* Page title - compact */}
-        <div className="mb-4 sm:mb-5 animate-fade-in">
+        <div className="mb-6 sm:mb-5 animate-fade-in">
           <div className="flex items-center gap-2 mb-1">
             <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
             <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">
@@ -111,12 +111,12 @@ export default function Estimate() {
         </div>
 
         {/* Estimate banner */}
-        <div className="mb-4 sm:mb-6">
+        <div className="mb-6 sm:mb-6">
           <EstimateBanner />
         </div>
 
         {/* Main content - stack on mobile, 2 column on desktop */}
-        <div className="grid gap-4 sm:gap-5 lg:grid-cols-5 mb-4 sm:mb-6">
+        <div className="grid gap-6 sm:gap-5 lg:grid-cols-5 mb-8 sm:mb-6">
           {/* Left: Property info */}
           <div className="lg:col-span-2">
             <PropertyCard epcData={epcData} results={results} />
@@ -134,7 +134,7 @@ export default function Estimate() {
         </div>
 
         {/* Savings section */}
-        <div className="mb-4 sm:mb-6">
+        <div className="mb-8 sm:mb-6">
           <SavingsCard 
             results={results}
             assumptions={assumptions}
@@ -146,7 +146,7 @@ export default function Estimate() {
         </div>
 
         {/* Options section */}
-        <div className="mb-4 sm:mb-6">
+        <div className="mb-8 sm:mb-6">
           <InstallOptions
             locationAdder={locationAdder}
             cylinderOption={cylinderOption}
