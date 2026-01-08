@@ -6,6 +6,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import logo from '@/assets/logo.png';
 import octopusPartner from '@/assets/octopus-partner.png';
 import cosyPump from '@/assets/cosy-pump.jpeg';
+import { CosyBadge } from '@/components/CosyBadge';
 import {
   Accordion,
   AccordionContent,
@@ -103,14 +104,14 @@ export default function Index() {
             </p>
           </div>
 
+          {/* Cosy Badge */}
+          <div className="mt-6 md:mt-8">
+            <CosyBadge size="lg" />
+          </div>
+
           {/* Social proof strip */}
-          <div className="mt-6 md:mt-8 w-full max-w-3xl px-2">
+          <div className="mt-4 md:mt-6 w-full max-w-3xl px-2">
             <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-2 md:gap-x-3 text-xs md:text-sm text-foreground font-medium">
-              <div className="flex items-center gap-1.5">
-                <img src={octopusPartner} alt="" className="h-4 md:h-5 w-auto" />
-                <span>Trusted Octopus Partner</span>
-              </div>
-              <span className="hidden sm:inline text-border">·</span>
               <div className="flex items-center gap-1">
                 <span className="text-green-600">★</span>
                 <span>5★ Trustpilot</span>
