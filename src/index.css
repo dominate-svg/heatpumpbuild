@@ -6,91 +6,93 @@
 
 @layer base {
   :root {
-    /* Octopus-style lavender/pink backgrounds */
-    --background: 280 30% 98%;
-    --foreground: 260 25% 20%;
+    /* Premium charcoal/near-black with warm tones */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 260 25% 20%;
+    --card-foreground: 0 0% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 260 25% 20%;
+    --popover-foreground: 0 0% 12%;
 
-    /* Octopus Pink/Purple primary (higher contrast) */
-    --primary: 292 92% 38%;
+    /* Smart Energy Homes pink accent */
+    --primary: 330 85% 55%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 280 20% 96%;
-    --secondary-foreground: 260 25% 25%;
+    --secondary: 30 10% 96%;
+    --secondary-foreground: 0 0% 20%;
 
-    --muted: 280 20% 95%;
-    --muted-foreground: 260 15% 45%;
+    --muted: 30 8% 94%;
+    --muted-foreground: 0 0% 45%;
 
-    /* Octopus teal accent */
-    --accent: 174 72% 45%;
-    --accent-foreground: 0 0% 100%;
+    /* Warm accent */
+    --accent: 30 20% 92%;
+    --accent-foreground: 0 0% 12%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 280 15% 90%;
-    --input: 280 15% 90%;
-    --ring: 292 92% 38%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 330 85% 55%;
 
-    --radius: 1rem;
+    --radius: 0.5rem;
 
-    /* Success green (Octopus style) */
+    /* Success green */
     --success: 160 84% 39%;
     --success-foreground: 0 0% 100%;
     
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    /* Pink/lavender tinted backgrounds */
-    --primary-light: 290 50% 97%;
-    --primary-muted: 290 30% 94%;
-
-    /* Teal backgrounds */
-    --accent-light: 174 50% 96%;
+    /* Charcoal dark */
+    --charcoal: 0 0% 12%;
+    --charcoal-light: 0 0% 20%;
+    
+    /* Warm light tones */
+    --warm-light: 35 30% 97%;
+    --warm-muted: 30 15% 92%;
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 260 25% 25%;
-    --sidebar-primary: 292 90% 44%;
+    --sidebar-foreground: 0 0% 20%;
+    --sidebar-primary: 330 85% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 280 20% 96%;
-    --sidebar-accent-foreground: 260 25% 25%;
-    --sidebar-border: 280 15% 90%;
-    --sidebar-ring: 292 90% 44%;
+    --sidebar-accent: 30 10% 96%;
+    --sidebar-accent-foreground: 0 0% 20%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 330 85% 55%;
   }
 
   .dark {
     /* Keep light mode only for this energy brand */
     --background: 0 0% 100%;
-    --foreground: 220 20% 18%;
+    --foreground: 0 0% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 220 20% 18%;
+    --card-foreground: 0 0% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 18%;
-    --primary: 300 75% 42%;
+    --popover-foreground: 0 0% 12%;
+    --primary: 330 85% 55%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 220 20% 25%;
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 10% 46%;
-    --accent: 174 72% 40%;
-    --accent-foreground: 0 0% 100%;
+    --secondary: 30 10% 96%;
+    --secondary-foreground: 0 0% 20%;
+    --muted: 30 8% 94%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 30 20% 92%;
+    --accent-foreground: 0 0% 12%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 14% 90%;
-    --input: 220 14% 90%;
-    --ring: 300 75% 42%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 330 85% 55%;
     --success: 160 84% 39%;
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
-    --primary-light: 300 60% 97%;
-    --primary-muted: 300 40% 95%;
-    --accent-light: 174 50% 96%;
+    --charcoal: 0 0% 12%;
+    --charcoal-light: 0 0% 20%;
+    --warm-light: 35 30% 97%;
+    --warm-muted: 30 15% 92%;
   }
 }
 
@@ -106,21 +108,26 @@
 }
 
 @layer utilities {
-  /* Purple tinted backgrounds */
-  .bg-primary-light {
-    background-color: hsl(300 60% 97%);
+  /* Charcoal backgrounds */
+  .bg-charcoal {
+    background-color: hsl(var(--charcoal));
   }
 
-  .bg-primary-muted {
-    background-color: hsl(300 40% 95%);
+  .bg-charcoal-light {
+    background-color: hsl(var(--charcoal-light));
   }
 
-  .bg-accent-light {
-    background-color: hsl(174 50% 96%);
+  /* Warm tinted backgrounds */
+  .bg-warm-light {
+    background-color: hsl(var(--warm-light));
+  }
+
+  .bg-warm-muted {
+    background-color: hsl(var(--warm-muted));
   }
 
   .text-gradient {
-    background: linear-gradient(135deg, hsl(300 75% 42%), hsl(300 65% 35%));
+    background: linear-gradient(135deg, hsl(330 85% 55%), hsl(330 75% 45%));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -131,18 +138,16 @@
   }
 
   .shadow-card {
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.1), 0 4px 16px -8px rgba(0, 0, 0, 0.08);
   }
 
   .shadow-elevated {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.15), 0 4px 12px -4px rgba(0, 0, 0, 0.08);
   }
 
-  /* Colorful brand glow shadow (for hero/search focal cards) */
+  /* Clean card shadow - no color glow */
   .shadow-glow-primary {
-    box-shadow:
-      0 18px 40px -22px hsl(var(--primary) / 0.75),
-      0 10px 22px -18px hsl(var(--primary) / 0.45);
+    box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.2), 0 4px 16px -4px rgba(0, 0, 0, 0.1);
   }
 
   .shimmer {
@@ -205,8 +210,8 @@
   }
 
   @keyframes pulseGlow {
-    0%, 100% { box-shadow: 0 0 0 0 hsl(300 75% 42% / 0.4); }
-    50% { box-shadow: 0 0 20px 4px hsl(300 75% 42% / 0.2); }
+    0%, 100% { box-shadow: 0 0 0 0 hsl(330 85% 55% / 0.4); }
+    50% { box-shadow: 0 0 20px 4px hsl(330 85% 55% / 0.2); }
   }
 
   /* Bounce in animation */
@@ -236,32 +241,14 @@
   }
 
   .card-selectable:hover {
-    border-color: hsl(300 75% 42% / 0.5);
+    border-color: hsl(330 85% 55% / 0.5);
     transform: translateY(-2px);
   }
 
   /* Selected card state */
   .card-selected {
-    border-color: hsl(300 75% 42%);
-    background-color: hsl(300 60% 97%);
-  }
-
-  /* Gradient border */
-  .gradient-border {
-    position: relative;
-  }
-
-  .gradient-border::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 2px;
-    background: linear-gradient(135deg, hsl(300 75% 42%), hsl(174 72% 40%));
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask-composite: exclude;
-    -webkit-mask-composite: xor;
-    pointer-events: none;
+    border-color: hsl(330 85% 55%);
+    background-color: hsl(330 60% 97%);
   }
 
   /* Text success color */
@@ -328,23 +315,12 @@
     90% { left: 100%; }
   }
 
-  /* CTA button: solid, high-contrast, with subtle highlight */
+  /* CTA button: solid, clean, high-contrast */
   .cta-solid {
     position: relative;
     overflow: hidden;
     background-color: hsl(var(--primary));
-    box-shadow:
-      0 20px 46px -26px hsl(var(--primary) / 0.95),
-      0 10px 22px -18px hsl(var(--primary) / 0.6);
-  }
-
-  .cta-solid::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    /* Keep highlight subtle so the button doesn't look washed out */
-    background: radial-gradient(circle at 50% 35%, hsl(0 0% 100% / 0.12), transparent 60%);
-    pointer-events: none;
+    box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.25);
   }
 
   /* CTA hover lift */
@@ -354,9 +330,7 @@
 
   .cta-hover-lift:hover {
     transform: translateY(-2px);
-    box-shadow:
-      0 24px 56px -30px hsl(var(--primary) / 1),
-      0 10px 24px -18px hsl(var(--primary) / 0.65);
+    box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.3);
   }
 
   /* Input focus glow */

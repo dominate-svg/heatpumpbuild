@@ -27,37 +27,33 @@ export function AddressLookup({ onAddressSelect, onManualEntry }: AddressLookupP
   };
 
   return (
-    <div className="space-y-5">
-      {/* Octopus-style Search Input */}
+    <div className="space-y-4">
+      {/* Clean Search Input */}
       <div className="space-y-3">
         <div className="relative">
-          <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
+          <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input
             type="text"
             placeholder="Enter your postcode"
             value={postcode}
             onChange={(e) => setPostcode(e.target.value.toUpperCase())}
             onKeyDown={handleKeyDown}
-            className="pl-12 h-14 text-lg rounded-2xl font-semibold placeholder:text-muted-foreground transition-all border-2 bg-card input-pop input-focus-glow"
+            className="pl-12 h-14 text-lg rounded-lg font-medium placeholder:text-muted-foreground border-2 border-border bg-background focus:border-primary focus:ring-0"
           />
         </div>
         <Button 
           onClick={handleSearch} 
           disabled={loading || !postcode.trim()}
           size="lg"
-          className="w-full h-14 rounded-full text-white font-extrabold text-lg cta-solid ring-1 ring-primary/30 animate-shimmer-sweep cta-hover-lift disabled:opacity-70"
+          className="w-full h-14 rounded-lg bg-primary hover:bg-primary/90 text-white font-bold text-lg transition-all disabled:opacity-50"
         >
           {loading ? (
             <Loader2 className="w-5 h-5 animate-spin" />
           ) : (
-            'Get my free estimate'
+            'Get my estimate'
           )}
         </Button>
       </div>
-      
-      <p className="text-center text-sm text-muted-foreground">
-        Takes about 30 seconds ⚡
-      </p>
 
       {error && (
         <Card className="border-destructive/50 bg-destructive/5">
@@ -69,12 +65,12 @@ export function AddressLookup({ onAddressSelect, onManualEntry }: AddressLookupP
       )}
 
       {results !== null && results.length === 0 && (
-        <Card className="border-warning/50 bg-warning/5">
+        <Card className="border-amber-200 bg-amber-50">
           <CardContent className="p-4 space-y-3">
             <p className="text-sm text-foreground">
               No EPC data found for this postcode. You can still get an estimate.
             </p>
-            <Button onClick={onManualEntry} className="gradient-primary text-white hover-lift">
+            <Button onClick={onManualEntry} className="bg-primary hover:bg-primary/90 text-white">
               Enter details manually
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
@@ -91,7 +87,7 @@ export function AddressLookup({ onAddressSelect, onManualEntry }: AddressLookupP
             {results.map((result, index) => (
               <Card 
                 key={index}
-                className="cursor-pointer border-2 border-transparent hover:border-primary hover:shadow-warm transition-all duration-200 group card-selectable"
+                className="cursor-pointer border border-border hover:border-primary hover:shadow-soft transition-all duration-200 group"
                 onClick={() => onAddressSelect(result)}
               >
                 <CardContent className="p-4 flex items-center justify-between">
