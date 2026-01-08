@@ -155,17 +155,17 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
-  /* Subtle halo pulse for postcode module - every 7 seconds */
+  /* Subtle halo pulse for postcode module - every 4 seconds */
   .animate-halo-pulse {
-    animation: haloPulse 7s ease-in-out infinite;
+    animation: haloPulse 4s ease-in-out infinite;
   }
 
   @keyframes haloPulse {
-    0%, 85%, 100% { 
+    0%, 70%, 100% { 
       box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.12), 0 8px 32px -8px rgba(0, 0, 0, 0.08);
     }
-    92% { 
-      box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.12), 0 8px 32px -8px rgba(0, 0, 0, 0.08), 0 0 0 4px hsl(330 85% 55% / 0.08);
+    85% { 
+      box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.12), 0 8px 32px -8px rgba(0, 0, 0, 0.08), 0 0 0 8px hsl(265 80% 35% / 0.15);
     }
   }
 
