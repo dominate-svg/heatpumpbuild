@@ -2,91 +2,95 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Smart Energy Homes - Heat Geek Style Design System */
+/* Smart Energy Homes - Octopus Energy Inspired Design System */
 
 @layer base {
   :root {
     /* Clean white backgrounds */
     --background: 0 0% 100%;
-    --foreground: 220 15% 20%;
+    --foreground: 220 20% 18%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 15% 20%;
+    --card-foreground: 220 20% 18%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 15% 20%;
+    --popover-foreground: 220 20% 18%;
 
-    /* Bright pink primary (Heat Geek style) */
-    --primary: 340 82% 52%;
+    /* Octopus Purple/Magenta primary */
+    --primary: 300 75% 42%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 220 14% 96%;
-    --secondary-foreground: 220 15% 30%;
+    --secondary-foreground: 220 20% 25%;
 
     --muted: 220 14% 96%;
     --muted-foreground: 220 10% 46%;
 
-    /* Pink accent matching primary */
-    --accent: 340 82% 52%;
+    /* Octopus teal accent */
+    --accent: 174 72% 40%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 14% 91%;
-    --input: 220 14% 91%;
-    --ring: 340 82% 52%;
+    --border: 220 14% 90%;
+    --input: 220 14% 90%;
+    --ring: 300 75% 42%;
 
     --radius: 0.75rem;
 
-    /* Success green */
-    --success: 142 71% 45%;
+    /* Success green (Octopus style) */
+    --success: 160 84% 39%;
     --success-foreground: 0 0% 100%;
     
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    /* Pink tinted backgrounds */
-    --primary-light: 340 100% 97%;
-    --primary-muted: 340 60% 95%;
+    /* Purple tinted backgrounds */
+    --primary-light: 300 60% 97%;
+    --primary-muted: 300 40% 95%;
+
+    /* Teal backgrounds */
+    --accent-light: 174 50% 96%;
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 220 15% 25%;
-    --sidebar-primary: 340 82% 52%;
+    --sidebar-foreground: 220 20% 25%;
+    --sidebar-primary: 300 75% 42%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 220 14% 96%;
-    --sidebar-accent-foreground: 220 15% 25%;
-    --sidebar-border: 220 14% 91%;
-    --sidebar-ring: 340 82% 52%;
+    --sidebar-accent-foreground: 220 20% 25%;
+    --sidebar-border: 220 14% 90%;
+    --sidebar-ring: 300 75% 42%;
   }
 
   .dark {
-    /* Keep light mode only */
+    /* Keep light mode only for this energy brand */
     --background: 0 0% 100%;
-    --foreground: 220 15% 20%;
+    --foreground: 220 20% 18%;
     --card: 0 0% 100%;
-    --card-foreground: 220 15% 20%;
+    --card-foreground: 220 20% 18%;
     --popover: 0 0% 100%;
-    --popover-foreground: 220 15% 20%;
-    --primary: 340 82% 52%;
+    --popover-foreground: 220 20% 18%;
+    --primary: 300 75% 42%;
     --primary-foreground: 0 0% 100%;
     --secondary: 220 14% 96%;
-    --secondary-foreground: 220 15% 30%;
+    --secondary-foreground: 220 20% 25%;
     --muted: 220 14% 96%;
     --muted-foreground: 220 10% 46%;
-    --accent: 340 82% 52%;
+    --accent: 174 72% 40%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 14% 91%;
-    --input: 220 14% 91%;
-    --ring: 340 82% 52%;
-    --success: 142 71% 45%;
+    --border: 220 14% 90%;
+    --input: 220 14% 90%;
+    --ring: 300 75% 42%;
+    --success: 160 84% 39%;
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
-    --primary-light: 340 100% 97%;
-    --primary-muted: 340 60% 95%;
+    --primary-light: 300 60% 97%;
+    --primary-muted: 300 40% 95%;
+    --accent-light: 174 50% 96%;
   }
 }
 
@@ -102,17 +106,21 @@
 }
 
 @layer utilities {
-  /* Pink tinted backgrounds */
+  /* Purple tinted backgrounds */
   .bg-primary-light {
-    background-color: hsl(340 100% 97%);
+    background-color: hsl(300 60% 97%);
   }
 
   .bg-primary-muted {
-    background-color: hsl(340 60% 95%);
+    background-color: hsl(300 40% 95%);
+  }
+
+  .bg-accent-light {
+    background-color: hsl(174 50% 96%);
   }
 
   .text-gradient {
-    background: linear-gradient(135deg, hsl(340 82% 52%), hsl(340 70% 45%));
+    background: linear-gradient(135deg, hsl(300 75% 42%), hsl(300 65% 35%));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -168,12 +176,12 @@
   }
 
   .card-selectable:hover {
-    border-color: hsl(340 82% 52% / 0.5);
+    border-color: hsl(300 75% 42% / 0.5);
   }
 
   /* Selected card state */
   .card-selected {
-    border-color: hsl(340 82% 52%);
-    background-color: hsl(340 100% 97%);
+    border-color: hsl(300 75% 42%);
+    background-color: hsl(300 60% 97%);
   }
 }
