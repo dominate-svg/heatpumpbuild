@@ -27,25 +27,25 @@ export function AddressLookup({ onAddressSelect, onManualEntry }: AddressLookupP
   };
 
   return (
-    <div className="space-y-6">
-      {/* Bold Search Box */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1 group">
+    <div className="space-y-5">
+      {/* Octopus-style Search Input */}
+      <div className="space-y-3">
+        <div className="relative">
           <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
           <Input
             type="text"
-            placeholder="Enter your postcode (e.g. SW1A 1AA)"
+            placeholder="Enter your postcode"
             value={postcode}
             onChange={(e) => setPostcode(e.target.value.toUpperCase())}
             onKeyDown={handleKeyDown}
-            className="pl-12 h-14 text-lg bg-muted/40 border-2 border-muted focus:border-primary focus:bg-white rounded-xl font-semibold placeholder:text-muted-foreground/50 transition-all"
+            className="pl-12 h-14 text-lg bg-muted/30 border-2 border-transparent focus:border-primary focus:bg-white rounded-2xl font-medium placeholder:text-muted-foreground/50 transition-all"
           />
         </div>
         <Button 
           onClick={handleSearch} 
           disabled={loading || !postcode.trim()}
           size="lg"
-          className="h-14 px-8 rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white font-bold text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all w-full sm:w-auto"
+          className="w-full h-14 rounded-full bg-gradient-to-r from-primary to-[hsl(280,70%,50%)] hover:from-primary/90 hover:to-[hsl(280,70%,45%)] text-white font-bold text-lg shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:-translate-y-0.5 transition-all"
         >
           {loading ? (
             <Loader2 className="w-5 h-5 animate-spin" />
@@ -54,6 +54,10 @@ export function AddressLookup({ onAddressSelect, onManualEntry }: AddressLookupP
           )}
         </Button>
       </div>
+      
+      <p className="text-center text-sm text-muted-foreground">
+        Takes about 30 seconds ⚡
+      </p>
 
       {error && (
         <Card className="border-destructive/50 bg-destructive/5">

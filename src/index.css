@@ -6,38 +6,38 @@
 
 @layer base {
   :root {
-    /* Clean white backgrounds */
-    --background: 0 0% 100%;
-    --foreground: 220 20% 18%;
+    /* Octopus-style lavender/pink backgrounds */
+    --background: 280 30% 98%;
+    --foreground: 260 25% 20%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 20% 18%;
+    --card-foreground: 260 25% 20%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 18%;
+    --popover-foreground: 260 25% 20%;
 
-    /* Octopus Purple/Magenta primary */
-    --primary: 300 75% 42%;
+    /* Octopus Pink/Purple primary */
+    --primary: 290 70% 55%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 220 20% 25%;
+    --secondary: 280 20% 96%;
+    --secondary-foreground: 260 25% 25%;
 
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 10% 46%;
+    --muted: 280 20% 95%;
+    --muted-foreground: 260 15% 45%;
 
     /* Octopus teal accent */
-    --accent: 174 72% 40%;
+    --accent: 174 72% 45%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 14% 90%;
-    --input: 220 14% 90%;
-    --ring: 300 75% 42%;
+    --border: 280 15% 90%;
+    --input: 280 15% 90%;
+    --ring: 290 70% 55%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
     /* Success green (Octopus style) */
     --success: 160 84% 39%;
@@ -46,21 +46,21 @@
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    /* Purple tinted backgrounds */
-    --primary-light: 300 60% 97%;
-    --primary-muted: 300 40% 95%;
+    /* Pink/lavender tinted backgrounds */
+    --primary-light: 290 50% 97%;
+    --primary-muted: 290 30% 94%;
 
     /* Teal backgrounds */
     --accent-light: 174 50% 96%;
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 220 20% 25%;
-    --sidebar-primary: 300 75% 42%;
+    --sidebar-foreground: 260 25% 25%;
+    --sidebar-primary: 290 70% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 14% 96%;
-    --sidebar-accent-foreground: 220 20% 25%;
-    --sidebar-border: 220 14% 90%;
-    --sidebar-ring: 300 75% 42%;
+    --sidebar-accent: 280 20% 96%;
+    --sidebar-accent-foreground: 260 25% 25%;
+    --sidebar-border: 280 15% 90%;
+    --sidebar-ring: 290 70% 55%;
   }
 
   .dark {
