@@ -26,6 +26,7 @@ interface EstimateInput {
     region?: string;
     locationAdder: string;
     cylinderOption: string;
+    selectedRadiators: number;
   };
 }
 
@@ -106,6 +107,15 @@ export function useCreateEstimate() {
           current_fuel: input.inputs.currentFuel,
           property_type: input.inputs.propertyType,
           region: input.inputs.region,
+          // Radiator contribution fields
+          selected_radiators: input.results.selectedRadiators,
+          radiator_delta: input.results.radiatorDelta,
+          raw_customer_contribution: input.results.rawCustomerContribution,
+          customer_contribution: input.results.customerContribution,
+          base_customer_contribution: input.assumptions.base_customer_contribution,
+          included_radiators: input.assumptions.included_radiators,
+          rad_upgrade_cost: input.assumptions.rad_upgrade_cost,
+          min_customer_contribution: input.assumptions.min_customer_contribution,
         })
         .select()
         .single();

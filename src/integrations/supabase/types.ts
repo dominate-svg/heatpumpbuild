@@ -70,11 +70,13 @@ export type Database = {
           adders_json: Json | null
           annual_heat_kwh: number | null
           annual_savings: number | null
+          base_customer_contribution: number | null
           baseline_cost: number | null
           boiler_efficiency: number | null
           cosy_blended_rate: number | null
           created_at: string
           current_fuel: string | null
+          customer_contribution: number | null
           electricity_rate: number | null
           floor_area_m2: number | null
           full_load_hours: number | null
@@ -84,23 +86,31 @@ export type Database = {
           hp_cost: number | null
           hp_electric_kwh: number | null
           id: string
+          included_radiators: number | null
           install_base: number | null
           install_price_final: number | null
           lead_id: string | null
+          min_customer_contribution: number | null
           property_type: string | null
+          rad_upgrade_cost: number | null
+          radiator_delta: number | null
+          raw_customer_contribution: number | null
           region: string | null
           scop: number | null
+          selected_radiators: number | null
           tariff: string | null
         }
         Insert: {
           adders_json?: Json | null
           annual_heat_kwh?: number | null
           annual_savings?: number | null
+          base_customer_contribution?: number | null
           baseline_cost?: number | null
           boiler_efficiency?: number | null
           cosy_blended_rate?: number | null
           created_at?: string
           current_fuel?: string | null
+          customer_contribution?: number | null
           electricity_rate?: number | null
           floor_area_m2?: number | null
           full_load_hours?: number | null
@@ -110,23 +120,31 @@ export type Database = {
           hp_cost?: number | null
           hp_electric_kwh?: number | null
           id?: string
+          included_radiators?: number | null
           install_base?: number | null
           install_price_final?: number | null
           lead_id?: string | null
+          min_customer_contribution?: number | null
           property_type?: string | null
+          rad_upgrade_cost?: number | null
+          radiator_delta?: number | null
+          raw_customer_contribution?: number | null
           region?: string | null
           scop?: number | null
+          selected_radiators?: number | null
           tariff?: string | null
         }
         Update: {
           adders_json?: Json | null
           annual_heat_kwh?: number | null
           annual_savings?: number | null
+          base_customer_contribution?: number | null
           baseline_cost?: number | null
           boiler_efficiency?: number | null
           cosy_blended_rate?: number | null
           created_at?: string
           current_fuel?: string | null
+          customer_contribution?: number | null
           electricity_rate?: number | null
           floor_area_m2?: number | null
           full_load_hours?: number | null
@@ -136,12 +154,18 @@ export type Database = {
           hp_cost?: number | null
           hp_electric_kwh?: number | null
           id?: string
+          included_radiators?: number | null
           install_base?: number | null
           install_price_final?: number | null
           lead_id?: string | null
+          min_customer_contribution?: number | null
           property_type?: string | null
+          rad_upgrade_cost?: number | null
+          radiator_delta?: number | null
+          raw_customer_contribution?: number | null
           region?: string | null
           scop?: number | null
+          selected_radiators?: number | null
           tariff?: string | null
         }
         Relationships: [
