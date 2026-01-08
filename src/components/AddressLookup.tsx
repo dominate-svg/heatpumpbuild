@@ -28,9 +28,9 @@ export function AddressLookup({ onAddressSelect, onManualEntry }: AddressLookupP
 
   return (
     <div className="space-y-6">
-      {/* Clean Search Box */}
+      {/* Bold Search Box */}
       <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
+        <div className="relative flex-1 group">
           <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
           <Input
             type="text"
@@ -38,14 +38,14 @@ export function AddressLookup({ onAddressSelect, onManualEntry }: AddressLookupP
             value={postcode}
             onChange={(e) => setPostcode(e.target.value.toUpperCase())}
             onKeyDown={handleKeyDown}
-            className="pl-12 h-14 text-base bg-muted/30 border border-border focus:border-primary rounded-xl font-medium placeholder:text-muted-foreground/60"
+            className="pl-12 h-14 text-lg bg-muted/40 border-2 border-muted focus:border-primary focus:bg-white rounded-xl font-semibold placeholder:text-muted-foreground/50 transition-all"
           />
         </div>
         <Button 
           onClick={handleSearch} 
           disabled={loading || !postcode.trim()}
           size="lg"
-          className="h-14 px-6 rounded-xl bg-primary hover:bg-primary/90 text-white font-semibold shadow-md transition-all w-full sm:w-auto"
+          className="h-14 px-8 rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white font-bold text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all w-full sm:w-auto"
         >
           {loading ? (
             <Loader2 className="w-5 h-5 animate-spin" />

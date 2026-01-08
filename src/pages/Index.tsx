@@ -82,14 +82,18 @@ export default function Index() {
           {/* Elevated Search Box - Primary Focus */}
           <div className="max-w-xl mx-auto">
             <div className="relative">
-              {/* Subtle glow */}
-              <div className="absolute -inset-4 bg-primary/10 rounded-3xl blur-2xl" />
+              {/* Animated glow */}
+              <div className="absolute -inset-1 bg-gradient-to-r from-primary via-accent to-primary rounded-3xl blur-lg opacity-60 animate-pulse" />
+              <div className="absolute -inset-3 bg-gradient-to-r from-primary/30 to-accent/30 rounded-[2rem] blur-2xl opacity-50" />
               
               {/* Main Card */}
-              <div className="relative bg-white rounded-2xl p-6 md:p-8 shadow-xl border border-border/50">
-                <div className="text-center mb-5">
-                  <h2 className="text-xl font-bold text-foreground mb-1">Find your home</h2>
-                  <p className="text-sm text-muted-foreground">Enter your postcode to get started</p>
+              <div className="relative bg-white rounded-2xl p-8 md:p-10 shadow-2xl border-2 border-primary/20">
+                <div className="text-center mb-6">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-accent mb-4 shadow-lg">
+                    <Search className="w-8 h-8 text-white" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-foreground mb-1">Find your home</h2>
+                  <p className="text-muted-foreground">Enter your postcode to get started</p>
                 </div>
                 
                 {showManualEntry ? (
@@ -104,15 +108,15 @@ export default function Index() {
                   />
                 )}
 
-                <p className="text-center text-xs text-muted-foreground mt-4">
-                  Takes about 30 seconds
+                <p className="text-center text-sm text-muted-foreground mt-5">
+                  ⚡ Takes about 30 seconds
                 </p>
               </div>
             </div>
 
             {/* Micro-trust below search */}
-            <div className="flex items-center justify-center gap-2 mt-4 text-xs text-muted-foreground">
-              <Lock className="w-3 h-3" />
+            <div className="flex items-center justify-center gap-2 mt-5 text-sm text-muted-foreground">
+              <Lock className="w-4 h-4 text-primary" />
               <span>We only use your address to generate your estimate — no spam, no selling your data.</span>
             </div>
           </div>
