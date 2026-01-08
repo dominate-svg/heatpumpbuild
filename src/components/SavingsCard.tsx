@@ -21,9 +21,9 @@ interface SavingsCardProps {
 }
 
 const EFFICIENCY_OPTIONS = [
-  { value: 3.4, label: '340%', recommended: false },
-  { value: 3.7, label: '370%', recommended: true },
-  { value: 4.0, label: '400%', recommended: false },
+  { value: 3.4, label: '340%', recommended: true, radiators: 2 },
+  { value: 3.7, label: '370%', recommended: false, radiators: 6 },
+  { value: 4.0, label: '400%', recommended: false, radiators: 11 },
 ];
 
 export function SavingsCard({
