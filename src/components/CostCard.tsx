@@ -33,7 +33,7 @@ export function CostCard({ results, assumptions, scop, cylinderOption }: CostCar
   const rightBullets = [
     { icon: Sparkles, text: 'Cosy heat pump sized for your home' },
     { icon: Droplets, text: cylinderText },
-    { icon: Heater, text: `${results.selectedRadiators} radiators upgraded` },
+    { icon: Heater, text: `${results.radiatorsUpgraded} radiators upgraded` },
   ];
 
   return (
@@ -126,12 +126,12 @@ export function CostCard({ results, assumptions, scop, cylinderOption }: CostCar
                   <span>+{formatCurrency(results.adders.cylinder)}</span>
                 </div>
               )}
-              <div className="flex justify-between text-foreground">
-                <span>Radiator adjustments ({results.selectedRadiators} selected)</span>
-                <span className={results.radiatorDelta >= 0 ? '' : 'text-success'}>
-                  {results.radiatorDelta >= 0 ? '+' : '−'}{formatCurrency(Math.abs(results.radiatorDelta))}
-                </span>
-              </div>
+              {results.radiatorAdder > 0 && (
+                <div className="flex justify-between text-foreground">
+                  <span>Radiator upgrades ({results.radiatorsUpgraded} radiators)</span>
+                  <span>+{formatCurrency(results.radiatorAdder)}</span>
+                </div>
+              )}
               <div className="border-t border-border pt-2 flex justify-between font-medium text-foreground">
                 <span>Your contribution</span>
                 <span>{formatCurrency(results.customerContribution)}</span>

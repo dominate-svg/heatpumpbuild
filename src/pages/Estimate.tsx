@@ -6,7 +6,6 @@ import { PropertyCard } from '@/components/PropertyCard';
 import { CostCard } from '@/components/CostCard';
 import { SavingsCard } from '@/components/SavingsCard';
 import { InstallOptions } from '@/components/InstallOptions';
-import { RadiatorSelector } from '@/components/RadiatorSelector';
 import { Timeline } from '@/components/Timeline';
 import { StickyCTA } from '@/components/StickyCTA';
 import { useAssumptions } from '@/hooks/useAssumptions';
@@ -19,14 +18,10 @@ export default function Estimate() {
   const { data: assumptions, isLoading } = useAssumptions();
   
   const [epcData, setEpcData] = useState<EPCData | null>(null);
-  const [scop, setScop] = useState(3.7);
+  const [scop, setScop] = useState(3.4); // Default to 340% (2 radiators)
   const [tariff, setTariff] = useState<'cosy' | 'standard'>('cosy');
   const [locationAdder, setLocationAdder] = useState<'included' | '6m' | '9m'>('included');
   const [cylinderOption, setCylinderOption] = useState<'existing' | '150l' | '210l'>('existing');
-  const [selectedRadiators, setSelectedRadiators] = useState<number | null>(null);
-
-  // Initialize selectedRadiators from assumptions once loaded
-  const effectiveRadiators = selectedRadiators ?? assumptions?.included_radiators ?? 2;
 
   useEffect(() => {
     const stored = sessionStorage.getItem('epcData');
@@ -57,9 +52,8 @@ export default function Estimate() {
       tariff,
       locationAdder,
       cylinderOption,
-      selectedRadiators: effectiveRadiators,
     }, assumptions);
-  }, [epcData, assumptions, scop, tariff, locationAdder, cylinderOption, effectiveRadiators]);
+  }, [epcData, assumptions, scop, tariff, locationAdder, cylinderOption]);
 
   if (isLoading || !epcData || !results || !assumptions) {
     return (
@@ -80,7 +74,6 @@ export default function Estimate() {
     region: epcData.region,
     locationAdder,
     cylinderOption,
-    selectedRadiators: effectiveRadiators,
   };
 
   return (
@@ -143,15 +136,6 @@ export default function Estimate() {
             cylinderOption={cylinderOption}
             onLocationChange={setLocationAdder}
             onCylinderChange={setCylinderOption}
-            assumptions={assumptions}
-          />
-        </section>
-
-        {/* Radiator selector */}
-        <section className="mb-12">
-          <RadiatorSelector
-            selectedRadiators={effectiveRadiators}
-            onRadiatorChange={setSelectedRadiators}
             assumptions={assumptions}
           />
         </section>

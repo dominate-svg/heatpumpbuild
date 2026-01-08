@@ -42,7 +42,13 @@ export interface EstimateInputs {
   tariff: 'cosy' | 'standard';
   locationAdder: 'included' | '6m' | '9m';
   cylinderOption: 'existing' | '150l' | '210l';
-  selectedRadiators: number;
+}
+
+// Map efficiency (SCOP) to radiator count
+export function getRadiatorsForEfficiency(scop: number): number {
+  if (scop >= 4.0) return 11;
+  if (scop >= 3.7) return 6;
+  return 2; // 340% / SCOP 3.4 or lower
 }
 
 export interface EstimateResults {
@@ -60,10 +66,12 @@ export interface EstimateResults {
   grantEligible: boolean;
   netInstallPrice: number;
   // Radiator contribution fields
-  selectedRadiators: number;
-  radiatorDelta: number;
+  radiatorsUpgraded: number;
+  extraRads: number;
+  radiatorAdder: number;
   rawCustomerContribution: number;
   customerContribution: number;
+  efficiencySelected: number;
 }
 
 // Default heat intensity by property type (kWh/m²/year)
@@ -154,20 +162,22 @@ export function calculateEstimate(
     inputs.cylinderOption === '150l' ? assumptions.adder_cylinder_150l :
     inputs.cylinderOption === '210l' ? assumptions.adder_cylinder_210l : 0;
 
-  // Radiator contribution calculation
-  const selectedRadiators = inputs.selectedRadiators ?? assumptions.included_radiators;
-  const radiatorDelta = (selectedRadiators - assumptions.included_radiators) * assumptions.rad_upgrade_cost;
+  // Radiator calculation based on efficiency selection
+  const radiatorsUpgraded = getRadiatorsForEfficiency(inputs.scop);
+  const baseRadiators = assumptions.included_radiators; // 2
+  const extraRads = Math.max(0, radiatorsUpgraded - baseRadiators);
+  const radiatorAdder = extraRads * assumptions.rad_upgrade_cost;
   
   // Customer contribution calculation
   const rawCustomerContribution = 
     assumptions.base_customer_contribution + 
     locationAdder + 
     cylinderAdder + 
-    radiatorDelta;
+    radiatorAdder;
   
   const customerContribution = Math.max(assumptions.min_customer_contribution, rawCustomerContribution);
 
-  const adders = { location: locationAdder, cylinder: cylinderAdder, radiator: radiatorDelta };
+  const adders = { location: locationAdder, cylinder: cylinderAdder, radiator: radiatorAdder };
   const grossInstallPrice = installBase + locationAdder + cylinderAdder;
 
   // Grant eligibility: England/Wales and gas/oil/LPG
@@ -197,10 +207,12 @@ export function calculateEstimate(
     grantApplied,
     grantEligible,
     netInstallPrice,
-    selectedRadiators,
-    radiatorDelta,
+    radiatorsUpgraded,
+    extraRads,
+    radiatorAdder,
     rawCustomerContribution,
     customerContribution,
+    efficiencySelected: inputs.scop * 100,
   };
 }
 

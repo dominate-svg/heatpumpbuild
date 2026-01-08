@@ -77,7 +77,9 @@ export type Database = {
           created_at: string
           current_fuel: string | null
           customer_contribution: number | null
+          efficiency_selected: number | null
           electricity_rate: number | null
+          extra_rads: number | null
           floor_area_m2: number | null
           full_load_hours: number | null
           gas_rate: number | null
@@ -93,6 +95,7 @@ export type Database = {
           min_customer_contribution: number | null
           property_type: string | null
           rad_upgrade_cost: number | null
+          radiator_adder: number | null
           radiator_delta: number | null
           raw_customer_contribution: number | null
           region: string | null
@@ -111,7 +114,9 @@ export type Database = {
           created_at?: string
           current_fuel?: string | null
           customer_contribution?: number | null
+          efficiency_selected?: number | null
           electricity_rate?: number | null
+          extra_rads?: number | null
           floor_area_m2?: number | null
           full_load_hours?: number | null
           gas_rate?: number | null
@@ -127,6 +132,7 @@ export type Database = {
           min_customer_contribution?: number | null
           property_type?: string | null
           rad_upgrade_cost?: number | null
+          radiator_adder?: number | null
           radiator_delta?: number | null
           raw_customer_contribution?: number | null
           region?: string | null
@@ -145,7 +151,9 @@ export type Database = {
           created_at?: string
           current_fuel?: string | null
           customer_contribution?: number | null
+          efficiency_selected?: number | null
           electricity_rate?: number | null
+          extra_rads?: number | null
           floor_area_m2?: number | null
           full_load_hours?: number | null
           gas_rate?: number | null
@@ -161,6 +169,7 @@ export type Database = {
           min_customer_contribution?: number | null
           property_type?: string | null
           rad_upgrade_cost?: number | null
+          radiator_adder?: number | null
           radiator_delta?: number | null
           raw_customer_contribution?: number | null
           region?: string | null
