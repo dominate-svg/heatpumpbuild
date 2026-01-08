@@ -133,9 +133,15 @@ export default function Index() {
               <h2 className="text-[30px] sm:text-[36px] md:text-[42px] font-bold text-foreground leading-[1.12] mb-6">
                 If you have a boiler, this is your chance to upgrade.
               </h2>
-              <p className="text-lg text-muted-foreground leading-relaxed">
+              <p className="text-lg text-muted-foreground leading-relaxed mb-6">
                 The Cosy Heat Pump is built for today's energy prices — not yesterday's heating systems.
               </p>
+              <button
+                onClick={scrollToPostcode}
+                className="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-bold cta-hover-lift"
+              >
+                Check your postcode
+              </button>
             </div>
             {/* Image Placeholder - Right */}
             <div className="bg-muted rounded-2xl aspect-[4/3] flex items-center justify-center p-6 border border-border">
@@ -174,9 +180,17 @@ export default function Index() {
               <p className="text-lg text-foreground leading-relaxed mb-4">
                 Your home heats when electricity is cheap — not when it's expensive.
               </p>
-              <p className="text-lg text-foreground font-semibold border-b-2 border-primary inline-block pb-1">
+              <p className="text-lg text-foreground font-semibold border-b-2 border-primary inline-block pb-1 mb-6">
                 That's the difference.
               </p>
+              <div>
+                <button
+                  onClick={scrollToPostcode}
+                  className="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-bold cta-hover-lift"
+                >
+                  Check your postcode
+                </button>
+              </div>
             </div>
 
             {/* Graphic Placeholder - Schedule Bar */}
@@ -239,9 +253,15 @@ export default function Index() {
               <p className="text-lg md:text-xl text-foreground leading-relaxed mb-4">
                 You might have heard people say heat pumps don't work.
               </p>
-              <p className="text-lg md:text-xl text-foreground leading-relaxed font-medium">
+              <p className="text-lg md:text-xl text-foreground leading-relaxed font-medium mb-6">
                 You just haven't seen one like this — it works brilliantly, and it looks like it knows it 😏
               </p>
+              <button
+                onClick={scrollToPostcode}
+                className="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-bold cta-hover-lift"
+              >
+                Check your postcode
+              </button>
             </div>
           </div>
         </div>
@@ -264,11 +284,17 @@ export default function Index() {
               </p>
               
               {/* Statement block - high-performing copy */}
-              <div className="space-y-3 text-lg md:text-xl text-foreground font-medium pl-4 border-l-4 border-primary">
+              <div className="space-y-3 text-lg md:text-xl text-foreground font-medium pl-4 border-l-4 border-primary mb-8">
                 <p>You don't see this happening.</p>
                 <p>You don't manage it.</p>
                 <p>It just works in the background.</p>
               </div>
+              <button
+                onClick={scrollToPostcode}
+                className="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-bold cta-hover-lift"
+              >
+                Check your postcode
+              </button>
             </div>
 
             {/* Graphic Placeholder - Right */}
@@ -325,9 +351,15 @@ export default function Index() {
                 </p>
               </div>
 
-              <p className="text-lg text-muted-foreground leading-relaxed">
+              <p className="text-lg text-muted-foreground leading-relaxed mb-6">
                 It uses far less energy than a boiler and is built to last around 20 years.
               </p>
+              <button
+                onClick={scrollToPostcode}
+                className="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-bold cta-hover-lift"
+              >
+                Check your postcode
+              </button>
             </div>
 
             {/* Image Placeholder - Right */}
@@ -372,9 +404,15 @@ export default function Index() {
               <p className="text-lg text-foreground leading-relaxed mb-6">
                 That's why Cosy can be fully installed from just <span className="text-primary font-bold text-2xl">£1995</span> — but the grant is currently scheduled to run until <span className="text-primary font-bold">April 2026</span> ⏳. After that, costs are likely to rise.
               </p>
-              <p className="text-sm text-muted-foreground border-l-2 border-border pl-4">
+              <p className="text-sm text-muted-foreground border-l-2 border-border pl-4 mb-6">
                 Eligibility confirmed at survey. This is a digital estimate.
               </p>
+              <button
+                onClick={scrollToPostcode}
+                className="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-bold cta-hover-lift"
+              >
+                Check your postcode
+              </button>
             </div>
           </div>
         </div>
