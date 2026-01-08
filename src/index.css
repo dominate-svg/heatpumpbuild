@@ -8,46 +8,101 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Smart Energy Homes Brand - Dark Purple Primary */
-    --background: 270 30% 12%;
+    /* Smart Energy Homes - Light, modern theme */
+    --background: 270 20% 98%;
+    --foreground: 270 40% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 270 40% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 270 40% 15%;
+
+    /* Deep purple primary */
+    --primary: 270 60% 35%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 270 30% 95%;
+    --secondary-foreground: 270 40% 25%;
+
+    --muted: 270 20% 94%;
+    --muted-foreground: 270 15% 45%;
+
+    /* Vibrant pink/magenta accent */
+    --accent: 330 85% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 270 20% 90%;
+    --input: 270 20% 90%;
+    --ring: 330 85% 55%;
+
+    --radius: 0.75rem;
+
+    /* Custom utility colors */
+    --highlight: 330 85% 55%;
+    --highlight-foreground: 0 0% 100%;
+    --success: 152 60% 40%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(270 60% 35%), hsl(290 50% 45%));
+    --gradient-accent: linear-gradient(135deg, hsl(330 85% 55%), hsl(350 80% 60%));
+    --gradient-hero: linear-gradient(180deg, hsl(270 40% 20%) 0%, hsl(280 50% 30%) 100%);
+
+    --sidebar-background: 270 30% 98%;
+    --sidebar-foreground: 270 40% 25%;
+    --sidebar-primary: 330 85% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 270 20% 94%;
+    --sidebar-accent-foreground: 270 40% 25%;
+    --sidebar-border: 270 20% 90%;
+    --sidebar-ring: 330 85% 55%;
+  }
+
+  .dark {
+    --background: 270 30% 8%;
     --foreground: 0 0% 98%;
 
-    --card: 270 25% 16%;
+    --card: 270 25% 12%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 270 25% 16%;
+    --popover: 270 25% 12%;
     --popover-foreground: 0 0% 98%;
 
-    /* Dark purple primary */
     --primary: 330 85% 60%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 270 20% 22%;
+    --secondary: 270 20% 18%;
     --secondary-foreground: 0 0% 98%;
 
     --muted: 270 15% 20%;
     --muted-foreground: 270 10% 65%;
 
-    /* Pink/magenta accent */
     --accent: 330 85% 60%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 62% 30%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 270 15% 25%;
-    --input: 270 15% 25%;
+    --border: 270 15% 22%;
+    --input: 270 15% 22%;
     --ring: 330 85% 60%;
 
-    --radius: 0.75rem;
-
-    /* Custom colors for the app */
     --highlight: 330 85% 60%;
     --highlight-foreground: 0 0% 100%;
-    --success: 142 76% 36%;
+    --success: 152 60% 40%;
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(270 50% 40%), hsl(290 50% 50%));
+    --gradient-accent: linear-gradient(135deg, hsl(330 85% 55%), hsl(350 80% 60%));
+    --gradient-hero: linear-gradient(180deg, hsl(270 40% 12%) 0%, hsl(280 50% 18%) 100%);
 
     --sidebar-background: 270 30% 10%;
     --sidebar-foreground: 0 0% 90%;
@@ -58,51 +113,46 @@ All colors MUST be HSL.
     --sidebar-border: 270 15% 20%;
     --sidebar-ring: 330 85% 60%;
   }
+}
 
-  .dark {
-    --background: 270 30% 12%;
-    --foreground: 0 0% 98%;
+@layer base {
+  * {
+    @apply border-border;
+  }
 
-    --card: 270 25% 16%;
-    --card-foreground: 0 0% 98%;
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
 
-    --popover: 270 25% 16%;
-    --popover-foreground: 0 0% 98%;
-
-    --primary: 330 85% 60%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 270 20% 22%;
-    --secondary-foreground: 0 0% 98%;
-
-    --muted: 270 15% 20%;
-    --muted-foreground: 270 10% 65%;
-
-    --accent: 330 85% 60%;
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 270 15% 25%;
-    --input: 270 15% 25%;
-    --ring: 330 85% 60%;
-
-    --highlight: 330 85% 60%;
-    --highlight-foreground: 0 0% 100%;
-    --success: 142 76% 36%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-
-    --sidebar-background: 270 30% 10%;
-    --sidebar-foreground: 0 0% 90%;
-    --sidebar-primary: 330 85% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 270 20% 18%;
-    --sidebar-accent-foreground: 0 0% 90%;
-    --sidebar-border: 270 15% 20%;
-    --sidebar-ring: 330 85% 60%;
+@layer utilities {
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+  
+  .gradient-accent {
+    background: var(--gradient-accent);
+  }
+  
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+  
+  .text-gradient {
+    background: var(--gradient-accent);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .glass {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .shadow-glow {
+    box-shadow: 0 0 40px -10px hsl(330 85% 55% / 0.3);
   }
 }
 

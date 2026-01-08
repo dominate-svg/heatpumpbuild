@@ -10,7 +10,8 @@ import { LeadCaptureForm } from '@/components/LeadCaptureForm';
 import { useAssumptions } from '@/hooks/useAssumptions';
 import { calculateEstimate } from '@/lib/calculations';
 import type { EPCData } from '@/lib/calculations';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default function Estimate() {
   const navigate = useNavigate();
@@ -50,7 +51,10 @@ export default function Estimate() {
   if (isLoading || !epcData || !results || !assumptions) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <div className="text-center">
+          <Loader2 className="w-10 h-10 animate-spin text-accent mx-auto mb-4" />
+          <p className="text-muted-foreground">Calculating your estimate...</p>
+        </div>
       </div>
     );
   }
@@ -69,8 +73,27 @@ export default function Estimate() {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="max-w-6xl mx-auto px-4 py-8">
+      {/* Hero banner */}
+      <div className="gradient-hero py-6">
+        <div className="max-w-6xl mx-auto px-4">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate('/')}
+            className="text-white/70 hover:text-white hover:bg-white/10 mb-4"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Start new estimate
+          </Button>
+          <h1 className="text-2xl md:text-3xl font-bold text-white">
+            Your Heat Pump Estimate
+          </h1>
+          <p className="text-white/70 mt-1">{epcData.address}, {epcData.postcode}</p>
+        </div>
+      </div>
+      
+      <main className="max-w-6xl mx-auto px-4 py-8 -mt-4">
         <div className="grid lg:grid-cols-3 gap-6">
+          {/* Main content */}
           <div className="lg:col-span-2 space-y-6">
             <EstimateOverview epcData={epcData} results={results} />
             <InstallPriceCard results={results} />
@@ -91,13 +114,17 @@ export default function Estimate() {
             />
             <Timeline />
           </div>
+          
+          {/* Sticky sidebar */}
           <div className="lg:col-span-1">
-            <LeadCaptureForm
-              epcData={epcData}
-              results={results}
-              assumptions={assumptions}
-              inputs={inputs}
-            />
+            <div className="lg:sticky lg:top-24">
+              <LeadCaptureForm
+                epcData={epcData}
+                results={results}
+                assumptions={assumptions}
+                inputs={inputs}
+              />
+            </div>
           </div>
         </div>
       </main>
