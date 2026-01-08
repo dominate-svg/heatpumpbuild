@@ -10,7 +10,7 @@ import {
 import { formatCurrency } from '@/lib/calculations';
 import type { EstimateResults, Assumptions } from '@/lib/calculations';
 import { CosyBadge } from './CosyBadge';
-import { HeatPumpVisual } from './HeatPumpVisual';
+
 
 interface CostCardProps {
   results: EstimateResults;
@@ -53,10 +53,6 @@ export function CostCard({ results, assumptions, scop, cylinderOption }: CostCar
       </div>
 
       <CardContent className="p-4 md:p-6">
-        {/* Heat pump visual - compact */}
-        <div className="mb-4 hidden md:block">
-          <HeatPumpVisual className="max-w-[120px] mx-auto" />
-        </div>
 
         {/* Features grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
