@@ -1,9 +1,7 @@
 import { useState } from 'react';
-import { TrendingUp, TrendingDown, ChevronDown, ChevronUp, Info, Leaf, Calculator, Fuel } from 'lucide-react';
+import { TrendingUp, TrendingDown, ChevronDown, ChevronUp, Info, Leaf, Calculator, Fuel, AlertCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Collapsible,
   CollapsibleContent,
@@ -26,11 +24,9 @@ interface SavingsCardProps {
   scop: number;
   selectedTariff: Tariff | null;
   currentFuel: string;
-  userAnnualCost: number | undefined;
   onScopChange: (scop: number) => void;
   onTariffChange: (tariff: Tariff) => void;
   onFuelChange: (fuel: string) => void;
-  onUserAnnualCostChange: (cost: number | undefined) => void;
 }
 
 const EFFICIENCY_OPTIONS = [
@@ -41,9 +37,9 @@ const EFFICIENCY_OPTIONS = [
 
 const FUEL_OPTIONS = [
   { value: 'gas', label: 'Mains gas' },
-  { value: 'oil', label: 'Oil' },
+  { value: 'oil', label: 'Heating oil' },
   { value: 'lpg', label: 'LPG' },
-  { value: 'electric', label: 'Electric' },
+  { value: 'electric', label: 'Direct electric' },
 ];
 
 export function SavingsCard({
@@ -52,19 +48,16 @@ export function SavingsCard({
   scop,
   selectedTariff,
   currentFuel,
-  userAnnualCost,
   onScopChange,
   onTariffChange,
   onFuelChange,
-  onUserAnnualCostChange,
 }: SavingsCardProps) {
   const [isEfficiencyOpen, setIsEfficiencyOpen] = useState(false);
   const [isCalculationOpen, setIsCalculationOpen] = useState(false);
   const { data: tariffs, isLoading: tariffsLoading } = useTariffs();
 
-  const { savingsRange, savingsCouldIncrease } = results;
-  const typicalSavings = savingsRange.typical.savings;
-  const isNegativeSavings = typicalSavings < 0;
+  const { annualSavings, savingsCouldIncrease, confidenceLabel, epcBand } = results;
+  const isNegativeSavings = annualSavings < 0;
 
   const handleTariffChange = (tariffId: string) => {
     const tariff = tariffs?.find(t => t.id === tariffId);
@@ -73,13 +66,11 @@ export function SavingsCard({
     }
   };
 
-  const handleAnnualCostChange = (value: string) => {
-    const parsed = parseFloat(value);
-    if (value === '' || isNaN(parsed)) {
-      onUserAnnualCostChange(undefined);
-    } else {
-      onUserAnnualCostChange(parsed);
-    }
+  // Confidence badge color
+  const getConfidenceBadgeClass = () => {
+    if (['A', 'B', 'C'].includes(epcBand)) return 'bg-success/10 text-success';
+    if (['D', 'E'].includes(epcBand)) return 'bg-warning/10 text-warning';
+    return 'bg-muted text-muted-foreground';
   };
 
   return (
@@ -87,7 +78,7 @@ export function SavingsCard({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-foreground">Annual savings</h2>
-          <p className="text-xs text-muted-foreground">Projected savings from your new system</p>
+          <p className="text-xs text-muted-foreground">Conservative estimate based on national averages</p>
         </div>
         <div className="flex items-center gap-2 text-success">
           <Leaf className="w-5 h-5 animate-bounce-in" style={{ animationDelay: '0.3s' }} />
@@ -96,10 +87,12 @@ export function SavingsCard({
 
       <Card className="border border-border shadow-card overflow-hidden">
         <CardContent className="p-0">
-          {/* Savings display with range */}
-          <div className="p-4 md:p-5 bg-gradient-to-r from-success/5 to-accent/5 border-b border-border">
+          {/* Savings display */}
+          <div className={`p-4 md:p-5 border-b border-border ${
+            isNegativeSavings ? 'bg-warning/5' : 'bg-gradient-to-r from-success/5 to-accent/5'
+          }`}>
             <div className="flex flex-col gap-4">
-              {/* Main savings figure - range display */}
+              {/* Main savings figure */}
               <div className="flex items-start gap-3">
                 <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0 ${
                   isNegativeSavings ? 'bg-warning/10' : 'bg-success/10'
@@ -112,26 +105,28 @@ export function SavingsCard({
                 </div>
                 <div className="flex-1">
                   <p className="text-xs text-muted-foreground mb-1">
-                    {savingsCouldIncrease ? 'Your costs could increase by' : 'You could save'}
+                    {savingsCouldIncrease ? 'Bills may increase slightly' : 'Estimated annual savings'}
                   </p>
                   
-                  {/* Savings range */}
                   <div className="space-y-1">
                     <div className="flex items-baseline gap-2 flex-wrap">
-                      <span className={`text-xl sm:text-2xl md:text-3xl font-bold ${
+                      <span className={`text-2xl sm:text-3xl md:text-4xl font-bold ${
                         isNegativeSavings ? 'text-warning' : 'text-success'
                       }`}>
-                        {formatCurrency(Math.abs(savingsRange.worst.savings))}
-                        <span className="text-base font-normal mx-1">–</span>
-                        {formatCurrency(Math.abs(savingsRange.best.savings))}
+                        {formatCurrency(Math.abs(annualSavings))}
                       </span>
                       <span className="text-xs sm:text-sm text-muted-foreground">/year</span>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      Typical: <span className="font-medium text-foreground">{formatCurrency(Math.abs(typicalSavings))}</span>
-                    </p>
                   </div>
                 </div>
+              </div>
+
+              {/* Confidence label */}
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className={`text-xs ${getConfidenceBadgeClass()}`}>
+                  EPC {epcBand}
+                </Badge>
+                <span className="text-xs text-muted-foreground">{confidenceLabel}</span>
               </div>
               
               {/* Tariff dropdown */}
@@ -166,7 +161,8 @@ export function SavingsCard({
 
               {/* Disclaimer */}
               <p className="text-[10px] sm:text-xs text-muted-foreground italic">
-                Digital estimate — a survey confirms the final design and savings.
+                Based on national average energy use for EPC {epcBand} homes and conservative performance assumptions. 
+                Final results depend on survey and any insulation improvements.
               </p>
             </div>
           </div>
@@ -178,43 +174,21 @@ export function SavingsCard({
               <p className="text-sm font-medium text-foreground">Current heating fuel</p>
             </div>
             
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs text-muted-foreground mb-1.5 block">Fuel type</Label>
-                <Select value={currentFuel} onValueChange={onFuelChange}>
-                  <SelectTrigger className="w-full text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {FUEL_OPTIONS.map((fuel) => (
-                      <SelectItem key={fuel.value} value={fuel.value} className="text-xs">
-                        {fuel.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-[10px] text-muted-foreground mt-1">
-                  Detected: {getFuelDisplayName(results.currentFuelType)}
-                </p>
-              </div>
-              
-              <div>
-                <Label className="text-xs text-muted-foreground mb-1.5 block">Your annual bill (optional)</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">£</span>
-                  <Input
-                    type="number"
-                    placeholder="e.g. 1200"
-                    value={userAnnualCost ?? ''}
-                    onChange={(e) => handleAnnualCostChange(e.target.value)}
-                    className="pl-7 text-xs"
-                  />
-                </div>
-                <p className="text-[10px] text-muted-foreground mt-1">
-                  Overrides our estimate
-                </p>
-              </div>
-            </div>
+            <Select value={currentFuel} onValueChange={onFuelChange}>
+              <SelectTrigger className="w-full text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {FUEL_OPTIONS.map((fuel) => (
+                  <SelectItem key={fuel.value} value={fuel.value} className="text-xs">
+                    {fuel.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-[10px] text-muted-foreground mt-2">
+              Detected from EPC: {getFuelDisplayName(results.currentFuelType)}
+            </p>
           </div>
 
           {/* Efficiency selector */}
@@ -252,7 +226,9 @@ export function SavingsCard({
               </CollapsibleTrigger>
               <CollapsibleContent className="pt-2">
                 <p className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
-                  Higher efficiency = more heat per unit of electricity. At 370% (SCOP 3.7), you get 3.7kWh of heat for every 1kWh used. We adjust for your home's EPC rating — less efficient homes may not achieve the full rated SCOP.
+                  Higher efficiency = more heat per unit of electricity. At 370% (SCOP 3.7), you get 3.7kWh of heat for every 1kWh used. 
+                  We adjust the SCOP based on your home's EPC rating — less efficient homes require higher flow temperatures, 
+                  which reduces achievable efficiency.
                 </p>
               </CollapsibleContent>
             </Collapsible>
@@ -272,48 +248,86 @@ export function SavingsCard({
               </CollapsibleTrigger>
               <CollapsibleContent className="pt-3">
                 <div className="bg-muted/50 p-3 rounded-lg space-y-2 text-xs text-muted-foreground">
-                  <div className="flex justify-between">
-                    <span>Heat demand:</span>
-                    <span className="font-medium text-foreground">
-                      {results.annualHeatKwh.toLocaleString()} kWh
-                      <span className="text-muted-foreground ml-1">
-                        ({results.heatDemandSource === 'epc' ? 'from EPC' : 'estimated'})
-                      </span>
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Current fuel:</span>
-                    <span className="font-medium text-foreground">
-                      {getFuelDisplayName(results.currentFuelType)} ({Math.round(results.boilerEfficiency * 100)}% eff.)
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Rated SCOP:</span>
-                    <span className="font-medium text-foreground">{scop.toFixed(1)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Adjusted SCOP (for your home):</span>
-                    <span className="font-medium text-foreground">{results.scopAdjusted.toFixed(2)}</span>
-                  </div>
-                  {results.offpeakShareUsed > 0 && (
+                  {/* Heat demand breakdown */}
+                  <div className="pb-2 border-b border-border">
+                    <p className="font-medium text-foreground mb-1">Heat demand (national average for EPC {epcBand})</p>
                     <div className="flex justify-between">
-                      <span>Off-peak usage share:</span>
+                      <span>Total useful heat:</span>
+                      <span className="font-medium text-foreground">{results.annualHeatKwh.toLocaleString()} kWh/year</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Space heating:</span>
+                      <span className="font-medium text-foreground">{results.spaceHeatKwh.toLocaleString()} kWh</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Hot water:</span>
+                      <span className="font-medium text-foreground">{results.dhwHeatKwh.toLocaleString()} kWh</span>
+                    </div>
+                  </div>
+
+                  {/* Current system */}
+                  <div className="pb-2 border-b border-border">
+                    <p className="font-medium text-foreground mb-1">Current system</p>
+                    <div className="flex justify-between">
+                      <span>Fuel type:</span>
+                      <span className="font-medium text-foreground">{getFuelDisplayName(results.currentFuelType)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Boiler efficiency:</span>
+                      <span className="font-medium text-foreground">{Math.round(results.boilerEfficiency * 100)}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Fuel energy used:</span>
+                      <span className="font-medium text-foreground">{results.fuelInputKwh.toLocaleString()} kWh/year</span>
+                    </div>
+                  </div>
+
+                  {/* Heat pump performance */}
+                  <div className="pb-2 border-b border-border">
+                    <p className="font-medium text-foreground mb-1">Heat pump performance</p>
+                    <div className="flex justify-between">
+                      <span>Selected SCOP:</span>
+                      <span className="font-medium text-foreground">{scop.toFixed(1)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>EPC derate applied:</span>
+                      <span className="font-medium text-foreground">{Math.round(results.epcDerateApplied * 100)}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Adjusted space SCOP:</span>
+                      <span className="font-medium text-foreground">{results.scopAdjusted.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>DHW SCOP (fixed):</span>
+                      <span className="font-medium text-foreground">{results.dhwScop.toFixed(1)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Electricity used:</span>
+                      <span className="font-medium text-foreground">{results.hpElectricKwh.toLocaleString()} kWh/year</span>
+                    </div>
+                  </div>
+
+                  {/* Electricity cost */}
+                  <div>
+                    <p className="font-medium text-foreground mb-1">Electricity cost</p>
+                    <div className="flex justify-between">
+                      <span>Cheap-hour share:</span>
                       <span className="font-medium text-foreground">{Math.round(results.offpeakShareUsed * 100)}%</span>
                     </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span>Effective electricity rate:</span>
-                    <span className="font-medium text-foreground">{(results.weightedRate * 100).toFixed(1)}p/kWh</span>
+                    <div className="flex justify-between">
+                      <span>Effective rate:</span>
+                      <span className="font-medium text-foreground">{(results.weightedRate * 100).toFixed(1)}p/kWh</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Heat pump electricity use:</span>
-                    <span className="font-medium text-foreground">{results.hpElectricKwh.toLocaleString()} kWh/year</span>
-                  </div>
-                  {results.savingsClamped && (
-                    <p className="text-[10px] text-muted-foreground mt-2 pt-2 border-t border-border">
-                      Note: Gas savings are capped at realistic levels based on typical switching outcomes.
+
+                  {/* Note about conservatism */}
+                  <div className="flex items-start gap-2 pt-2 mt-2 border-t border-border">
+                    <AlertCircle className="w-3 h-3 text-muted-foreground flex-shrink-0 mt-0.5" />
+                    <p className="text-[10px] text-muted-foreground">
+                      This calculator uses conservative assumptions. We prefer to under-estimate savings rather than over-estimate. 
+                      Actual results may be better, especially after insulation improvements.
                     </p>
-                  )}
+                  </div>
                 </div>
               </CollapsibleContent>
             </Collapsible>

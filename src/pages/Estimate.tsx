@@ -14,6 +14,16 @@ import { calculateEstimate } from '@/lib/calculations';
 import type { EPCData } from '@/lib/calculations';
 import { Loader2, Sparkles } from 'lucide-react';
 
+// Helper to detect fuel type from EPC data
+function detectFuelType(mainFuel?: string): string {
+  if (!mainFuel) return 'gas';
+  const fuel = mainFuel.toLowerCase();
+  if (fuel.includes('oil')) return 'oil';
+  if (fuel.includes('lpg') || fuel.includes('bottled')) return 'lpg';
+  if (fuel.includes('electric')) return 'electric';
+  return 'gas';
+}
+
 export default function Estimate() {
   const navigate = useNavigate();
   const { data: assumptions, isLoading: assumptionsLoading } = useAssumptions();
@@ -25,7 +35,6 @@ export default function Estimate() {
   const [locationAdder, setLocationAdder] = useState<'included' | '6m' | '9m'>('included');
   const [cylinderOption, setCylinderOption] = useState<'existing' | '150l' | '210l'>('existing');
   const [currentFuel, setCurrentFuel] = useState<string>('gas');
-  const [userAnnualCost, setUserAnnualCost] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     const stored = sessionStorage.getItem('epcData');
@@ -38,13 +47,7 @@ export default function Estimate() {
       const parsed = JSON.parse(stored) as EPCData;
       setEpcData(parsed);
       // Set initial fuel from EPC data
-      if (parsed.mainFuel) {
-        const fuel = parsed.mainFuel.toLowerCase();
-        if (fuel.includes('oil')) setCurrentFuel('oil');
-        else if (fuel.includes('lpg') || fuel.includes('bottled')) setCurrentFuel('lpg');
-        else if (fuel.includes('electric')) setCurrentFuel('electric');
-        else setCurrentFuel('gas');
-      }
+      setCurrentFuel(detectFuelType(parsed.mainFuel));
     } catch {
       sessionStorage.removeItem('epcData');
       navigate('/');
@@ -75,9 +78,8 @@ export default function Estimate() {
       tariff: selectedTariff,
       locationAdder,
       cylinderOption,
-      userProvidedAnnualCost: userAnnualCost,
     }, assumptions);
-  }, [epcData, assumptions, scop, selectedTariff, locationAdder, cylinderOption, currentFuel, userAnnualCost]);
+  }, [epcData, assumptions, scop, selectedTariff, locationAdder, cylinderOption, currentFuel]);
 
   const isLoading = assumptionsLoading || tariffsLoading;
 
@@ -153,11 +155,9 @@ export default function Estimate() {
             scop={scop}
             selectedTariff={selectedTariff}
             currentFuel={currentFuel}
-            userAnnualCost={userAnnualCost}
             onScopChange={setScop}
             onTariffChange={setSelectedTariff}
             onFuelChange={setCurrentFuel}
-            onUserAnnualCostChange={setUserAnnualCost}
           />
         </div>
 
