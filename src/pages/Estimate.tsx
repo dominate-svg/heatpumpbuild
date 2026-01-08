@@ -27,9 +27,17 @@ export default function Estimate() {
 
   useEffect(() => {
     const stored = sessionStorage.getItem('epcData');
-    if (stored) {
-      setEpcData(JSON.parse(stored));
-    } else {
+    if (!stored) {
+      navigate('/');
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(stored) as EPCData;
+      setEpcData(parsed);
+    } catch {
+      // If the stored value is corrupted, recover gracefully.
+      sessionStorage.removeItem('epcData');
       navigate('/');
     }
   }, [navigate]);
