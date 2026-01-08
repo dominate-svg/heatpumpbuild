@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TrendingUp, TrendingDown, ChevronDown, ChevronUp, Zap } from 'lucide-react';
+import { TrendingUp, TrendingDown, ChevronDown, ChevronUp, Zap, PiggyBank } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -47,73 +47,71 @@ export function SavingsCalculator({
   const displaySavings = Math.abs(results.annualSavings);
 
   return (
-    <Card className="border-border bg-card">
+    <Card className="border shadow-sm bg-card">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
-          <Zap className="w-5 h-5 text-primary" />
-          Annual Running Costs
+          <div className="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center">
+            <PiggyBank className="w-4 h-4 text-success" />
+          </div>
+          Running Cost Comparison
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Current vs Heat Pump costs */}
+        {/* Cost comparison */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-secondary/50 rounded-lg p-4">
-            <p className="text-sm text-muted-foreground mb-1">Current heating</p>
-            <p className="text-2xl font-bold text-foreground">
+          <div className="p-4 bg-muted/50 rounded-xl border-2 border-transparent">
+            <p className="text-sm text-muted-foreground mb-2">Current heating</p>
+            <p className="text-3xl font-bold text-foreground">
               {formatCurrency(results.baselineCost)}
-              <span className="text-sm font-normal text-muted-foreground">/year</span>
             </p>
+            <p className="text-xs text-muted-foreground">per year</p>
           </div>
-          <div className="bg-primary/10 rounded-lg p-4 border border-primary/30">
-            <p className="text-sm text-muted-foreground mb-1">With heat pump</p>
-            <p className="text-2xl font-bold text-foreground">
+          <div className="p-4 bg-success/5 rounded-xl border-2 border-success/30">
+            <p className="text-sm text-muted-foreground mb-2">With heat pump</p>
+            <p className="text-3xl font-bold text-success">
               {formatCurrency(results.hpCost)}
-              <span className="text-sm font-normal text-muted-foreground">/year</span>
             </p>
+            <p className="text-xs text-muted-foreground">per year</p>
           </div>
         </div>
 
-        {/* Savings display */}
-        <div className={`rounded-lg p-4 flex items-center gap-3 ${
+        {/* Savings highlight */}
+        <div className={`rounded-xl p-5 flex items-center gap-4 ${
           isNegativeSavings 
-            ? 'bg-warning/10 border border-warning/30' 
-            : 'bg-success/10 border border-success/30'
+            ? 'bg-warning/10 border-2 border-warning/30' 
+            : 'bg-success/10 border-2 border-success/30'
         }`}>
-          {isNegativeSavings ? (
-            <>
+          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+            isNegativeSavings ? 'bg-warning/20' : 'bg-success/20'
+          }`}>
+            {isNegativeSavings ? (
               <TrendingDown className="w-6 h-6 text-warning" />
-              <div>
-                <p className="text-sm text-foreground">Estimated change in running cost</p>
-                <p className="text-2xl font-bold text-warning">
-                  +{formatCurrency(displaySavings)}/yr
-                </p>
-              </div>
-            </>
-          ) : (
-            <>
+            ) : (
               <TrendingUp className="w-6 h-6 text-success" />
-              <div>
-                <p className="text-sm text-foreground">Annual savings</p>
-                <p className="text-2xl font-bold text-success">
-                  {formatCurrency(displaySavings)}/yr
-                </p>
-              </div>
-            </>
-          )}
+            )}
+          </div>
+          <div>
+            <p className="text-sm text-foreground font-medium">
+              {isNegativeSavings ? 'Estimated change in running cost' : 'Estimated annual savings'}
+            </p>
+            <p className={`text-3xl font-bold ${isNegativeSavings ? 'text-warning' : 'text-success'}`}>
+              {isNegativeSavings ? '+' : ''}{formatCurrency(displaySavings)}/yr
+            </p>
+          </div>
         </div>
 
         {/* Controls */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label className="text-sm text-muted-foreground">Efficiency (SCOP)</Label>
             <div className="flex gap-1">
               {EFFICIENCY_OPTIONS.map((option) => (
                 <Button
                   key={option.value}
-                  variant={scop === option.scop ? 'default' : 'secondary'}
+                  variant={scop === option.scop ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => onScopChange(option.scop)}
-                  className="flex-1"
+                  className={`flex-1 ${scop === option.scop ? 'gradient-primary border-0' : ''}`}
                 >
                   {option.label}
                 </Button>
@@ -123,7 +121,7 @@ export function SavingsCalculator({
           <div className="space-y-2">
             <Label className="text-sm text-muted-foreground">Electricity tariff</Label>
             <Select value={tariff} onValueChange={(v) => onTariffChange(v as 'cosy' | 'standard')}>
-              <SelectTrigger className="bg-secondary">
+              <SelectTrigger className="bg-background border-2">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -137,38 +135,38 @@ export function SavingsCalculator({
         {/* Assumptions */}
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" className="w-full justify-between text-muted-foreground">
+            <Button variant="ghost" className="w-full justify-between text-muted-foreground hover:text-foreground">
               View assumptions
               {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent className="pt-2">
-            <div className="bg-secondary/50 rounded-lg p-4 text-sm space-y-2">
+            <div className="bg-muted/50 rounded-xl p-4 text-sm space-y-2">
               <div className="flex justify-between text-foreground">
                 <span>Annual heat demand</span>
-                <span>{Math.round(results.annualHeatKwh).toLocaleString()} kWh</span>
+                <span className="font-medium">{Math.round(results.annualHeatKwh).toLocaleString()} kWh</span>
               </div>
               <div className="flex justify-between text-foreground">
                 <span>HP electricity usage</span>
-                <span>{Math.round(results.hpElectricKwh).toLocaleString()} kWh</span>
+                <span className="font-medium">{Math.round(results.hpElectricKwh).toLocaleString()} kWh</span>
               </div>
               <div className="flex justify-between text-foreground">
                 <span>Gas rate</span>
-                <span>{assumptions.gas_rate}p/kWh</span>
+                <span className="font-medium">{(assumptions.gas_rate * 100).toFixed(1)}p/kWh</span>
               </div>
               <div className="flex justify-between text-foreground">
                 <span>Boiler efficiency</span>
-                <span>{(assumptions.boiler_efficiency * 100).toFixed(0)}%</span>
+                <span className="font-medium">{(assumptions.boiler_efficiency * 100).toFixed(0)}%</span>
               </div>
               <div className="flex justify-between text-foreground">
                 <span>{tariff === 'cosy' ? 'Cosy blended rate' : 'Electricity rate'}</span>
-                <span>
-                  {tariff === 'cosy' ? assumptions.cosy_blended_rate : assumptions.electricity_rate}p/kWh
+                <span className="font-medium">
+                  {((tariff === 'cosy' ? assumptions.cosy_blended_rate : assumptions.electricity_rate) * 100).toFixed(1)}p/kWh
                 </span>
               </div>
               <div className="flex justify-between text-foreground">
                 <span>SCOP</span>
-                <span>{scop}</span>
+                <span className="font-medium">{scop}</span>
               </div>
             </div>
           </CollapsibleContent>

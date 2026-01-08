@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Calendar, Phone, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,7 +24,6 @@ interface LeadCaptureFormProps {
   };
 }
 
-// Placeholder booking URL
 const BOOKING_URL = 'https://example.com/book-survey';
 
 export function LeadCaptureForm({ epcData, results, assumptions, inputs }: LeadCaptureFormProps) {
@@ -68,7 +67,6 @@ export function LeadCaptureForm({ epcData, results, assumptions, inputs }: LeadC
         description: 'Redirecting you to book your survey...',
       });
 
-      // Redirect to booking URL
       setTimeout(() => {
         window.open(BOOKING_URL, '_blank');
       }, 1500);
@@ -82,68 +80,83 @@ export function LeadCaptureForm({ epcData, results, assumptions, inputs }: LeadC
   };
 
   return (
-    <Card className="border-primary bg-gradient-to-br from-card to-primary/5 sticky top-4">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg text-foreground">Book your survey</CardTitle>
+    <Card className="border-0 shadow-xl shadow-primary/10 overflow-hidden">
+      <CardHeader className="gradient-accent text-white pb-4">
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Calendar className="w-5 h-5" />
+          Book your free survey
+        </CardTitle>
+        <p className="text-white/80 text-sm mt-1">
+          No obligation • Takes 30 minutes
+        </p>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-6">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name" className="text-foreground">Full name</Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Your full name"
-              className="bg-secondary"
+              placeholder="John Smith"
+              className="h-12 bg-background border-2 focus:border-accent"
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email" className="text-foreground">Email</Label>
             <Input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              className="bg-secondary"
+              placeholder="john@example.com"
+              className="h-12 bg-background border-2 focus:border-accent"
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="phone">Phone</Label>
+            <Label htmlFor="phone" className="text-foreground">Phone</Label>
             <Input
               id="phone"
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="07xxx xxxxxx"
-              className="bg-secondary"
+              className="h-12 bg-background border-2 focus:border-accent"
               required
             />
           </div>
-          <div className="flex items-start gap-2">
+          <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
             <Checkbox
               id="consent"
               checked={consent}
               onCheckedChange={(c) => setConsent(c === true)}
+              className="mt-0.5"
             />
-            <Label htmlFor="consent" className="text-sm text-muted-foreground leading-tight cursor-pointer">
+            <Label htmlFor="consent" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
               I consent to Smart Energy Homes contacting me about my heat pump enquiry
             </Label>
           </div>
           <Button 
             type="submit" 
-            className="w-full h-12 text-lg"
+            className="w-full h-14 text-lg font-semibold gradient-accent hover:opacity-90 transition-opacity"
             disabled={!isValid || isLoading}
           >
             {isLoading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
-              'Book a survey'
+              <>
+                <Phone className="w-5 h-5 mr-2" />
+                Book a survey
+              </>
             )}
           </Button>
+          
+          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground pt-2">
+            <Shield className="w-4 h-4" />
+            <span>Your details are secure and never shared</span>
+          </div>
         </form>
       </CardContent>
     </Card>
