@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useCreateLead, useCreateEstimate } from '@/hooks/useLeads';
 import type { EPCData, EstimateResults, Assumptions } from '@/lib/calculations';
+import type { Tariff } from '@/hooks/useTariffs';
 
 interface LeadCaptureFormProps {
   epcData: EPCData;
@@ -15,7 +16,7 @@ interface LeadCaptureFormProps {
   assumptions: Assumptions;
   inputs: {
     scop: number;
-    tariff: string;
+    tariff: Tariff | null;
     currentFuel: string;
     propertyType?: string;
     region?: string;

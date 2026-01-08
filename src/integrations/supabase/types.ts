@@ -76,6 +76,7 @@ export type Database = {
           cosy_blended_rate: number | null
           created_at: string
           current_fuel: string | null
+          current_heating_cost: number | null
           customer_contribution: number | null
           efficiency_selected: number | null
           electricity_rate: number | null
@@ -84,6 +85,8 @@ export type Database = {
           full_load_hours: number | null
           gas_rate: number | null
           grant_applied: number | null
+          heat_demand_kwh: number | null
+          heat_demand_source: string | null
           heat_loss_kw: number | null
           hp_cost: number | null
           hp_electric_kwh: number | null
@@ -93,6 +96,7 @@ export type Database = {
           install_price_final: number | null
           lead_id: string | null
           min_customer_contribution: number | null
+          offpeak_share_used: number | null
           property_type: string | null
           rad_upgrade_cost: number | null
           radiator_adder: number | null
@@ -102,6 +106,10 @@ export type Database = {
           scop: number | null
           selected_radiators: number | null
           tariff: string | null
+          tariff_id: string | null
+          tariff_offpeak_rate: number | null
+          tariff_peak_rate: number | null
+          weighted_rate: number | null
         }
         Insert: {
           adders_json?: Json | null
@@ -113,6 +121,7 @@ export type Database = {
           cosy_blended_rate?: number | null
           created_at?: string
           current_fuel?: string | null
+          current_heating_cost?: number | null
           customer_contribution?: number | null
           efficiency_selected?: number | null
           electricity_rate?: number | null
@@ -121,6 +130,8 @@ export type Database = {
           full_load_hours?: number | null
           gas_rate?: number | null
           grant_applied?: number | null
+          heat_demand_kwh?: number | null
+          heat_demand_source?: string | null
           heat_loss_kw?: number | null
           hp_cost?: number | null
           hp_electric_kwh?: number | null
@@ -130,6 +141,7 @@ export type Database = {
           install_price_final?: number | null
           lead_id?: string | null
           min_customer_contribution?: number | null
+          offpeak_share_used?: number | null
           property_type?: string | null
           rad_upgrade_cost?: number | null
           radiator_adder?: number | null
@@ -139,6 +151,10 @@ export type Database = {
           scop?: number | null
           selected_radiators?: number | null
           tariff?: string | null
+          tariff_id?: string | null
+          tariff_offpeak_rate?: number | null
+          tariff_peak_rate?: number | null
+          weighted_rate?: number | null
         }
         Update: {
           adders_json?: Json | null
@@ -150,6 +166,7 @@ export type Database = {
           cosy_blended_rate?: number | null
           created_at?: string
           current_fuel?: string | null
+          current_heating_cost?: number | null
           customer_contribution?: number | null
           efficiency_selected?: number | null
           electricity_rate?: number | null
@@ -158,6 +175,8 @@ export type Database = {
           full_load_hours?: number | null
           gas_rate?: number | null
           grant_applied?: number | null
+          heat_demand_kwh?: number | null
+          heat_demand_source?: string | null
           heat_loss_kw?: number | null
           hp_cost?: number | null
           hp_electric_kwh?: number | null
@@ -167,6 +186,7 @@ export type Database = {
           install_price_final?: number | null
           lead_id?: string | null
           min_customer_contribution?: number | null
+          offpeak_share_used?: number | null
           property_type?: string | null
           rad_upgrade_cost?: number | null
           radiator_adder?: number | null
@@ -176,6 +196,10 @@ export type Database = {
           scop?: number | null
           selected_radiators?: number | null
           tariff?: string | null
+          tariff_id?: string | null
+          tariff_offpeak_rate?: number | null
+          tariff_peak_rate?: number | null
+          weighted_rate?: number | null
         }
         Relationships: [
           {
@@ -183,6 +207,13 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estimates_tariff_id_fkey"
+            columns: ["tariff_id"]
+            isOneToOne: false
+            referencedRelation: "tariffs"
             referencedColumns: ["id"]
           },
         ]
@@ -247,6 +278,48 @@ export type Database = {
           id?: string
           is_admin?: boolean
           user_id?: string
+        }
+        Relationships: []
+      }
+      tariffs: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          notes: string | null
+          offpeak_hours_per_day: number | null
+          offpeak_rate_p_per_kwh: number | null
+          peak_rate_p_per_kwh: number
+          sort_order: number
+          supplier: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          notes?: string | null
+          offpeak_hours_per_day?: number | null
+          offpeak_rate_p_per_kwh?: number | null
+          peak_rate_p_per_kwh: number
+          sort_order?: number
+          supplier: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          notes?: string | null
+          offpeak_hours_per_day?: number | null
+          offpeak_rate_p_per_kwh?: number | null
+          peak_rate_p_per_kwh?: number
+          sort_order?: number
+          supplier?: string
+          updated_at?: string
         }
         Relationships: []
       }

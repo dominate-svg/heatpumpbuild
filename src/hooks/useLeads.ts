@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { EstimateResults } from '@/lib/calculations';
-import type { Assumptions } from '@/lib/calculations';
+import type { EstimateResults, Assumptions } from '@/lib/calculations';
+import type { Tariff } from '@/hooks/useTariffs';
 
 interface LeadInput {
   name: string;
@@ -20,7 +20,7 @@ interface EstimateInput {
   assumptions: Assumptions;
   inputs: {
     scop: number;
-    tariff: string;
+    tariff: Tariff | null;
     currentFuel: string;
     propertyType?: string;
     region?: string;
@@ -93,7 +93,7 @@ export function useCreateEstimate() {
           hp_cost: input.results.hpCost,
           annual_savings: input.results.annualSavings,
           scop: input.inputs.scop,
-          tariff: input.inputs.tariff,
+          tariff: input.inputs.tariff?.name || 'unknown',
           install_base: input.results.installBase,
           adders_json: input.results.adders,
           grant_applied: input.results.grantApplied,
@@ -115,10 +115,19 @@ export function useCreateEstimate() {
           included_radiators: input.assumptions.included_radiators,
           rad_upgrade_cost: input.assumptions.rad_upgrade_cost,
           min_customer_contribution: input.assumptions.min_customer_contribution,
-          // New fields for efficiency-driven data
+          // Efficiency-driven data
           efficiency_selected: input.results.efficiencySelected,
           extra_rads: input.results.extraRads,
           radiator_adder: input.results.radiatorAdder,
+          // New savings engine fields
+          tariff_id: input.results.tariffId,
+          tariff_peak_rate: input.results.tariffPeakRate,
+          tariff_offpeak_rate: input.results.tariffOffpeakRate,
+          heat_demand_kwh: input.results.annualHeatKwh,
+          current_heating_cost: input.results.baselineCost,
+          weighted_rate: input.results.weightedRate,
+          offpeak_share_used: input.results.offpeakShareUsed,
+          heat_demand_source: input.results.heatDemandSource,
         })
         .select()
         .single();
