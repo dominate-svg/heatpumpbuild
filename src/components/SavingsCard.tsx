@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TrendingUp, TrendingDown, ChevronDown, ChevronUp, Info, Leaf, Calculator, Fuel, ArrowRight, AlertCircle } from 'lucide-react';
+import { TrendingUp, TrendingDown, ChevronDown, ChevronUp, Info, Leaf, Calculator, Fuel, ArrowRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -42,16 +42,6 @@ const FUEL_OPTIONS = [
   { value: 'electric', label: 'Direct electric' },
 ];
 
-// Calculate single conservative estimate from typical and worst case
-function calculateConservativeEstimate(typical: number, worst: number): number {
-  // Blend: 70% typical + 30% worst case
-  let estimated = (typical * 0.7) + (worst * 0.3);
-  // Floor at -250 to prevent extreme negatives
-  estimated = Math.max(estimated, -250);
-  // Round to nearest 10
-  return Math.round(estimated / 10) * 10;
-}
-
 export function SavingsCard({
   results,
   scop,
@@ -65,18 +55,8 @@ export function SavingsCard({
   const [isCalculationOpen, setIsCalculationOpen] = useState(false);
   const { data: tariffs, isLoading: tariffsLoading } = useTariffs();
 
-  const { savingsRange, confidenceLabel, epcBand, isOilFuel, oilSavings, oilCurrentCost } = results;
+  const { estimatedSavings, confidenceLabel, epcBand } = results;
   
-  // Calculate single conservative estimate
-  const estimatedSavings = isOilFuel && oilSavings
-    ? calculateConservativeEstimate(oilSavings.modernBoiler.typical, oilSavings.modernBoiler.worst)
-    : calculateConservativeEstimate(savingsRange.typical, savingsRange.worst);
-
-  // For oil, also calculate old boiler comparison
-  const estimatedSavingsOldOil = isOilFuel && oilSavings
-    ? calculateConservativeEstimate(oilSavings.oldBoiler.typical, oilSavings.oldBoiler.worst)
-    : null;
-
   const showWarning = estimatedSavings < 0;
 
   const handleTariffChange = (tariffId: string) => {
@@ -112,7 +92,7 @@ export function SavingsCard({
             showWarning ? 'bg-warning/5' : 'bg-gradient-to-r from-success/5 to-accent/5'
           }`}>
             <div className="flex flex-col gap-4">
-              {/* Main savings figure */}
+              {/* Main savings figure - ONE number only */}
               <div className="flex items-start gap-3">
                 <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0 ${
                   showWarning ? 'bg-warning/10' : 'bg-success/10'
@@ -128,67 +108,25 @@ export function SavingsCard({
                     {showWarning ? 'Estimated annual change' : 'Estimated annual savings'}
                   </p>
                   
-                  {/* Non-oil display - single figure */}
-                  {!isOilFuel && (
-                    <div className="space-y-2">
-                      <div className="flex items-baseline gap-2 flex-wrap">
-                        <span className={`text-2xl sm:text-3xl md:text-4xl font-bold ${
-                          showWarning ? 'text-warning' : 'text-success'
-                        }`}>
-                          {showWarning 
-                            ? `£${Math.abs(estimatedSavings)} more`
-                            : `£${estimatedSavings}`
-                          }
-                        </span>
-                        <span className="text-sm text-muted-foreground">/year</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
+                  <div className="space-y-2">
+                    <div className="flex items-baseline gap-2 flex-wrap">
+                      <span className={`text-2xl sm:text-3xl md:text-4xl font-bold ${
+                        showWarning ? 'text-warning' : 'text-success'
+                      }`}>
                         {showWarning 
-                          ? 'This is a cautious estimate. Many homes improve after system design optimisation.'
-                          : 'Based on national averages for your EPC band and fuel type. Final design may improve this.'
+                          ? `£${Math.abs(estimatedSavings)} more`
+                          : `£${estimatedSavings}`
                         }
-                      </p>
+                      </span>
+                      <span className="text-sm text-muted-foreground">/year</span>
                     </div>
-                  )}
-
-                  {/* Oil-specific display - single figures for each comparison */}
-                  {isOilFuel && oilSavings && (
-                    <div className="space-y-4">
-                      <div className="space-y-1">
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Compared to modern oil boiler</p>
-                        <div className="flex items-baseline gap-2 flex-wrap">
-                          <span className={`text-xl sm:text-2xl font-bold ${
-                            estimatedSavings < 0 ? 'text-warning' : 'text-success'
-                          }`}>
-                            {estimatedSavings < 0 
-                              ? `£${Math.abs(estimatedSavings)} more`
-                              : `£${estimatedSavings}`
-                            }
-                          </span>
-                          <span className="text-xs text-muted-foreground">/year</span>
-                        </div>
-                      </div>
-                      {estimatedSavingsOldOil !== null && (
-                        <div className="space-y-1">
-                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Compared to older oil boiler</p>
-                          <div className="flex items-baseline gap-2 flex-wrap">
-                            <span className={`text-xl sm:text-2xl font-bold ${
-                              estimatedSavingsOldOil < 0 ? 'text-warning' : 'text-success'
-                            }`}>
-                              {estimatedSavingsOldOil < 0 
-                                ? `£${Math.abs(estimatedSavingsOldOil)} more`
-                                : `£${estimatedSavingsOldOil}`
-                              }
-                            </span>
-                            <span className="text-xs text-muted-foreground">/year</span>
-                          </div>
-                        </div>
-                      )}
-                      <p className="text-xs text-muted-foreground">
-                        Based on national averages for your EPC band. Final design may improve this.
-                      </p>
-                    </div>
-                  )}
+                    <p className="text-xs text-muted-foreground">
+                      {showWarning 
+                        ? 'This is a cautious estimate. Many homes improve after system design optimisation.'
+                        : 'Based on national averages for your EPC band and fuel type. Final design may improve this.'
+                      }
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -235,28 +173,12 @@ export function SavingsCard({
 
               {/* Cost breakdown - simplified */}
               <div className="flex flex-col gap-2 text-xs text-muted-foreground">
-                {!isOilFuel ? (
-                  <>
-                    <span>
-                      Current heating: <span className="font-medium text-foreground">{formatCurrency(results.baselineCost)}/year</span>
-                    </span>
-                    <span>
-                      Heat pump: <span className="font-medium text-foreground">{formatCurrency(results.hpCostRange.typical)}/year</span>
-                    </span>
-                  </>
-                ) : oilCurrentCost && (
-                  <>
-                    <span>
-                      Modern oil boiler: <span className="font-medium text-foreground">{formatCurrency(oilCurrentCost.modernBoiler)}/year</span>
-                    </span>
-                    <span>
-                      Older oil boiler: <span className="font-medium text-foreground">{formatCurrency(oilCurrentCost.oldBoiler)}/year</span>
-                    </span>
-                    <span>
-                      Heat pump: <span className="font-medium text-foreground">{formatCurrency(results.hpCostRange.typical)}/year</span>
-                    </span>
-                  </>
-                )}
+                <span>
+                  Current heating: <span className="font-medium text-foreground">{formatCurrency(results.baselineCost)}/year</span>
+                </span>
+                <span>
+                  Heat pump: <span className="font-medium text-foreground">{formatCurrency(results.hpCost)}/year</span>
+                </span>
               </div>
 
               {/* Disclaimer */}
@@ -326,8 +248,7 @@ export function SavingsCard({
               <CollapsibleContent className="pt-2">
                 <p className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
                   Higher efficiency = more heat per unit of electricity. At 370% (SCOP 3.7), you get 3.7kWh of heat for every 1kWh used. 
-                  We adjust the SCOP based on your home's EPC rating — less efficient homes require higher flow temperatures, 
-                  which reduces achievable efficiency.
+                  Higher efficiency typically requires more radiator upgrades to run at lower flow temperatures.
                 </p>
               </CollapsibleContent>
             </Collapsible>
@@ -350,11 +271,13 @@ export function SavingsCard({
                   {/* Methodology explanation */}
                   <div className="space-y-2">
                     <p>
-                      We estimate your savings using national average energy consumption for homes in your EPC band and fuel type.
-                      We model a typical scenario and a cautious scenario, then blend them to avoid over-promising.
+                      We use national average energy demand for homes in your EPC band and compare the cost of running a heat pump 
+                      on the Octopus Cosy tariff with the cost of continuing to heat your home using standard Ofgem-capped gas prices 
+                      (or oil/LPG where relevant).
                     </p>
                     <p>
-                      Your final system design, insulation, radiator sizing, and tariff choice can all improve this outcome.
+                      We assume realistic system efficiencies and conservative operating behaviour to avoid over-promising.
+                      Your final savings may improve after system design and optimisation.
                     </p>
                   </div>
 
@@ -362,16 +285,12 @@ export function SavingsCard({
                   <div className="pt-2 border-t border-border space-y-2">
                     <p className="font-medium text-foreground">Your numbers:</p>
                     
-                    {/* Heat demand breakdown */}
+                    {/* Heat demand */}
                     <div className="pb-2 border-b border-border/50">
                       <p className="font-medium text-foreground/80 mb-1 text-[10px] uppercase tracking-wide">Heat demand (EPC {epcBand})</p>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
-                        <span>Total useful heat:</span>
+                        <span>Annual heat demand:</span>
                         <span className="font-medium text-foreground text-right">{results.annualHeatKwh.toLocaleString()} kWh/yr</span>
-                        <span>Space heating:</span>
-                        <span className="font-medium text-foreground text-right">{results.spaceHeatKwh.toLocaleString()} kWh</span>
-                        <span>Hot water:</span>
-                        <span className="font-medium text-foreground text-right">{results.dhwHeatKwh.toLocaleString()} kWh</span>
                       </div>
                     </div>
 
@@ -383,47 +302,38 @@ export function SavingsCard({
                         <span className="font-medium text-foreground text-right">{getFuelDisplayName(results.currentFuelType)}</span>
                         <span>Boiler efficiency:</span>
                         <span className="font-medium text-foreground text-right">{Math.round(results.boilerEfficiency * 100)}%</span>
-                        <span>Fuel energy used:</span>
-                        <span className="font-medium text-foreground text-right">{results.fuelInputKwh.toLocaleString()} kWh/yr</span>
+                        <span>Fuel input needed:</span>
+                        <span className="font-medium text-foreground text-right">{results.fuelInputKwh.toLocaleString()} kWh</span>
+                        <span>Annual cost:</span>
+                        <span className="font-medium text-foreground text-right">{formatCurrency(results.baselineCost)}</span>
                       </div>
                     </div>
 
-                    {/* Heat pump performance */}
+                    {/* Heat pump */}
                     <div className="pb-2 border-b border-border/50">
-                      <p className="font-medium text-foreground/80 mb-1 text-[10px] uppercase tracking-wide">Heat pump performance</p>
+                      <p className="font-medium text-foreground/80 mb-1 text-[10px] uppercase tracking-wide">Heat pump</p>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
-                        <span>Selected SCOP:</span>
-                        <span className="font-medium text-foreground text-right">{scop.toFixed(1)}</span>
-                        <span>EPC derate applied:</span>
-                        <span className="font-medium text-foreground text-right">{Math.round(results.epcDerateApplied * 100)}%</span>
-                        <span>Adjusted space SCOP:</span>
-                        <span className="font-medium text-foreground text-right">{results.scopAdjusted.toFixed(2)}</span>
-                        <span>DHW COP (fixed):</span>
-                        <span className="font-medium text-foreground text-right">{results.dhwCop.toFixed(1)}</span>
-                        <span>Electricity used:</span>
-                        <span className="font-medium text-foreground text-right">{results.hpElectricKwh.toLocaleString()} kWh/yr</span>
+                        <span>Efficiency (SCOP):</span>
+                        <span className="font-medium text-foreground text-right">{results.scopUsed.toFixed(1)}</span>
+                        <span>Electricity needed:</span>
+                        <span className="font-medium text-foreground text-right">{results.hpElectricKwh.toLocaleString()} kWh</span>
+                        <span>Cosy tariff rate:</span>
+                        <span className="font-medium text-foreground text-right">{(results.cosyRate * 100).toFixed(1)}p/kWh</span>
+                        <span>Annual cost:</span>
+                        <span className="font-medium text-foreground text-right">{formatCurrency(results.hpCost)}</span>
                       </div>
                     </div>
 
-                    {/* Electricity cost */}
+                    {/* Savings */}
                     <div>
-                      <p className="font-medium text-foreground/80 mb-1 text-[10px] uppercase tracking-wide">Electricity cost</p>
+                      <p className="font-medium text-foreground/80 mb-1 text-[10px] uppercase tracking-wide">Savings</p>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
-                        <span>Cheap-hour share:</span>
-                        <span className="font-medium text-foreground text-right">{Math.round(results.offpeakShareUsed * 100)}%</span>
-                        <span>Effective rate:</span>
-                        <span className="font-medium text-foreground text-right">{(results.weightedRate * 100).toFixed(2)}p/kWh</span>
+                        <span>Raw savings:</span>
+                        <span className="font-medium text-foreground text-right">{formatCurrency(results.rawSavings)}</span>
+                        <span>Conservative estimate (×0.9):</span>
+                        <span className="font-medium text-foreground text-right">{formatCurrency(results.estimatedSavings)}</span>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Note about conservatism */}
-                  <div className="flex items-start gap-2 pt-2 mt-2 border-t border-border">
-                    <AlertCircle className="w-3 h-3 text-muted-foreground flex-shrink-0 mt-0.5" />
-                    <p className="text-[10px] text-muted-foreground">
-                      This calculator uses conservative assumptions. We prefer to under-estimate savings rather than over-estimate. 
-                      Actual results may be better, especially after insulation improvements.
-                    </p>
                   </div>
                 </div>
               </CollapsibleContent>
