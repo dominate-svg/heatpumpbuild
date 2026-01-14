@@ -1,4 +1,5 @@
 import type { Tariff } from '@/hooks/useTariffs';
+import { getTariffConfig, calculateTariffCost, type TariffCostResult, type TariffConfig } from './tariffConfig';
 
 export interface Assumptions {
   gas_rate: number;
@@ -37,6 +38,8 @@ export interface Assumptions {
   offpeak_share_min?: number;
   offpeak_share_max?: number;
 }
+
+export type { TariffCostResult, TariffConfig };
 
 export interface EPCData {
   address: string;
@@ -217,7 +220,7 @@ export interface SavingsTransparency {
   hpKwhSpace: number;
   hpKwhDhw: number;
   
-  // Cosy tariff breakdown
+  // Cosy tariff breakdown (LOCKED - DO NOT CHANGE)
   cosyOffpeakRate: number;
   cosyMidRate: number;
   cosyPeakRate: number;
@@ -225,6 +228,10 @@ export interface SavingsTransparency {
   cosyMidShare: number;
   cosyPeakShare: number;
   blendedRate: number;
+  
+  // Non-Cosy tariff info
+  isCosy: boolean;
+  tariffCostResult?: TariffCostResult;
   
   // Clamp info
   rawSavingsBeforeClamp: number;
@@ -480,6 +487,7 @@ function calculateSavings(
       cosyMidShare,
       cosyPeakShare: COSY_PEAK_SHARE,
       blendedRate: blendedRate * 100,
+      isCosy: true, // This is the Cosy calculation path
       rawSavingsBeforeClamp,
       savingsWasClamped,
       isHighSensitivity,
@@ -495,12 +503,61 @@ export function calculateEstimate(
   const fuelType = getFuelType(inputs.currentFuel);
   
   // ============================================
-  // 1. Calculate savings using comprehensive model
+  // 1. Calculate base savings using Cosy model (always computed for baseline)
   // ============================================
-  const savings = calculateSavings(epcBand, fuelType, inputs.scop);
+  const cosySavings = calculateSavings(epcBand, fuelType, inputs.scop);
   
-  const annualHeatKwh = savings.heatDemand;
+  const annualHeatKwh = cosySavings.heatDemand;
   const heatDemandSource: 'national_average' | 'epc' = 'national_average';
+  
+  // ============================================
+  // 2. Check if we need to use a different tariff
+  // ============================================
+  let hpCost = cosySavings.hpCost;
+  let estimatedSavings = cosySavings.estimatedSavings;
+  let rawSavings = cosySavings.rawSavings;
+  let transparency = { ...cosySavings.transparency };
+  
+  // Try to find matching tariff config
+  const tariffName = inputs.tariff?.name || '';
+  const tariffConfig = getTariffConfig(tariffName);
+  
+  // Check if this is NOT Cosy
+  const isCosy = tariffConfig?.isCosy ?? tariffName.toLowerCase().includes('cosy');
+  
+  if (tariffConfig && !isCosy) {
+    // Calculate using the selected tariff
+    const tariffResult = calculateTariffCost(cosySavings.hpKwh, epcBand, tariffConfig);
+    
+    if (tariffResult) {
+      hpCost = tariffResult.annualCost;
+      const newRawSavings = cosySavings.currentCost - hpCost;
+      
+      // Apply clamp for oil homes
+      let finalSavings = newRawSavings;
+      let savingsWasClamped = false;
+      if (fuelType === 'oil') {
+        const clampRange = OIL_SAVINGS_CLAMP[epcBand] || { min: -600, max: 900 };
+        const clampedValue = clamp(newRawSavings, clampRange.min, clampRange.max);
+        savingsWasClamped = clampedValue !== newRawSavings;
+        finalSavings = clampedValue;
+      }
+      
+      estimatedSavings = roundToNearest10(finalSavings);
+      rawSavings = newRawSavings;
+      
+      // Update transparency with non-Cosy tariff info
+      transparency = {
+        ...cosySavings.transparency,
+        isCosy: false,
+        blendedRate: tariffResult.blendedRateP,
+        tariffCostResult: tariffResult,
+        rawSavingsBeforeClamp: newRawSavings,
+        savingsWasClamped,
+        isHighSensitivity: fuelType === 'oil' && finalSavings > 800,
+      };
+    }
+  }
 
   // ============================================
   // Heat loss calculation (for install sizing)
@@ -580,12 +637,12 @@ export function calculateEstimate(
     floorArea: inputs.floorArea,
     annualHeatKwh,
     heatLossKw,
-    baselineCost: roundToNearest10(savings.currentCost),
-    hpElectricKwh: roundToNearest10(savings.hpKwh),
-    hpCost: roundToNearest10(savings.hpCost),
-    annualSavings: savings.estimatedSavings,
-    estimatedSavings: savings.estimatedSavings,
-    rawSavings: roundToNearest10(savings.rawSavings),
+    baselineCost: roundToNearest10(cosySavings.currentCost),
+    hpElectricKwh: roundToNearest10(cosySavings.hpKwh),
+    hpCost: roundToNearest10(hpCost),
+    annualSavings: estimatedSavings,
+    estimatedSavings,
+    rawSavings: roundToNearest10(rawSavings),
     installBase,
     adders,
     grossInstallPrice,
@@ -606,15 +663,15 @@ export function calculateEstimate(
     tariffOffpeakRate,
     // Transparency fields
     currentFuelType: fuelType,
-    boilerEfficiency: savings.boilerEfficiency,
-    fuelInputKwh: roundToNearest10(savings.fuelKwh),
-    cosyRate: savings.transparency.blendedRate / 100,
-    optimisticScop: savings.optimisticScop,
+    boilerEfficiency: cosySavings.boilerEfficiency,
+    fuelInputKwh: roundToNearest10(cosySavings.fuelKwh),
+    cosyRate: transparency.blendedRate / 100,
+    optimisticScop: cosySavings.optimisticScop,
     confidenceLabel: getConfidenceLabel(epcBand, fuelType),
     epcBand,
     isOilFuel: fuelType === 'oil',
     // Full transparency object
-    transparency: savings.transparency,
+    transparency,
   };
 }
 

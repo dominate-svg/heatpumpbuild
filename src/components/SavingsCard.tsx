@@ -158,24 +158,54 @@ export function SavingsCard({
               
               {/* Tariff info */}
               <div className="w-full space-y-2">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="text-xs text-muted-foreground cursor-help">
-                        <span className="font-medium text-foreground">Octopus Energy — Cosy (3-rate tariff)</span>
-                        <br />
-                        Typical effective rate: ~{transparency.blendedRate.toFixed(1)}p/kWh
-                        <br />
-                        <span className="text-[10px]">Tariff bands: ~{transparency.cosyOffpeakRate}p / ~{transparency.cosyMidRate}p / ~{transparency.cosyPeakRate}p (varies by region)</span>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-xs">
-                      <p className="text-xs">
-                        We model Cosy using a blended rate that reflects when heat pumps actually run — mostly overnight and midday when power is cheapest. For EPC {epcBand}, we assume {Math.round(transparency.cosyCheapShare * 100)}% cheap / {Math.round(transparency.cosyMidShare * 100)}% mid / {Math.round(transparency.cosyPeakShare * 100)}% peak usage.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                {transparency.isCosy ? (
+                  /* COSY TARIFF DISPLAY - DO NOT CHANGE */
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="text-xs text-muted-foreground cursor-help">
+                          <span className="font-medium text-foreground">Octopus Energy — Cosy (3-rate tariff)</span>
+                          <br />
+                          Typical effective rate: ~{transparency.blendedRate.toFixed(1)}p/kWh
+                          <br />
+                          <span className="text-[10px]">Tariff bands: ~{transparency.cosyOffpeakRate}p / ~{transparency.cosyMidRate}p / ~{transparency.cosyPeakRate}p (varies by region)</span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p className="text-xs">
+                          We model Cosy using a blended rate that reflects when heat pumps actually run — mostly overnight and midday when power is cheapest. For EPC {epcBand}, we assume {Math.round(transparency.cosyCheapShare * 100)}% cheap / {Math.round(transparency.cosyMidShare * 100)}% mid / {Math.round(transparency.cosyPeakShare * 100)}% peak usage.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  /* NON-COSY TARIFF DISPLAY */
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="text-xs text-muted-foreground cursor-help">
+                          <span className="font-medium text-foreground">
+                            {transparency.tariffCostResult?.displayLabel || selectedTariff?.supplier + ' — ' + selectedTariff?.name}
+                          </span>
+                          <br />
+                          Modelled blended rate: ~{transparency.blendedRate.toFixed(1)}p/kWh
+                          <br />
+                          <span className="text-[10px]">
+                            {transparency.tariffCostResult?.ratesLabel || `${selectedTariff?.peak_rate_p_per_kwh}p/kWh`}
+                          </span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p className="text-xs">
+                          {transparency.tariffCostResult?.explainer || 'Calculated using tariff rates and typical heat pump usage patterns.'}
+                          {transparency.tariffCostResult?.offpeakShare !== undefined && (
+                            <> For EPC {epcBand}, we assume {Math.round((transparency.tariffCostResult.offpeakShare || 0) * 100)}% off-peak / {Math.round((transparency.tariffCostResult.peakShare || 0) * 100)}% peak usage.</>
+                          )}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
                 <Select 
                   value={selectedTariff?.id || ''} 
                   onValueChange={handleTariffChange}
@@ -193,7 +223,10 @@ export function SavingsCard({
                   </SelectContent>
                 </Select>
                 <p className="text-[10px] text-muted-foreground italic">
-                  We model Cosy using a blended rate based on when heat pumps typically run (cheap hours + some peak use).
+                  {transparency.isCosy 
+                    ? 'We model Cosy using a blended rate based on when heat pumps typically run (cheap hours + some peak use).'
+                    : `Modelled blended rate: ~${transparency.blendedRate.toFixed(1)}p/kWh (based on EPC ${epcBand} and typical heat pump run times).`
+                  }
                 </p>
               </div>
 
@@ -391,22 +424,53 @@ export function SavingsCard({
                       </div>
                     </div>
 
-                    {/* Cosy tariff */}
+                    {/* Tariff details */}
                     <div className="pb-2 border-b border-border/50">
-                      <p className="font-medium text-foreground/80 mb-1 text-[10px] uppercase tracking-wide">Cosy tariff (3-rate)</p>
+                      <p className="font-medium text-foreground/80 mb-1 text-[10px] uppercase tracking-wide">
+                        {transparency.isCosy ? 'Cosy tariff (3-rate)' : 'Selected tariff'}
+                      </p>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
-                        <span>Off-peak rate:</span>
-                        <span className="font-medium text-foreground text-right">{transparency.cosyOffpeakRate}p/kWh</span>
-                        <span>Mid rate:</span>
-                        <span className="font-medium text-foreground text-right">{transparency.cosyMidRate}p/kWh</span>
-                        <span>Peak rate:</span>
-                        <span className="font-medium text-foreground text-right">{transparency.cosyPeakRate}p/kWh</span>
-                        <span>Usage split (EPC {epcBand}):</span>
-                        <span className="font-medium text-foreground text-right">{Math.round(transparency.cosyCheapShare * 100)}% / {Math.round(transparency.cosyMidShare * 100)}% / {Math.round(transparency.cosyPeakShare * 100)}%</span>
+                        {transparency.isCosy ? (
+                          /* COSY BREAKDOWN - DO NOT CHANGE */
+                          <>
+                            <span>Off-peak rate:</span>
+                            <span className="font-medium text-foreground text-right">{transparency.cosyOffpeakRate}p/kWh</span>
+                            <span>Mid rate:</span>
+                            <span className="font-medium text-foreground text-right">{transparency.cosyMidRate}p/kWh</span>
+                            <span>Peak rate:</span>
+                            <span className="font-medium text-foreground text-right">{transparency.cosyPeakRate}p/kWh</span>
+                            <span>Usage split (EPC {epcBand}):</span>
+                            <span className="font-medium text-foreground text-right">{Math.round(transparency.cosyCheapShare * 100)}% / {Math.round(transparency.cosyMidShare * 100)}% / {Math.round(transparency.cosyPeakShare * 100)}%</span>
+                          </>
+                        ) : transparency.tariffCostResult ? (
+                          /* NON-COSY BREAKDOWN */
+                          <>
+                            <span>Tariff type:</span>
+                            <span className="font-medium text-foreground text-right">{transparency.tariffCostResult.tariffType.replace('_', ' ')}</span>
+                            <span>Rates:</span>
+                            <span className="font-medium text-foreground text-right">{transparency.tariffCostResult.ratesLabel}</span>
+                            {transparency.tariffCostResult.offpeakShare !== undefined && (
+                              <>
+                                <span>Assumed split (EPC {epcBand}):</span>
+                                <span className="font-medium text-foreground text-right">
+                                  {Math.round((transparency.tariffCostResult.offpeakShare || 0) * 100)}% off-peak / {Math.round((transparency.tariffCostResult.peakShare || 0) * 100)}% peak
+                                </span>
+                              </>
+                            )}
+                          </>
+                        ) : null}
                         <span>Blended rate:</span>
                         <span className="font-medium text-foreground text-right">{transparency.blendedRate.toFixed(1)}p/kWh</span>
                         <span>Annual cost:</span>
                         <span className="font-medium text-foreground text-right">{formatCurrency(results.hpCost)}</span>
+                        {transparency.tariffCostResult?.standingChargeDeltaAnnual !== 0 && transparency.tariffCostResult?.standingChargeDeltaAnnual && (
+                          <>
+                            <span className="text-[10px]">SC delta vs standard:</span>
+                            <span className="text-[10px] text-right">
+                              {transparency.tariffCostResult.standingChargeDeltaAnnual > 0 ? '+' : ''}{formatCurrency(transparency.tariffCostResult.standingChargeDeltaAnnual)} (not in savings)
+                            </span>
+                          </>
+                        )}
                       </div>
                     </div>
 
