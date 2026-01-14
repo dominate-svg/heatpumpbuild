@@ -1,4 +1,4 @@
-import { Award, Gauge, Zap, Calendar, Check, Phone, Wrench, Sparkles } from 'lucide-react';
+import { Award, Gauge, Zap, Calendar, Check, Phone, Wrench, Sparkles, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/calculations';
 import type { EstimateResults, Assumptions } from '@/lib/calculations';
@@ -11,6 +11,7 @@ interface FinalEstimateNextSectionProps {
   scop: number;
   selectedTariff: Tariff | null;
   onBook: () => void;
+  onBack: () => void;
 }
 
 const NEXT_STEPS = [
@@ -42,6 +43,7 @@ export function FinalEstimateNextSection({
   scop,
   selectedTariff,
   onBook,
+  onBack,
 }: FinalEstimateNextSectionProps) {
   const { estimatedSavings, customerContribution } = results;
   const isNegativeSavings = estimatedSavings < 0;
@@ -51,6 +53,15 @@ export function FinalEstimateNextSection({
   return (
     <section className="py-16 px-6 bg-gradient-to-b from-muted/30 to-background">
       <div className="max-w-2xl mx-auto">
+        {/* Back button */}
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6 section-enter"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span className="text-sm">Back</span>
+        </button>
+
         {/* Header */}
         <div className="text-center mb-10 section-enter">
           <h2 className="text-section-title font-semibold text-foreground tracking-tight mb-3">

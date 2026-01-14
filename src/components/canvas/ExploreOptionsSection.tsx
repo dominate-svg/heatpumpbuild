@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Gauge, Zap, MapPin, Droplets, Sparkles, TrendingUp, TrendingDown, ChevronRight } from 'lucide-react';
+import { Gauge, Zap, MapPin, Droplets, Sparkles, TrendingUp, TrendingDown, ChevronRight, ArrowLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
 import {
@@ -26,6 +26,7 @@ interface ExploreOptionsSectionProps {
   onLocationChange: (location: 'included' | '6m' | '9m') => void;
   onCylinderChange: (cylinder: 'existing' | '150l' | '210l') => void;
   onContinue: () => void;
+  onBack: () => void;
 }
 
 const EFFICIENCY_OPTIONS = [
@@ -46,6 +47,7 @@ export function ExploreOptionsSection({
   onLocationChange,
   onCylinderChange,
   onContinue,
+  onBack,
 }: ExploreOptionsSectionProps) {
   const { data: tariffs, isLoading: tariffsLoading } = useTariffs();
   const [activePanel, setActivePanel] = useState<string | null>('efficiency');
@@ -78,6 +80,15 @@ export function ExploreOptionsSection({
   return (
     <section className="py-16 px-6 bg-muted/30">
       <div className="max-w-3xl mx-auto">
+        {/* Back button */}
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6 section-enter"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span className="text-sm">Back</span>
+        </button>
+
         {/* Header */}
         <div className="text-center mb-10 section-enter">
           <h2 className="text-section-title font-semibold text-foreground tracking-tight mb-3">
