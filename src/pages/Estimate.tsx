@@ -170,7 +170,8 @@ export default function Estimate() {
       <div className="flex min-h-screen">
         {/* Main content */}
         <div className="flex-1 overflow-y-auto" ref={contentRef}>
-          <div className="max-w-lg mx-auto px-4">
+          {/* Mobile-optimized padding and max-width */}
+          <div className="max-w-lg mx-auto px-4 sm:px-6 pb-24 lg:pb-6">
             {renderSection()}
           </div>
         </div>

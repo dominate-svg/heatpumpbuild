@@ -220,10 +220,11 @@ export function MobileGuideDrawer({ currentSection, context }: GuidePanelProps) 
 
   return (
     <>
-      {/* Floating button */}
+      {/* Floating button - positioned above bottom safe area */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-4 right-4 z-40 flex items-center gap-2 px-4 py-3 rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95 transition-transform"
+        className="fixed bottom-6 right-4 z-40 flex items-center gap-2 px-4 py-3 rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95 transition-transform"
+        style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         <MessageCircle className="w-5 h-5" />
         <span className="text-sm font-medium">Ask Guide</span>
@@ -236,7 +237,10 @@ export function MobileGuideDrawer({ currentSection, context }: GuidePanelProps) 
             className="fixed inset-0 bg-black/30 z-40 animate-fade-in"
             onClick={() => setIsOpen(false)}
           />
-          <div className="fixed inset-x-0 bottom-0 z-50 h-[85vh] bg-card rounded-t-3xl shadow-xl animate-slide-up">
+          <div 
+            className="fixed inset-x-0 bottom-0 z-50 h-[80vh] bg-card rounded-t-3xl shadow-xl animate-slide-up"
+            style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+          >
             {/* Drag handle */}
             <div className="flex justify-center py-2">
               <div className="w-10 h-1 bg-muted-foreground/30 rounded-full" />
@@ -244,7 +248,7 @@ export function MobileGuideDrawer({ currentSection, context }: GuidePanelProps) 
             {/* Close button */}
             <button
               onClick={() => setIsOpen(false)}
-              className="absolute top-3 right-3 w-8 h-8 rounded-full hover:bg-muted flex items-center justify-center"
+              className="absolute top-3 right-3 w-8 h-8 rounded-full hover:bg-muted active:bg-muted flex items-center justify-center"
             >
               <X className="w-4 h-4 text-muted-foreground" />
             </button>
