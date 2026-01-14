@@ -230,19 +230,28 @@ export function SavingsCard({
                 <div className="bg-muted/50 p-3 rounded-lg space-y-3 text-xs text-muted-foreground">
                   {/* Methodology explanation */}
                   <div className="space-y-2">
-                    <p>
-                      We use national average energy demand for homes in your EPC band and compare a typical boiler 
-                      with a well-designed heat pump on a time-of-use tariff.
-                    </p>
-                    <p>
-                      We assume moderate insulation, a correctly sized system, and sensible use of cheap electricity hours 
-                      — not best-case, not worst-case.
-                    </p>
+                    <p className="font-medium text-foreground">Your estimate is based on:</p>
+                    <ul className="list-disc list-inside space-y-1">
+                      <li>EPC band {epcBand} typical heat demand ({results.annualHeatKwh.toLocaleString()} kWh/year)</li>
+                      <li>Typical boiler efficiency for {getFuelDisplayName(results.currentFuelType)} ({Math.round(results.boilerEfficiency * 100)}%)</li>
+                      <li>Energy prices:
+                        <ul className="list-none ml-4 mt-1 space-y-0.5">
+                          {results.currentFuelType === 'gas' && <li>– Gas: 5.93p/kWh (Ofgem cap)</li>}
+                          {results.currentFuelType === 'oil' && results.oilPencePerLitre && (
+                            <li>– Oil: {results.oilPencePerLitre}p per litre (converted using 10.35 kWh/litre)</li>
+                          )}
+                          {results.currentFuelType === 'lpg' && <li>– LPG: 10.5p/kWh</li>}
+                          <li>– Electricity: 17.3p/kWh effective on Cosy</li>
+                        </ul>
+                      </li>
+                      <li>Heat pump efficiency (SCOP {results.optimisticScop.toFixed(1)})</li>
+                    </ul>
+                    <p className="italic">Your final design and survey confirm exact figures.</p>
                   </div>
 
                   {/* Detailed breakdown */}
                   <div className="pt-2 border-t border-border space-y-2">
-                    <p className="font-medium text-foreground">Your numbers:</p>
+                    <p className="font-medium text-foreground">Detailed breakdown:</p>
                     
                     {/* Heat demand */}
                     <div className="pb-2 border-b border-border/50">
@@ -261,8 +270,20 @@ export function SavingsCard({
                         <span className="font-medium text-foreground text-right">{getFuelDisplayName(results.currentFuelType)}</span>
                         <span>Boiler efficiency:</span>
                         <span className="font-medium text-foreground text-right">{Math.round(results.boilerEfficiency * 100)}%</span>
-                        <span>Fuel input needed:</span>
-                        <span className="font-medium text-foreground text-right">{results.fuelInputKwh.toLocaleString()} kWh</span>
+                        {results.currentFuelType === 'oil' && results.oilLitresUsed && (
+                          <>
+                            <span>Oil consumption:</span>
+                            <span className="font-medium text-foreground text-right">{results.oilLitresUsed.toLocaleString()} litres/yr</span>
+                            <span>Oil price:</span>
+                            <span className="font-medium text-foreground text-right">{results.oilPencePerLitre}p/litre</span>
+                          </>
+                        )}
+                        {results.currentFuelType !== 'oil' && (
+                          <>
+                            <span>Fuel input needed:</span>
+                            <span className="font-medium text-foreground text-right">{results.fuelInputKwh.toLocaleString()} kWh</span>
+                          </>
+                        )}
                         <span>Annual cost:</span>
                         <span className="font-medium text-foreground text-right">{formatCurrency(results.baselineCost)}</span>
                       </div>
