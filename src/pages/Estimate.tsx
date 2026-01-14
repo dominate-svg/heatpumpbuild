@@ -1,19 +1,18 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
-import { EstimateBanner } from '@/components/EstimateBanner';
-import { PropertyCard } from '@/components/PropertyCard';
-import { CostCard } from '@/components/CostCard';
-import { SavingsCard } from '@/components/SavingsCard';
-import { InstallOptions } from '@/components/InstallOptions';
-import { Timeline } from '@/components/Timeline';
-import { StickyCTA } from '@/components/StickyCTA';
-import { EstimateChat } from '@/components/EstimateChat';
+import { Button } from '@/components/ui/button';
+import { LeadCaptureForm } from '@/components/LeadCaptureForm';
+import { WizardProgress } from '@/components/wizard/WizardProgress';
+import { PreparingEstimate } from '@/components/wizard/PreparingEstimate';
+import { YourHomeStep } from '@/components/wizard/YourHomeStep';
+import { YourEstimateStep } from '@/components/wizard/YourEstimateStep';
+import { FineTuneStep } from '@/components/wizard/FineTuneStep';
 import { useAssumptions } from '@/hooks/useAssumptions';
 import { useTariffs, type Tariff } from '@/hooks/useTariffs';
 import { calculateEstimate } from '@/lib/calculations';
 import type { EPCData } from '@/lib/calculations';
-import { Loader2, Sparkles } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 // Helper to detect fuel type from EPC data
 function detectFuelType(mainFuel?: string): string {
@@ -25,12 +24,24 @@ function detectFuelType(mainFuel?: string): string {
   return 'gas';
 }
 
+type WizardStep = 'preparing' | 'home' | 'estimate' | 'finetune';
+
+const WIZARD_STEPS = [
+  { label: 'Your home' },
+  { label: 'Your estimate' },
+  { label: 'Fine-tune & book' },
+];
+
 export default function Estimate() {
   const navigate = useNavigate();
   const { data: assumptions, isLoading: assumptionsLoading } = useAssumptions();
   const { data: tariffs, isLoading: tariffsLoading } = useTariffs();
   
   const [epcData, setEpcData] = useState<EPCData | null>(null);
+  const [wizardStep, setWizardStep] = useState<WizardStep>('preparing');
+  const [showLeadForm, setShowLeadForm] = useState(false);
+  
+  // Estimate configuration state
   const [scop, setScop] = useState(3.4);
   const [selectedTariff, setSelectedTariff] = useState<Tariff | null>(null);
   const [locationAdder, setLocationAdder] = useState<'included' | '6m' | '9m'>('included');
@@ -47,7 +58,6 @@ export default function Estimate() {
     try {
       const parsed = JSON.parse(stored) as EPCData;
       setEpcData(parsed);
-      // Set initial fuel from EPC data
       setCurrentFuel(detectFuelType(parsed.mainFuel));
     } catch {
       sessionStorage.removeItem('epcData');
@@ -58,7 +68,6 @@ export default function Estimate() {
   // Set default tariff when tariffs load
   useEffect(() => {
     if (tariffs && tariffs.length > 0 && !selectedTariff) {
-      // Default to first tariff (usually Octopus Cosy based on sort order)
       const defaultTariff = tariffs.find(t => t.name.toLowerCase().includes('cosy')) || tariffs[0];
       setSelectedTariff(defaultTariff);
     }
@@ -84,117 +93,139 @@ export default function Estimate() {
 
   const isLoading = assumptionsLoading || tariffsLoading;
 
+  // Navigation handlers
+  const handlePreparingComplete = useCallback(() => {
+    setWizardStep('home');
+  }, []);
+
+  const handleHomeComplete = useCallback(() => {
+    setWizardStep('estimate');
+  }, []);
+
+  const handleEstimateComplete = useCallback(() => {
+    setWizardStep('finetune');
+  }, []);
+
+  const handleBackToHome = useCallback(() => {
+    setWizardStep('home');
+  }, []);
+
+  const handleBook = useCallback(() => {
+    setShowLeadForm(true);
+  }, []);
+
+  const handleLeadSuccess = useCallback(() => {
+    setShowLeadForm(false);
+    // Could navigate to thank you page or show success state
+  }, []);
+
+  // Get current step number for progress indicator
+  const getCurrentStepNumber = () => {
+    switch (wizardStep) {
+      case 'home': return 1;
+      case 'estimate': return 2;
+      case 'finetune': return 3;
+      default: return 0;
+    }
+  };
+
+  // Show loading while data loads
   if (isLoading || !epcData || !results || !assumptions) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center animate-fade-in">
-          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4 animate-pulse-glow">
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
-          <p className="text-muted-foreground">Calculating your estimate...</p>
+          <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
     );
   }
 
-  const inputs = {
-    scop,
-    tariff: selectedTariff,
-    currentFuel: currentFuel,
-    propertyType: epcData.propertyType,
-    region: epcData.region,
-    locationAdder,
-    cylinderOption,
-  };
+  // Show preparing screen
+  if (wizardStep === 'preparing') {
+    return <PreparingEstimate onComplete={handlePreparingComplete} />;
+  }
 
-  return (
-    <div className="min-h-screen bg-background pb-28 sm:pb-24 lg:pb-28">
-      <Header />
-      
-      <main className="max-w-4xl mx-auto px-4 sm:px-4 py-8 sm:py-6 md:py-8">
-        {/* Page title - compact */}
-        <div className="mb-8 sm:mb-5 animate-fade-in">
-          <div className="flex items-center gap-2 mb-1">
-            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">
-              Your heat pump estimate
-            </h1>
+  // Lead capture modal
+  if (showLeadForm) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="max-w-lg mx-auto px-4 py-8">
+          <div className="mb-4">
+            <Button 
+              variant="ghost" 
+              onClick={() => setShowLeadForm(false)}
+              className="text-muted-foreground"
+            >
+              ← Back to estimate
+            </Button>
           </div>
-          <p className="text-xs sm:text-sm text-muted-foreground">
-            Based on analysing your home digitally
-          </p>
-        </div>
-
-        {/* Estimate banner */}
-        <div className="mb-10 sm:mb-6">
-          <EstimateBanner />
-        </div>
-
-        {/* Main content - stack on mobile, 2 column on desktop */}
-        <div className="space-y-8 sm:space-y-0 sm:grid sm:gap-5 lg:grid-cols-5 mb-10 sm:mb-6">
-          {/* Left: Property info */}
-          <div className="lg:col-span-2">
-            <PropertyCard epcData={epcData} results={results} />
-          </div>
-          
-          {/* Right: Cost card */}
-          <div className="lg:col-span-3">
-            <CostCard 
-              results={results} 
-              assumptions={assumptions}
-              scop={scop}
-              cylinderOption={cylinderOption}
-            />
-          </div>
-        </div>
-
-        {/* Savings section */}
-        <div className="mb-10 sm:mb-6">
-          <SavingsCard 
-            results={results}
-            assumptions={assumptions}
-            scop={scop}
-            selectedTariff={selectedTariff}
-            currentFuel={currentFuel}
-            onScopChange={setScop}
-            onTariffChange={setSelectedTariff}
-            onFuelChange={setCurrentFuel}
-          />
-        </div>
-
-        {/* Options section */}
-        <div className="mb-10 sm:mb-6">
-          <InstallOptions
-            locationAdder={locationAdder}
-            cylinderOption={cylinderOption}
-            onLocationChange={setLocationAdder}
-            onCylinderChange={setCylinderOption}
-            assumptions={assumptions}
-          />
-        </div>
-
-        {/* Timeline */}
-        <Timeline />
-
-        {/* AI Chat Section */}
-        <div className="mt-10 sm:mt-8">
-          <EstimateChat
+          <LeadCaptureForm
             epcData={epcData}
             results={results}
-            selectedTariff={selectedTariff}
-            currentFuel={currentFuel}
-            scop={scop}
+            assumptions={assumptions}
+            inputs={{
+              scop,
+              tariff: selectedTariff,
+              currentFuel,
+              propertyType: epcData.propertyType,
+              region: epcData.region,
+              locationAdder,
+              cylinderOption,
+            }}
           />
+        </main>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      
+      <main className="max-w-4xl mx-auto py-6 sm:py-8">
+        {/* Progress indicator */}
+        <WizardProgress currentStep={getCurrentStepNumber()} steps={WIZARD_STEPS} />
+
+        {/* Step content with transitions */}
+        <div className="transition-all duration-300">
+          {wizardStep === 'home' && (
+            <YourHomeStep
+              epcData={epcData}
+              results={results}
+              onContinue={handleHomeComplete}
+            />
+          )}
+
+          {wizardStep === 'estimate' && (
+            <YourEstimateStep
+              results={results}
+              assumptions={assumptions}
+              onContinue={handleEstimateComplete}
+            />
+          )}
+
+          {wizardStep === 'finetune' && (
+            <FineTuneStep
+              results={results}
+              assumptions={assumptions}
+              scop={scop}
+              selectedTariff={selectedTariff}
+              locationAdder={locationAdder}
+              cylinderOption={cylinderOption}
+              onScopChange={setScop}
+              onTariffChange={setSelectedTariff}
+              onLocationChange={setLocationAdder}
+              onCylinderChange={setCylinderOption}
+              onBack={handleBackToHome}
+              onBook={handleBook}
+            />
+          )}
         </div>
       </main>
-      
-      {/* Sticky CTA */}
-      <StickyCTA 
-        epcData={epcData}
-        results={results}
-        assumptions={assumptions}
-        inputs={inputs}
-      />
     </div>
   );
 }
