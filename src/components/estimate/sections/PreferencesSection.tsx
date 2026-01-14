@@ -41,19 +41,19 @@ export function PreferencesSection({
   onContinue 
 }: PreferencesSectionProps) {
   return (
-    <section className="py-12 animate-fade-in">
+    <section className="py-8 sm:py-12 animate-fade-in">
       {/* Header */}
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-foreground mb-2">
+      <div className="text-center mb-6 sm:mb-8">
+        <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2">
           What matters most to you?
         </h2>
-        <p className="text-muted-foreground">
+        <p className="text-sm sm:text-base text-muted-foreground">
           This helps us tune your estimate to match your priorities
         </p>
       </div>
 
       {/* Preference cards */}
-      <div className="space-y-4 mb-10">
+      <div className="space-y-3 sm:space-y-4 mb-8 sm:mb-10">
         {PREFERENCES.map((pref, index) => {
           const Icon = pref.icon;
           const isSelected = selectedPreference === pref.value;
@@ -63,32 +63,32 @@ export function PreferencesSection({
               key={pref.value}
               onClick={() => onSelect(pref.value)}
               className={cn(
-                'w-full p-5 rounded-2xl border-2 text-left transition-all relative overflow-hidden animate-fade-in',
+                'w-full p-4 sm:p-5 rounded-xl sm:rounded-2xl border-2 text-left transition-all relative overflow-hidden animate-fade-in active:scale-[0.98]',
                 isSelected 
                   ? 'border-primary bg-primary/5 shadow-md' 
                   : 'border-border bg-card hover:border-primary/30'
               )}
               style={{ animationDelay: `${index * 100}ms` }}
             >
-              <div className="flex items-start gap-4">
+              <div className="flex items-start gap-3 sm:gap-4">
                 <div className={cn(
-                  'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all',
+                  'w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 transition-all',
                   isSelected ? 'bg-primary text-primary-foreground' : pref.color
                 )}>
-                  <Icon className="w-6 h-6" />
+                  <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-semibold text-foreground">{pref.title}</h3>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5 sm:mb-1">
+                    <h3 className="font-semibold text-foreground text-sm sm:text-base">{pref.title}</h3>
                     {isSelected && (
-                      <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                        <Check className="w-3 h-3 text-primary-foreground" />
+                      <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                        <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-primary-foreground" />
                       </div>
                     )}
                   </div>
-                  <p className="text-sm text-muted-foreground mb-2">{pref.description}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-1.5 sm:mb-2">{pref.description}</p>
                   <div className={cn(
-                    'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium',
+                    'inline-flex items-center px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium',
                     isSelected ? 'bg-primary/10 text-primary' : 'bg-muted/50 text-muted-foreground'
                   )}>
                     {pref.benefit}
@@ -109,7 +109,7 @@ export function PreferencesSection({
       <Button 
         onClick={onContinue}
         size="lg"
-        className="w-full h-14 text-lg font-semibold"
+        className="w-full h-12 sm:h-14 text-base sm:text-lg font-semibold active:scale-[0.98] transition-transform"
       >
         Continue →
       </Button>

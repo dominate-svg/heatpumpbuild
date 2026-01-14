@@ -46,40 +46,40 @@ interface DataTileProps {
 function DataTile({ icon, label, value, tooltip, onEdit, highlight }: DataTileProps) {
   return (
     <div className={cn(
-      'relative p-4 rounded-2xl border transition-all animate-scale-in',
+      'relative p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border transition-all animate-scale-in',
       highlight ? 'bg-primary/5 border-primary/20' : 'bg-card border-border'
     )}>
       <div className="flex items-start gap-3">
         <div className={cn(
-          'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0',
+          'w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0',
           highlight ? 'bg-primary/10' : 'bg-muted/50'
         )}>
           {icon}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 mb-0.5">
-            <span className="text-sm text-muted-foreground">{label}</span>
+            <span className="text-xs sm:text-sm text-muted-foreground">{label}</span>
             {tooltip && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button className="text-muted-foreground/50 hover:text-muted-foreground">
-                      <Info className="w-3.5 h-3.5" />
+                      <Info className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent className="max-w-xs">
-                    <p className="text-sm">{tooltip}</p>
+                  <TooltipContent className="max-w-[260px] sm:max-w-xs">
+                    <p className="text-xs sm:text-sm">{tooltip}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             )}
           </div>
-          <p className="font-semibold text-foreground">{value}</p>
+          <p className="font-semibold text-foreground text-sm sm:text-base">{value}</p>
         </div>
         {onEdit && (
           <button 
             onClick={onEdit}
-            className="text-primary text-sm hover:underline flex items-center gap-1"
+            className="text-primary text-xs sm:text-sm hover:underline flex items-center gap-1 active:opacity-70 py-1 px-2 -mr-2 rounded-lg"
           >
             <Pencil className="w-3 h-3" />
             Edit
@@ -87,8 +87,8 @@ function DataTile({ icon, label, value, tooltip, onEdit, highlight }: DataTilePr
         )}
       </div>
       {/* Checkmark */}
-      <div className="absolute -right-1 -top-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-        <Check className="w-3 h-3 text-primary-foreground" />
+      <div className="absolute -right-0.5 -top-0.5 sm:-right-1 sm:-top-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-primary flex items-center justify-center">
+        <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-primary-foreground" />
       </div>
     </div>
   );
@@ -106,26 +106,26 @@ export function HomeDataSection({
   const epcColor = EPC_COLORS[epcBand] || EPC_COLORS.D;
 
   return (
-    <section className="py-12 animate-fade-in">
+    <section className="py-8 sm:py-12 animate-fade-in">
       {/* Header */}
-      <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 mb-4">
-          <Home className="w-7 h-7 text-primary" />
+      <div className="text-center mb-6 sm:mb-8">
+        <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-primary/10 mb-3 sm:mb-4">
+          <Home className="w-6 h-6 sm:w-7 sm:h-7 text-primary" />
         </div>
-        <h2 className="text-2xl font-bold text-foreground mb-2">
+        <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2">
           Here's what we already know
         </h2>
-        <p className="text-muted-foreground">
+        <p className="text-sm sm:text-base text-muted-foreground px-2">
           This comes from your EPC — you can change anything if it's wrong.
         </p>
       </div>
 
       {/* Data tiles - animated stack */}
-      <div className="space-y-3 mb-8">
+      <div className="space-y-2.5 sm:space-y-3 mb-6 sm:mb-8">
         <DataTile
           icon={
             <div className={cn(
-              'w-6 h-6 rounded font-bold text-xs flex items-center justify-center',
+              'w-5 h-5 sm:w-6 sm:h-6 rounded font-bold text-[10px] sm:text-xs flex items-center justify-center',
               epcColor.bg, epcColor.text
             )}>
               {epcBand}
@@ -138,14 +138,14 @@ export function HomeDataSection({
         />
 
         <DataTile
-          icon={<Home className="w-5 h-5 text-muted-foreground" />}
+          icon={<Home className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />}
           label="Home size"
           value={`${floorArea} m²`}
           tooltip="Floor area helps us estimate your heating needs."
         />
 
         <DataTile
-          icon={<Flame className="w-5 h-5 text-muted-foreground" />}
+          icon={<Flame className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />}
           label="Current heating"
           value={FUEL_LABELS[currentFuel] || 'Gas boiler'}
           tooltip="We use this to calculate your current costs and potential savings."
@@ -153,7 +153,7 @@ export function HomeDataSection({
         />
 
         <DataTile
-          icon={<Thermometer className="w-5 h-5 text-muted-foreground" />}
+          icon={<Thermometer className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />}
           label="Heat loss estimate"
           value={`${heatLossKw.toFixed(1)} kW`}
           tooltip="How much heat escapes on a cold day — this determines the size of heat pump you need."
@@ -161,8 +161,8 @@ export function HomeDataSection({
       </div>
 
       {/* Trust note */}
-      <div className="bg-muted/30 rounded-xl p-4 mb-8">
-        <p className="text-sm text-muted-foreground text-center">
+      <div className="bg-muted/30 rounded-lg sm:rounded-xl p-3 sm:p-4 mb-6 sm:mb-8">
+        <p className="text-xs sm:text-sm text-muted-foreground text-center">
           ✓ This data is from your official EPC record
         </p>
       </div>
@@ -171,7 +171,7 @@ export function HomeDataSection({
       <Button 
         onClick={onContinue}
         size="lg"
-        className="w-full h-14 text-lg font-semibold"
+        className="w-full h-12 sm:h-14 text-base sm:text-lg font-semibold active:scale-[0.98] transition-transform"
       >
         Looks right →
       </Button>
