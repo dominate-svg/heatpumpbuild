@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
+import ReactMarkdown from 'react-markdown';
 import type { EPCData, EstimateResults } from '@/lib/calculations';
 import type { Tariff } from '@/hooks/useTariffs';
 
@@ -244,7 +245,22 @@ export function EstimateChat({ epcData, results, selectedTariff, currentFuel, sc
                         : 'bg-muted'
                     }`}
                   >
-                    {msg.content || (
+                    {msg.content ? (
+                      msg.role === 'assistant' ? (
+                        <ReactMarkdown
+                          components={{
+                            p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                            ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1">{children}</ul>,
+                            li: ({ children }) => <li>{children}</li>,
+                            strong: ({ children }) => <strong className="font-semibold text-primary">{children}</strong>,
+                          }}
+                        >
+                          {msg.content}
+                        </ReactMarkdown>
+                      ) : (
+                        msg.content
+                      )
+                    ) : (
                       <span className="flex items-center gap-2 text-muted-foreground">
                         <Loader2 className="w-4 h-4 animate-spin" />
                         Thinking...
