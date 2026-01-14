@@ -4,12 +4,13 @@ import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { LeadCaptureForm } from '@/components/LeadCaptureForm';
 import { AIAssistant } from '@/components/canvas/AIAssistant';
-import { UnderstandingSection } from '@/components/canvas/UnderstandingSection';
-import { WhatIFoundSection } from '@/components/canvas/WhatIFoundSection';
-import { WhatThisMeansSection } from '@/components/canvas/WhatThisMeansSection';
-import { PersonaliseSection } from '@/components/canvas/PersonaliseSection';
-import { FinalEstimateSection } from '@/components/canvas/FinalEstimateSection';
-import { WhatHappensNextSection } from '@/components/canvas/WhatHappensNextSection';
+import { LearningSection } from '@/components/canvas/LearningSection';
+import { HomeAtGlanceSection } from '@/components/canvas/HomeAtGlanceSection';
+import { WhyCosySection } from '@/components/canvas/WhyCosySection';
+import { WhatItMeansSection } from '@/components/canvas/WhatItMeansSection';
+import { ExploreOptionsSection } from '@/components/canvas/ExploreOptionsSection';
+import { IsThisRightSection } from '@/components/canvas/IsThisRightSection';
+import { FinalEstimateNextSection } from '@/components/canvas/FinalEstimateNextSection';
 import { useAssumptions } from '@/hooks/useAssumptions';
 import { useTariffs, type Tariff } from '@/hooks/useTariffs';
 import { calculateEstimate } from '@/lib/calculations';
@@ -26,14 +27,24 @@ function detectFuelType(mainFuel?: string): string {
   return 'gas';
 }
 
-type CanvasPhase = 'understanding' | 'found' | 'means' | 'personalise' | 'final' | 'booking';
+type JourneyPhase = 
+  | 'learning' 
+  | 'glance' 
+  | 'why-cosy' 
+  | 'what-means' 
+  | 'explore' 
+  | 'is-right' 
+  | 'final' 
+  | 'booking';
 
-const AI_MESSAGES: Record<CanvasPhase, string> = {
-  understanding: "I'm building your estimate now.",
-  found: 'This is based on your EPC. Let me know if anything looks off.',
-  means: 'This is a realistic estimate based on homes like yours.',
-  personalise: 'Higher efficiency costs more upfront, but saves more long-term.',
-  final: "I'll hand you over to a human engineer after this.",
+const AI_MESSAGES: Record<JourneyPhase, string> = {
+  learning: "I'm putting your estimate together now.",
+  glance: 'This is based on your EPC. Let me know if anything looks off.',
+  'why-cosy': 'Cosy is designed specifically for heat pumps — 8 cheap hours every day.',
+  'what-means': 'This is a realistic estimate based on homes like yours.',
+  explore: 'Higher efficiency costs more upfront, but saves more long-term.',
+  'is-right': 'These are the questions I hear most. Honest answers only.',
+  final: "Ready when you are. I'll hand you over to a human engineer.",
   booking: 'Almost there! Just a few details to book your survey.',
 };
 
@@ -43,9 +54,9 @@ export default function Estimate() {
   const { data: tariffs, isLoading: tariffsLoading } = useTariffs();
   
   const [epcData, setEpcData] = useState<EPCData | null>(null);
-  const [phase, setPhase] = useState<CanvasPhase>('understanding');
-  const [isPersonaliseIdle, setIsPersonaliseIdle] = useState(false);
+  const [phase, setPhase] = useState<JourneyPhase>('learning');
   
+  // Configuration state
   const [scop, setScop] = useState(3.4);
   const [selectedTariff, setSelectedTariff] = useState<Tariff | null>(null);
   const [locationAdder, setLocationAdder] = useState<'included' | '6m' | '9m'>('included');
@@ -68,13 +79,6 @@ export default function Estimate() {
     }
   }, [tariffs, selectedTariff]);
 
-  useEffect(() => {
-    if (isPersonaliseIdle && phase === 'personalise') {
-      const timeout = setTimeout(() => setPhase('final'), 500);
-      return () => clearTimeout(timeout);
-    }
-  }, [isPersonaliseIdle, phase]);
-
   const results = useMemo(() => {
     if (!epcData || !assumptions) return null;
     return calculateEstimate({
@@ -94,6 +98,15 @@ export default function Estimate() {
 
   const isLoading = assumptionsLoading || tariffsLoading;
 
+  // Navigation callbacks
+  const goToGlance = useCallback(() => setPhase('glance'), []);
+  const goToWhyCosy = useCallback(() => setPhase('why-cosy'), []);
+  const goToWhatMeans = useCallback(() => setPhase('what-means'), []);
+  const goToExplore = useCallback(() => setPhase('explore'), []);
+  const goToIsRight = useCallback(() => setPhase('is-right'), []);
+  const goToFinal = useCallback(() => setPhase('final'), []);
+  const goToBooking = useCallback(() => setPhase('booking'), []);
+
   if (isLoading || !epcData || !results || !assumptions) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -105,13 +118,29 @@ export default function Estimate() {
     );
   }
 
+  // Booking form
   if (phase === 'booking') {
     return (
       <div className="min-h-screen bg-background">
         <Header />
         <main className="max-w-lg mx-auto px-4 py-8">
-          <Button variant="ghost" onClick={() => setPhase('final')} className="mb-6">← Back</Button>
-          <LeadCaptureForm epcData={epcData} results={results} assumptions={assumptions} inputs={{ scop, tariff: selectedTariff, currentFuel, propertyType: epcData.propertyType, region: epcData.region, locationAdder, cylinderOption }} />
+          <Button variant="ghost" onClick={() => setPhase('final')} className="mb-6">
+            ← Back
+          </Button>
+          <LeadCaptureForm
+            epcData={epcData}
+            results={results}
+            assumptions={assumptions}
+            inputs={{
+              scop,
+              tariff: selectedTariff,
+              currentFuel,
+              propertyType: epcData.propertyType,
+              region: epcData.region,
+              locationAdder,
+              cylinderOption,
+            }}
+          />
         </main>
         <AIAssistant message={AI_MESSAGES.booking} isVisible />
       </div>
@@ -120,28 +149,82 @@ export default function Estimate() {
 
   return (
     <div className="min-h-screen bg-background relative">
-      <div className={cn('transition-all duration-300', phase === 'understanding' ? 'opacity-0' : 'opacity-100')}>
+      {/* Header - hidden during learning phase */}
+      <div className={cn(
+        'transition-all duration-300',
+        phase === 'learning' ? 'opacity-0 pointer-events-none' : 'opacity-100'
+      )}>
         <Header />
       </div>
       
       <main>
-        {phase === 'understanding' && <UnderstandingSection onComplete={() => setPhase('found')} />}
-        {phase === 'found' && <WhatIFoundSection epcData={epcData} results={results} onContinue={() => setPhase('means')} />}
-        {phase === 'means' && <WhatThisMeansSection results={results} assumptions={assumptions} onContinue={() => setPhase('personalise')} />}
-        {(phase === 'personalise' || phase === 'final') && (
-          <div className={cn(phase === 'final' && 'section-past')}>
-            <PersonaliseSection results={results} assumptions={assumptions} scop={scop} selectedTariff={selectedTariff} locationAdder={locationAdder} cylinderOption={cylinderOption} onScopChange={setScop} onTariffChange={setSelectedTariff} onLocationChange={setLocationAdder} onCylinderChange={setCylinderOption} onIdleChange={setIsPersonaliseIdle} />
-          </div>
+        {/* Section 1: Learning */}
+        {phase === 'learning' && (
+          <LearningSection onComplete={goToGlance} />
         )}
+
+        {/* Section 2: Your home at a glance */}
+        {phase === 'glance' && (
+          <HomeAtGlanceSection
+            epcData={epcData}
+            results={results}
+            onContinue={goToWhyCosy}
+          />
+        )}
+
+        {/* Section 3: Why Cosy is different */}
+        {phase === 'why-cosy' && (
+          <WhyCosySection onContinue={goToWhatMeans} />
+        )}
+
+        {/* Section 4: What this means for your home */}
+        {phase === 'what-means' && (
+          <WhatItMeansSection
+            results={results}
+            assumptions={assumptions}
+            onContinue={goToExplore}
+          />
+        )}
+
+        {/* Section 5: Explore your options */}
+        {phase === 'explore' && (
+          <ExploreOptionsSection
+            results={results}
+            assumptions={assumptions}
+            scop={scop}
+            selectedTariff={selectedTariff}
+            locationAdder={locationAdder}
+            cylinderOption={cylinderOption}
+            onScopChange={setScop}
+            onTariffChange={setSelectedTariff}
+            onLocationChange={setLocationAdder}
+            onCylinderChange={setCylinderOption}
+            onContinue={goToIsRight}
+          />
+        )}
+
+        {/* Section 6: Is this right for you? */}
+        {phase === 'is-right' && (
+          <IsThisRightSection onContinue={goToFinal} />
+        )}
+
+        {/* Section 7: Final estimate & next steps */}
         {phase === 'final' && (
-          <>
-            <FinalEstimateSection results={results} assumptions={assumptions} scop={scop} selectedTariff={selectedTariff} onBook={() => setPhase('booking')} />
-            <WhatHappensNextSection />
-          </>
+          <FinalEstimateNextSection
+            results={results}
+            assumptions={assumptions}
+            scop={scop}
+            selectedTariff={selectedTariff}
+            onBook={goToBooking}
+          />
         )}
       </main>
 
-      <AIAssistant message={AI_MESSAGES[phase]} isVisible={phase !== 'understanding'} />
+      {/* AI Assistant */}
+      <AIAssistant
+        message={AI_MESSAGES[phase]}
+        isVisible={phase !== 'learning'}
+      />
     </div>
   );
 }
