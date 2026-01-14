@@ -107,8 +107,29 @@ export function useDeleteTariff() {
 export function formatTariffLabel(tariff: Tariff): string {
   const hasOffpeak = tariff.offpeak_hours_per_day > 0 && tariff.offpeak_rate_p_per_kwh !== null;
   
-  if (hasOffpeak) {
-    return `${tariff.supplier} — ${tariff.name} (${tariff.offpeak_rate_p_per_kwh}p to ${tariff.peak_rate_p_per_kwh}p/kWh)`;
+  // Special cases for specific tariff types
+  const lowerName = tariff.name.toLowerCase();
+  
+  // Cosy: 3-rate tariff
+  if (lowerName.includes('cosy')) {
+    return `${tariff.supplier} — Cosy (3-rate tariff)`;
   }
+  
+  // Agile: variable/dynamic
+  if (lowerName.includes('agile')) {
+    return `${tariff.supplier} — Agile (variable)`;
+  }
+  
+  // Price cap: flat rate
+  if (lowerName.includes('cap') || lowerName.includes('ofgem')) {
+    return `${tariff.supplier} — Price Cap (${tariff.peak_rate_p_per_kwh}p/kWh)`;
+  }
+  
+  // TOU tariffs: show off-peak / peak format
+  if (hasOffpeak) {
+    return `${tariff.supplier} — ${tariff.name} (${tariff.offpeak_rate_p_per_kwh}p / ${tariff.peak_rate_p_per_kwh}p)`;
+  }
+  
+  // Flat tariffs
   return `${tariff.supplier} — ${tariff.name} (${tariff.peak_rate_p_per_kwh}p/kWh)`;
 }
