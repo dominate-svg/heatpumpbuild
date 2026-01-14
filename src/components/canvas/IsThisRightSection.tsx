@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Snowflake, ThermometerSun, PiggyBank, Zap, ChevronDown } from 'lucide-react';
+import { Snowflake, ThermometerSun, PiggyBank, Zap, ChevronDown, ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface IsThisRightSectionProps {
@@ -103,10 +104,17 @@ export function IsThisRightSection({ onContinue }: IsThisRightSectionProps) {
           })}
         </div>
 
-        {/* Continue hint */}
-        <p className="text-center text-micro text-muted-foreground section-enter" style={{ animationDelay: '600ms' }}>
-          Scroll down to see your final estimate
-        </p>
+        {/* Continue button */}
+        <div className="text-center section-enter" style={{ animationDelay: '600ms' }}>
+          <Button
+            onClick={onContinue}
+            size="lg"
+            className="h-14 px-10 text-base font-semibold rounded-xl shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all"
+          >
+            See your final estimate
+            <ArrowRight className="w-5 h-5 ml-2" />
+          </Button>
+        </div>
       </div>
     </section>
   );
