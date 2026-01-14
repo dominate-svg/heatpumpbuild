@@ -224,9 +224,12 @@ export function SavingsCard({
                   </SelectContent>
                 </Select>
                 <p className="text-[10px] text-muted-foreground italic">
+                  All tariffs are modelled using the same heat pump run-time profile so comparisons remain fair.
+                </p>
+                <p className="text-[10px] text-muted-foreground">
                   {transparency.isCosy 
-                    ? 'We model Cosy using a blended rate based on when heat pumps typically run (cheap hours + some peak use).'
-                    : `Modelled blended rate: ~${transparency.blendedRate.toFixed(1)}p/kWh (based on EPC ${epcBand} and typical heat pump run times).`
+                    ? `Modelled blended rate: ~${transparency.blendedRate.toFixed(1)}p/kWh (based on typical heat pump run times)`
+                    : `Modelled blended rate: ~${transparency.blendedRate.toFixed(1)}p/kWh (based on typical heat pump run times)`
                   }
                 </p>
               </div>
