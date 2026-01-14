@@ -61,6 +61,30 @@ serve(async (req) => {
 
     const data = await response.json();
 
+    // Filter to only keep the newest EPC per address (by lodgement-date)
+    if (data.rows && Array.isArray(data.rows)) {
+      const addressMap = new Map<string, any>();
+      
+      for (const row of data.rows) {
+        const addressKey = (row.address || '').toLowerCase().trim();
+        const existingRow = addressMap.get(addressKey);
+        
+        if (!existingRow) {
+          addressMap.set(addressKey, row);
+        } else {
+          // Compare lodgement dates - keep the newer one
+          const existingDate = existingRow['lodgement-date'] || '';
+          const newDate = row['lodgement-date'] || '';
+          
+          if (newDate > existingDate) {
+            addressMap.set(addressKey, row);
+          }
+        }
+      }
+      
+      data.rows = Array.from(addressMap.values());
+    }
+
     return new Response(
       JSON.stringify(data),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
