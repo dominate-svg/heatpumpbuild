@@ -1,5 +1,5 @@
 import type { Tariff } from '@/hooks/useTariffs';
-import { getTariffConfig, calculateTariffCost, type TariffCostResult, type TariffConfig } from './tariffConfig';
+import { getTariffConfig, calculateTariffCost, type TariffCostResult, type TariffConfig, type DatabaseTariff } from './tariffConfig';
 
 export interface Assumptions {
   gas_rate: number;
@@ -531,8 +531,15 @@ export function calculateEstimate(
   const isCosy = tariffConfig?.isCosy ?? tariffName.toLowerCase().includes('cosy');
   
   if (tariffConfig && !isCosy) {
-    // Calculate using the selected tariff
-    const tariffResult = calculateTariffCost(cosySavings.hpKwh, epcBand, tariffConfig);
+    // Build database tariff object for rate overrides
+    const dbTariff: DatabaseTariff | undefined = inputs.tariff ? {
+      peak_rate_p_per_kwh: inputs.tariff.peak_rate_p_per_kwh,
+      offpeak_rate_p_per_kwh: inputs.tariff.offpeak_rate_p_per_kwh,
+      offpeak_hours_per_day: inputs.tariff.offpeak_hours_per_day,
+    } : undefined;
+    
+    // Calculate using the selected tariff with actual DB rates
+    const tariffResult = calculateTariffCost(cosySavings.hpKwh, epcBand, tariffConfig, dbTariff);
     
     console.log('[Tariff Calc] Result:', tariffResult);
     
