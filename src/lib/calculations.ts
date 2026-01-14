@@ -518,9 +518,14 @@ export function calculateEstimate(
   let rawSavings = cosySavings.rawSavings;
   let transparency = { ...cosySavings.transparency };
   
-  // Try to find matching tariff config
+  // Try to find matching tariff config using both supplier and name
   const tariffName = inputs.tariff?.name || '';
-  const tariffConfig = getTariffConfig(tariffName);
+  const tariffSupplier = inputs.tariff?.supplier || '';
+  const tariffConfig = getTariffConfig(tariffName, tariffSupplier);
+  
+  // Debug logging
+  console.log('[Tariff Calc] Input:', { name: tariffName, supplier: tariffSupplier });
+  console.log('[Tariff Calc] Config found:', tariffConfig?.id, 'isCosy:', tariffConfig?.isCosy);
   
   // Check if this is NOT Cosy
   const isCosy = tariffConfig?.isCosy ?? tariffName.toLowerCase().includes('cosy');
@@ -528,6 +533,8 @@ export function calculateEstimate(
   if (tariffConfig && !isCosy) {
     // Calculate using the selected tariff
     const tariffResult = calculateTariffCost(cosySavings.hpKwh, epcBand, tariffConfig);
+    
+    console.log('[Tariff Calc] Result:', tariffResult);
     
     if (tariffResult) {
       hpCost = tariffResult.annualCost;
@@ -546,6 +553,8 @@ export function calculateEstimate(
       estimatedSavings = roundToNearest10(finalSavings);
       rawSavings = newRawSavings;
       
+      console.log('[Tariff Calc] New savings:', { hpCost, estimatedSavings, rawSavings });
+      
       // Update transparency with non-Cosy tariff info
       transparency = {
         ...cosySavings.transparency,
@@ -557,6 +566,8 @@ export function calculateEstimate(
         isHighSensitivity: fuelType === 'oil' && finalSavings > 800,
       };
     }
+  } else {
+    console.log('[Tariff Calc] Using Cosy calculation');
   }
 
   // ============================================

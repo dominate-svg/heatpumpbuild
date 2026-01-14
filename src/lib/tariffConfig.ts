@@ -248,24 +248,59 @@ export const TARIFF_CONFIGS: TariffConfig[] = [
 // ============================================
 
 /**
- * Get tariff config by database tariff ID or name
+ * Get tariff config by database tariff name and supplier
  */
-export function getTariffConfig(tariffIdOrName: string): TariffConfig | undefined {
-  const lower = tariffIdOrName.toLowerCase();
+export function getTariffConfig(tariffName: string, tariffSupplier?: string): TariffConfig | undefined {
+  const lowerName = tariffName.toLowerCase();
+  const lowerSupplier = (tariffSupplier || '').toLowerCase();
   
-  // Try exact ID match first
-  const byId = TARIFF_CONFIGS.find(t => t.id === tariffIdOrName);
-  if (byId) return byId;
+  // Cosy
+  if (lowerName.includes('cosy')) {
+    return TARIFF_CONFIGS.find(t => t.id === 'cosy');
+  }
   
-  // Try name matching
-  if (lower.includes('cosy')) return TARIFF_CONFIGS.find(t => t.id === 'cosy');
-  if (lower.includes('agile')) return TARIFF_CONFIGS.find(t => t.id === 'octopus-agile');
-  if (lower.includes('go') && lower.includes('octopus')) return TARIFF_CONFIGS.find(t => t.id === 'octopus-go');
-  if (lower.includes('ofgem') || lower.includes('cap')) return TARIFF_CONFIGS.find(t => t.id === 'ofgem-cap');
-  if (lower.includes('british gas')) return TARIFF_CONFIGS.find(t => t.id === 'british-gas-hp');
-  if (lower.includes('edf')) return TARIFF_CONFIGS.find(t => t.id === 'edf-hp');
-  if (lower.includes('e.on') || lower.includes('eon')) return TARIFF_CONFIGS.find(t => t.id === 'eon-next-hp');
-  if (lower.includes('scottish')) return TARIFF_CONFIGS.find(t => t.id === 'scottish-power-hp');
+  // Agile
+  if (lowerName.includes('agile')) {
+    return TARIFF_CONFIGS.find(t => t.id === 'octopus-agile');
+  }
+  
+  // Go (Octopus)
+  if (lowerName === 'go' || lowerName.includes('go')) {
+    if (lowerSupplier.includes('octopus') || !lowerSupplier) {
+      return TARIFF_CONFIGS.find(t => t.id === 'octopus-go');
+    }
+  }
+  
+  // Ofgem Price Cap
+  if (lowerName.includes('cap') || lowerName.includes('price cap') || lowerSupplier.includes('ofgem')) {
+    return TARIFF_CONFIGS.find(t => t.id === 'ofgem-cap');
+  }
+  
+  // British Gas Heat Pump
+  if (lowerSupplier.includes('british gas') || lowerSupplier.includes('british')) {
+    return TARIFF_CONFIGS.find(t => t.id === 'british-gas-hp');
+  }
+  
+  // EDF Heat Pump
+  if (lowerSupplier.includes('edf')) {
+    return TARIFF_CONFIGS.find(t => t.id === 'edf-hp');
+  }
+  
+  // E.ON Next Heat Pump
+  if (lowerSupplier.includes('e.on') || lowerSupplier.includes('eon')) {
+    return TARIFF_CONFIGS.find(t => t.id === 'eon-next-hp');
+  }
+  
+  // Scottish Power Heat Pump
+  if (lowerSupplier.includes('scottish')) {
+    return TARIFF_CONFIGS.find(t => t.id === 'scottish-power-hp');
+  }
+  
+  // Fallback: If it's a heat pump tariff from unknown supplier, use a generic config
+  if (lowerName.includes('heat pump')) {
+    // Default to British Gas config as template
+    return TARIFF_CONFIGS.find(t => t.id === 'british-gas-hp');
+  }
   
   return undefined;
 }
