@@ -12,10 +12,11 @@ interface ResearchScreenProps {
 }
 
 const STEPS = [
-  'Finding your EPC',
-  'Estimating heat demand',
-  'Sizing your heat pump',
-  'Modelling Cosy tariff savings',
+  'Retrieving EPC certificate',
+  'Reading floor area and heating fuel',
+  'Estimating heat demand and system size',
+  'Applying tariff and savings model',
+  'Preparing your results',
 ];
 
 const MINIMUM_DISPLAY_TIME = 4000; // 4 seconds
@@ -125,7 +126,7 @@ export function ResearchScreen({
             Analysing your home…
           </h1>
           <p className="text-muted-foreground text-base md:text-lg">
-            Pulling EPC + property signals to build your estimate.
+            Retrieving EPC data and preparing your personalised estimate.
           </p>
         </div>
 

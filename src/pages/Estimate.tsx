@@ -1,11 +1,11 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
-import { EstimateSummary } from '@/components/estimate/EstimateSummary';
-import { AdjustEstimateSection } from '@/components/estimate/AdjustEstimateSection';
-import { CalculationDetails } from '@/components/estimate/CalculationDetails';
-import { WhyCosySection } from '@/components/estimate/WhyCosySection';
-import { TrustSection } from '@/components/estimate/TrustSection';
+import { EstimateBanner } from '@/components/EstimateBanner';
+import { PropertyCard } from '@/components/PropertyCard';
+import { CostCard } from '@/components/CostCard';
+import { SavingsCard } from '@/components/SavingsCard';
+import { InstallOptions } from '@/components/InstallOptions';
 import { Timeline } from '@/components/Timeline';
 import { StickyCTA } from '@/components/StickyCTA';
 import { EstimateChat } from '@/components/EstimateChat';
@@ -13,14 +13,7 @@ import { useAssumptions } from '@/hooks/useAssumptions';
 import { useTariffs, type Tariff } from '@/hooks/useTariffs';
 import { calculateEstimate } from '@/lib/calculations';
 import type { EPCData } from '@/lib/calculations';
-import { Loader2 } from 'lucide-react';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
-import { LeadCaptureForm } from '@/components/LeadCaptureForm';
+import { Loader2, Sparkles } from 'lucide-react';
 
 // Helper to detect fuel type from EPC data
 function detectFuelType(mainFuel?: string): string {
@@ -43,9 +36,6 @@ export default function Estimate() {
   const [locationAdder, setLocationAdder] = useState<'included' | '6m' | '9m'>('included');
   const [cylinderOption, setCylinderOption] = useState<'existing' | '150l' | '210l'>('existing');
   const [currentFuel, setCurrentFuel] = useState<string>('gas');
-  const [showBookingSheet, setShowBookingSheet] = useState(false);
-
-  const calculationRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const stored = sessionStorage.getItem('epcData');
@@ -94,14 +84,6 @@ export default function Estimate() {
 
   const isLoading = assumptionsLoading || tariffsLoading;
 
-  const handleScrollToCalculations = () => {
-    calculationRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
-  const handleBookSurvey = () => {
-    setShowBookingSheet(true);
-  };
-
   if (isLoading || !epcData || !results || !assumptions) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -109,13 +91,11 @@ export default function Estimate() {
           <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4 animate-pulse-glow">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
-          <p className="text-muted-foreground">Loading your estimate...</p>
+          <p className="text-muted-foreground">Calculating your estimate...</p>
         </div>
       </div>
     );
   }
-
-  const epcBand = results.epcBand || epcData.epcBand || 'D';
 
   const inputs = {
     scop,
@@ -131,60 +111,73 @@ export default function Estimate() {
     <div className="min-h-screen bg-background pb-28 sm:pb-24 lg:pb-28">
       <Header />
       
-      <main className="max-w-3xl mx-auto px-4 py-6 md:py-10 space-y-10">
-        {/* Section 1: Summary */}
-        <section className="animate-fade-in">
-          <EstimateSummary
+      <main className="max-w-4xl mx-auto px-4 sm:px-4 py-8 sm:py-6 md:py-8">
+        {/* Page title - compact */}
+        <div className="mb-8 sm:mb-5 animate-fade-in">
+          <div className="flex items-center gap-2 mb-1">
+            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">
+              Your heat pump estimate
+            </h1>
+          </div>
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            Based on analysing your home digitally
+          </p>
+        </div>
+
+        {/* Estimate banner */}
+        <div className="mb-10 sm:mb-6">
+          <EstimateBanner />
+        </div>
+
+        {/* Main content - stack on mobile, 2 column on desktop */}
+        <div className="space-y-8 sm:space-y-0 sm:grid sm:gap-5 lg:grid-cols-5 mb-10 sm:mb-6">
+          {/* Left: Property info */}
+          <div className="lg:col-span-2">
+            <PropertyCard epcData={epcData} results={results} />
+          </div>
+          
+          {/* Right: Cost card */}
+          <div className="lg:col-span-3">
+            <CostCard 
+              results={results} 
+              assumptions={assumptions}
+              scop={scop}
+              cylinderOption={cylinderOption}
+            />
+          </div>
+        </div>
+
+        {/* Savings section */}
+        <div className="mb-10 sm:mb-6">
+          <SavingsCard 
             results={results}
             assumptions={assumptions}
-            epcBand={epcBand}
-            onBookSurvey={handleBookSurvey}
-            onSeeCalculations={handleScrollToCalculations}
-          />
-        </section>
-
-        {/* Section 2: Adjust Your Estimate */}
-        <section className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
-          <AdjustEstimateSection
             scop={scop}
             selectedTariff={selectedTariff}
-            locationAdder={locationAdder}
-            cylinderOption={cylinderOption}
+            currentFuel={currentFuel}
             onScopChange={setScop}
             onTariffChange={setSelectedTariff}
+            onFuelChange={setCurrentFuel}
+          />
+        </div>
+
+        {/* Options section */}
+        <div className="mb-10 sm:mb-6">
+          <InstallOptions
+            locationAdder={locationAdder}
+            cylinderOption={cylinderOption}
             onLocationChange={setLocationAdder}
             onCylinderChange={setCylinderOption}
             assumptions={assumptions}
           />
-        </section>
+        </div>
 
-        {/* Section 3: How We Calculated This */}
-        <section className="animate-fade-in" style={{ animationDelay: '0.15s' }}>
-          <CalculationDetails
-            ref={calculationRef}
-            results={results}
-            epcBand={epcBand}
-            scop={scop}
-          />
-        </section>
+        {/* Timeline */}
+        <Timeline />
 
-        {/* Section 4: Why Cosy Works */}
-        <section className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
-          <WhyCosySection />
-        </section>
-
-        {/* Section 5: Trust & Accreditation */}
-        <section className="animate-fade-in" style={{ animationDelay: '0.25s' }}>
-          <TrustSection />
-        </section>
-
-        {/* Section 6: Journey Timeline */}
-        <section className="animate-fade-in" style={{ animationDelay: '0.3s' }}>
-          <Timeline />
-        </section>
-
-        {/* Section 7: AI Chat */}
-        <section className="animate-fade-in" style={{ animationDelay: '0.35s' }}>
+        {/* AI Chat Section */}
+        <div className="mt-10 sm:mt-8">
           <EstimateChat
             epcData={epcData}
             results={results}
@@ -192,7 +185,7 @@ export default function Estimate() {
             currentFuel={currentFuel}
             scop={scop}
           />
-        </section>
+        </div>
       </main>
       
       {/* Sticky CTA */}
@@ -202,22 +195,6 @@ export default function Estimate() {
         assumptions={assumptions}
         inputs={inputs}
       />
-
-      {/* Booking Sheet */}
-      <Sheet open={showBookingSheet} onOpenChange={setShowBookingSheet}>
-        <SheetContent side="right" className="w-full sm:w-[400px]">
-          <SheetHeader className="mb-6">
-            <SheetTitle>Book your free home survey</SheetTitle>
-          </SheetHeader>
-          <LeadCaptureForm
-            epcData={epcData}
-            results={results}
-            assumptions={assumptions}
-            inputs={inputs}
-            onSuccess={() => setShowBookingSheet(false)}
-          />
-        </SheetContent>
-      </Sheet>
     </div>
   );
 }
