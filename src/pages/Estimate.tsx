@@ -1,23 +1,24 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAssumptions } from '@/hooks/useAssumptions';
 import { useTariffs, type Tariff } from '@/hooks/useTariffs';
-import { calculateEstimate, getRadiatorsForEfficiency } from '@/lib/calculations';
+import { calculateEstimate } from '@/lib/calculations';
 import type { EPCData } from '@/lib/calculations';
 import { Loader2 } from 'lucide-react';
 
-// Wizard components
-import { WizardProgress } from '@/components/wizard/WizardProgress';
-import { HomeDataStep } from '@/components/wizard/steps/HomeDataStep';
-import { WhatChangesStep } from '@/components/wizard/steps/WhatChangesStep';
-import { PreferenceStep, preferenceToScop } from '@/components/wizard/steps/PreferenceStep';
-import { FineTuneStep, peopleToCylinder } from '@/components/wizard/steps/FineTuneStep';
-import { YourEstimateStep } from '@/components/wizard/steps/YourEstimateStep';
-import { AIAssistantStep } from '@/components/wizard/steps/AIAssistantStep';
+// Section components
+import { GuidePanel, MobileGuideDrawer } from '@/components/estimate/GuidePanel';
+import { WelcomeSection } from '@/components/estimate/sections/WelcomeSection';
+import { HeatPumpExplainerSection } from '@/components/estimate/sections/HeatPumpExplainerSection';
+import { HomeDataSection } from '@/components/estimate/sections/HomeDataSection';
+import { InitialEstimateSection } from '@/components/estimate/sections/InitialEstimateSection';
+import { PreferencesSection } from '@/components/estimate/sections/PreferencesSection';
+import { FineTuneSection } from '@/components/estimate/sections/FineTuneSection';
+import { BenefitsSection } from '@/components/estimate/sections/BenefitsSection';
+import { FinalEstimateSection } from '@/components/estimate/sections/FinalEstimateSection';
 import { ContactStep } from '@/components/wizard/steps/ContactStep';
 import { HeatingTypeStep } from '@/components/wizard/steps/HeatingTypeStep';
 
-// Fuel detection
 function detectFuelType(mainFuel?: string): string {
   if (!mainFuel) return 'gas';
   const fuel = mainFuel.toLowerCase();
@@ -27,36 +28,41 @@ function detectFuelType(mainFuel?: string): string {
   return 'gas';
 }
 
-const STEP_LABELS = [
-  'Your home',
-  'How it works',
-  'Preferences',
-  'Fine-tune',
-  'Estimate',
-  'Questions',
-  'Book survey',
-];
+function peopleToCylinder(people: '1-2' | '3-4' | '5+'): 'existing' | '150l' | '210l' {
+  switch (people) {
+    case '1-2': return 'existing';
+    case '3-4': return '150l';
+    case '5+': return '210l';
+  }
+}
 
-// Sub-step for fuel editing
-type SubStep = 'main' | 'edit-fuel';
+function preferenceToScop(pref: 'upfront' | 'running' | 'future'): number {
+  switch (pref) {
+    case 'upfront': return 3.4;
+    case 'running': return 3.7;
+    case 'future': return 4.0;
+  }
+}
+
+const SECTION_NAMES = ['welcome', 'explainer', 'home-data', 'initial-estimate', 'preferences', 'fine-tune', 'benefits', 'final-estimate', 'booking'];
 
 export default function Estimate() {
   const navigate = useNavigate();
   const { data: assumptions, isLoading: assumptionsLoading } = useAssumptions();
   const { data: tariffs, isLoading: tariffsLoading } = useTariffs();
+  const contentRef = useRef<HTMLDivElement>(null);
   
   const [epcData, setEpcData] = useState<EPCData | null>(null);
-  const [step, setStep] = useState(1);
-  const [subStep, setSubStep] = useState<SubStep>('main');
+  const [currentSection, setCurrentSection] = useState(0);
+  const [editingFuel, setEditingFuel] = useState(false);
   
-  // Configuration state
-  const [preference, setPreference] = useState<'upfront' | 'running' | 'future' | null>('running');
+  // Config state
+  const [preference, setPreference] = useState<'upfront' | 'running' | 'future'>('running');
   const [selectedTariff, setSelectedTariff] = useState<Tariff | null>(null);
   const [locationAdder, setLocationAdder] = useState<'included' | '6m' | '9m'>('included');
   const [people, setPeople] = useState<'1-2' | '3-4' | '5+'>('3-4');
   const [currentFuel, setCurrentFuel] = useState<string>('gas');
 
-  // Derived values
   const scop = preferenceToScop(preference);
   const cylinderOption = peopleToCylinder(people);
 
@@ -96,25 +102,21 @@ export default function Estimate() {
     }, assumptions);
   }, [epcData, assumptions, scop, selectedTariff, locationAdder, cylinderOption, currentFuel]);
 
-  const isLoading = assumptionsLoading || tariffsLoading;
+  const goNext = useCallback(() => {
+    setCurrentSection(s => Math.min(s + 1, SECTION_NAMES.length - 1));
+    contentRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
-  // Navigation
-  const goNext = useCallback(() => setStep(s => Math.min(s + 1, 7)), []);
   const goBack = useCallback(() => {
-    if (subStep !== 'main') {
-      setSubStep('main');
-    } else if (step > 1) {
-      setStep(s => s - 1);
-    } else {
-      navigate('/');
+    if (editingFuel) {
+      setEditingFuel(false);
+    } else if (currentSection > 0) {
+      setCurrentSection(s => s - 1);
+      contentRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  }, [step, subStep, navigate]);
+  }, [currentSection, editingFuel]);
 
-  const handleEditFuel = () => setSubStep('edit-fuel');
-  const handleFuelSelected = (fuel: string) => {
-    setCurrentFuel(fuel);
-    setSubStep('main');
-  };
+  const isLoading = assumptionsLoading || tariffsLoading;
 
   if (isLoading || !epcData) {
     return (
@@ -127,131 +129,62 @@ export default function Estimate() {
     );
   }
 
-  // Calculate heat loss and radiators for display
   const heatLossKw = results?.heatLossKw || 8;
-  const likelyRadiators = getRadiatorsForEfficiency(scop);
 
-  // Render sub-step if active
-  if (subStep === 'edit-fuel') {
+  // Fuel editing mode
+  if (editingFuel) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border px-4 py-3">
-          <div className="max-w-lg mx-auto">
-            <WizardProgress
-              currentStep={step}
-              totalSteps={7}
-              stepLabel="Edit heating type"
-            />
-          </div>
-        </div>
-        <div className="flex items-start justify-center px-4 py-6">
-          <div className="w-full max-w-lg">
-            <HeatingTypeStep
-              detectedFuel={detectFuelType(epcData.mainFuel)}
-              selectedFuel={currentFuel}
-              onSelect={handleFuelSelected}
-              onContinue={() => setSubStep('main')}
-              onBack={() => setSubStep('main')}
-            />
-          </div>
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 px-4 py-6">
+        <div className="max-w-lg mx-auto">
+          <HeatingTypeStep
+            detectedFuel={detectFuelType(epcData.mainFuel)}
+            selectedFuel={currentFuel}
+            onSelect={(fuel) => { setCurrentFuel(fuel); setEditingFuel(false); }}
+            onContinue={() => setEditingFuel(false)}
+            onBack={() => setEditingFuel(false)}
+          />
         </div>
       </div>
     );
   }
 
-  // Step content renderer
-  const renderStep = () => {
-    switch (step) {
-      case 1:
-        return (
-          <HomeDataStep
-            epcData={epcData}
-            heatLossKw={heatLossKw}
-            likelyRadiators={likelyRadiators}
-            currentFuel={currentFuel}
-            onEditFuel={handleEditFuel}
-            onContinue={goNext}
-            onBack={goBack}
-          />
-        );
-      case 2:
-        return <WhatChangesStep onContinue={goNext} onBack={goBack} />;
-      case 3:
-        return (
-          <PreferenceStep
-            selectedPreference={preference}
-            onSelect={setPreference}
-            onContinue={goNext}
-            onBack={goBack}
-          />
-        );
-      case 4:
-        return (
-          <FineTuneStep
-            selectedLocation={locationAdder}
-            selectedPeople={people}
-            onSelectLocation={setLocationAdder}
-            onSelectPeople={setPeople}
-            onContinue={goNext}
-            onBack={goBack}
-          />
-        );
-      case 5:
-        return results && assumptions ? (
-          <YourEstimateStep
-            results={results}
-            assumptions={assumptions}
-            currentFuel={currentFuel}
-            onContinue={goNext}
-            onBack={goBack}
-          />
-        ) : null;
-      case 6:
-        return results ? (
-          <AIAssistantStep
-            results={results}
-            currentFuel={currentFuel}
-            epcBand={epcData.epcBand}
-            onContinue={goNext}
-            onBack={goBack}
-          />
-        ) : null;
-      case 7:
-        return results && assumptions ? (
-          <ContactStep
-            epcData={epcData}
-            results={results}
-            assumptions={assumptions}
-            scop={scop}
-            selectedTariff={selectedTariff}
-            currentFuel={currentFuel}
-            locationAdder={locationAdder}
-            cylinderOption={cylinderOption}
-            onBack={goBack}
-          />
-        ) : null;
-      default:
-        return null;
+  const renderSection = () => {
+    switch (currentSection) {
+      case 0: return <WelcomeSection onStart={goNext} />;
+      case 1: return <HeatPumpExplainerSection onContinue={goNext} />;
+      case 2: return <HomeDataSection epcData={epcData} heatLossKw={heatLossKw} currentFuel={currentFuel} onEditFuel={() => setEditingFuel(true)} onContinue={goNext} />;
+      case 3: return results ? <InitialEstimateSection results={results} currentFuel={currentFuel} onPersonalise={goNext} /> : null;
+      case 4: return <PreferencesSection selectedPreference={preference} onSelect={setPreference} onContinue={goNext} />;
+      case 5: return <FineTuneSection selectedLocation={locationAdder} selectedPeople={people} onSelectLocation={setLocationAdder} onSelectPeople={setPeople} onContinue={goNext} />;
+      case 6: return <BenefitsSection onContinue={goNext} />;
+      case 7: return results ? <FinalEstimateSection results={results} currentFuel={currentFuel} onBook={goNext} /> : null;
+      case 8: return results && assumptions ? <ContactStep epcData={epcData} results={results} assumptions={assumptions} scop={scop} selectedTariff={selectedTariff} currentFuel={currentFuel} locationAdder={locationAdder} cylinderOption={cylinderOption} onBack={goBack} /> : null;
+      default: return null;
     }
   };
 
+  const guideContext = { epcBand: epcData.epcBand, floorArea: epcData.totalFloorArea, currentFuel, installCost: results?.customerContribution, savings: results?.estimatedSavings };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-      {/* Progress bar - fixed at top */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border px-4 py-3">
-        <div className="max-w-lg mx-auto">
-          <WizardProgress
-            currentStep={step}
-            totalSteps={7}
-            stepLabel={STEP_LABELS[step - 1]}
-          />
+      <div className="flex min-h-screen">
+        {/* Main content */}
+        <div className="flex-1 overflow-y-auto" ref={contentRef}>
+          <div className="max-w-lg mx-auto px-4">
+            {renderSection()}
+          </div>
         </div>
-      </div>
 
-      {/* Step content */}
-      <div className="flex items-start justify-center px-4 py-6">
-        <div className="w-full max-w-lg">
-          {renderStep()}
+        {/* Desktop guide panel */}
+        <div className="hidden lg:block w-80 xl:w-96 border-l border-border bg-card">
+          <div className="sticky top-0 h-screen overflow-hidden">
+            <GuidePanel currentSection={SECTION_NAMES[currentSection]} context={guideContext} />
+          </div>
+        </div>
+
+        {/* Mobile guide drawer */}
+        <div className="lg:hidden">
+          <MobileGuideDrawer currentSection={SECTION_NAMES[currentSection]} context={guideContext} />
         </div>
       </div>
     </div>
