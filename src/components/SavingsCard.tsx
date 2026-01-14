@@ -63,7 +63,8 @@ export function SavingsCard({
 
   const { estimatedSavings, epcBand, transparency } = results;
   const isNegativeSavings = estimatedSavings < 0;
-  const displaySavings = Math.abs(estimatedSavings);
+  const isNearZero = Math.abs(estimatedSavings) <= 100; // ±£100 shows as "≈ £0"
+  const displaySavings = isNearZero ? 0 : Math.abs(estimatedSavings);
 
   const handleTariffChange = (tariffId: string) => {
     const tariff = tariffs?.find(t => t.id === tariffId);
@@ -110,14 +111,14 @@ export function SavingsCard({
                   <div className="space-y-2">
                     <div className="flex items-baseline gap-2 flex-wrap">
                       <span className={`text-2xl sm:text-3xl md:text-4xl font-bold ${
-                        isNegativeSavings ? 'text-amber-600 dark:text-amber-400' : 'text-success'
+                        isNearZero ? 'text-muted-foreground' : isNegativeSavings ? 'text-amber-600 dark:text-amber-400' : 'text-success'
                       }`}>
-                        {isNegativeSavings ? '-' : ''}£{displaySavings}
+                        {isNearZero ? '≈ £0' : `${isNegativeSavings ? '-' : ''}£${displaySavings}`}
                       </span>
                       <span className="text-sm text-muted-foreground">/year</span>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Balanced estimate using national averages and conservative assumptions. Survey confirms actual costs.
+                      Balanced estimate using national averages, EPC-based heat demand, realistic seasonal performance, and typical tariff usage. This is an estimate, not a guarantee. Your home survey confirms final costs and savings.
                     </p>
                   </div>
                 </div>
