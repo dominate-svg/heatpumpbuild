@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Snowflake, ThermometerSun, PiggyBank, Zap, ChevronDown, ArrowRight } from 'lucide-react';
+import { Snowflake, ThermometerSun, PiggyBank, Zap, ChevronDown, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface IsThisRightSectionProps {
   onContinue: () => void;
+  onBack: () => void;
 }
 
 const QUESTIONS = [
@@ -34,12 +35,21 @@ const QUESTIONS = [
   },
 ];
 
-export function IsThisRightSection({ onContinue }: IsThisRightSectionProps) {
+export function IsThisRightSection({ onContinue, onBack }: IsThisRightSectionProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   return (
     <section className="py-16 px-6">
       <div className="max-w-2xl mx-auto">
+        {/* Back button */}
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6 section-enter"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span className="text-sm">Back</span>
+        </button>
+
         {/* Header */}
         <div className="text-center mb-10 section-enter">
           <h2 className="text-section-title font-semibold text-foreground tracking-tight mb-3">

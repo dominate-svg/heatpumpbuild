@@ -1,10 +1,11 @@
-import { Clock, Zap, ThermometerSun, Home, ArrowRight } from 'lucide-react';
+import { Clock, Zap, ThermometerSun, Home, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import cosyPump from '@/assets/cosy-pump.jpeg';
 
 interface WhyCosySectionProps {
   onContinue: () => void;
+  onBack: () => void;
 }
 
 const BENEFITS = [
@@ -30,10 +31,19 @@ const BENEFITS = [
   },
 ];
 
-export function WhyCosySection({ onContinue }: WhyCosySectionProps) {
+export function WhyCosySection({ onContinue, onBack }: WhyCosySectionProps) {
   return (
     <section className="py-16 px-6 bg-gradient-to-b from-background via-primary/5 to-background">
       <div className="max-w-5xl mx-auto">
+        {/* Back button */}
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6 section-enter"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span className="text-sm">Back</span>
+        </button>
+
         {/* Header */}
         <div className="text-center mb-12 section-enter">
           <h2 className="text-section-title font-semibold text-foreground tracking-tight mb-3">

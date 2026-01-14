@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Award, TrendingUp, TrendingDown, HelpCircle, ArrowRight } from 'lucide-react';
+import { Award, TrendingUp, TrendingDown, HelpCircle, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
@@ -16,6 +16,7 @@ interface WhatItMeansSectionProps {
   results: EstimateResults;
   assumptions: Assumptions;
   onContinue: () => void;
+  onBack: () => void;
 }
 
 interface MetricCardProps {
@@ -99,7 +100,7 @@ function MetricCard({
   );
 }
 
-export function WhatItMeansSection({ results, assumptions, onContinue }: WhatItMeansSectionProps) {
+export function WhatItMeansSection({ results, assumptions, onContinue, onBack }: WhatItMeansSectionProps) {
   const [showContent, setShowContent] = useState(false);
 
   useEffect(() => {
@@ -115,6 +116,15 @@ export function WhatItMeansSection({ results, assumptions, onContinue }: WhatItM
   return (
     <section className="py-16 px-6">
       <div className="max-w-xl mx-auto">
+        {/* Back button */}
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6 section-enter"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span className="text-sm">Back</span>
+        </button>
+
         {/* Header */}
         <div
           className={cn(

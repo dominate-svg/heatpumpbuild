@@ -98,13 +98,20 @@ export default function Estimate() {
 
   const isLoading = assumptionsLoading || tariffsLoading;
 
-  // Navigation callbacks
+  // Navigation callbacks - forward
   const goToGlance = useCallback(() => setPhase('glance'), []);
   const goToWhyCosy = useCallback(() => setPhase('why-cosy'), []);
   const goToWhatMeans = useCallback(() => setPhase('what-means'), []);
   const goToExplore = useCallback(() => setPhase('explore'), []);
   const goToIsRight = useCallback(() => setPhase('is-right'), []);
   const goToFinal = useCallback(() => setPhase('final'), []);
+  
+  // Navigation callbacks - back
+  const backToGlance = useCallback(() => setPhase('glance'), []);
+  const backToWhyCosy = useCallback(() => setPhase('why-cosy'), []);
+  const backToWhatMeans = useCallback(() => setPhase('what-means'), []);
+  const backToExplore = useCallback(() => setPhase('explore'), []);
+  const backToIsRight = useCallback(() => setPhase('is-right'), []);
   const goToBooking = useCallback(() => setPhase('booking'), []);
 
   if (isLoading || !epcData || !results || !assumptions) {
@@ -174,7 +181,10 @@ export default function Estimate() {
 
         {/* Section 3: Why Cosy is different */}
         {phase === 'why-cosy' && (
-          <WhyCosySection onContinue={goToWhatMeans} />
+          <WhyCosySection 
+            onContinue={goToWhatMeans} 
+            onBack={backToGlance}
+          />
         )}
 
         {/* Section 4: What this means for your home */}
@@ -183,6 +193,7 @@ export default function Estimate() {
             results={results}
             assumptions={assumptions}
             onContinue={goToExplore}
+            onBack={backToWhyCosy}
           />
         )}
 
@@ -200,12 +211,16 @@ export default function Estimate() {
             onLocationChange={setLocationAdder}
             onCylinderChange={setCylinderOption}
             onContinue={goToIsRight}
+            onBack={backToWhatMeans}
           />
         )}
 
         {/* Section 6: Is this right for you? */}
         {phase === 'is-right' && (
-          <IsThisRightSection onContinue={goToFinal} />
+          <IsThisRightSection 
+            onContinue={goToFinal} 
+            onBack={backToExplore}
+          />
         )}
 
         {/* Section 7: Final estimate & next steps */}
@@ -216,6 +231,7 @@ export default function Estimate() {
             scop={scop}
             selectedTariff={selectedTariff}
             onBook={goToBooking}
+            onBack={backToIsRight}
           />
         )}
       </main>
