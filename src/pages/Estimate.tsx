@@ -8,6 +8,7 @@ import { SavingsCard } from '@/components/SavingsCard';
 import { InstallOptions } from '@/components/InstallOptions';
 import { Timeline } from '@/components/Timeline';
 import { StickyCTA } from '@/components/StickyCTA';
+import { EstimateChat } from '@/components/EstimateChat';
 import { useAssumptions } from '@/hooks/useAssumptions';
 import { useTariffs, type Tariff } from '@/hooks/useTariffs';
 import { calculateEstimate } from '@/lib/calculations';
@@ -182,6 +183,15 @@ export default function Estimate() {
         results={results}
         assumptions={assumptions}
         inputs={inputs}
+      />
+      
+      {/* AI Chat */}
+      <EstimateChat
+        epcData={epcData}
+        results={results}
+        selectedTariff={selectedTariff}
+        currentFuel={currentFuel}
+        scop={scop}
       />
     </div>
   );
