@@ -3,14 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { LeadCaptureForm } from '@/components/LeadCaptureForm';
-import { AIAssistant } from '@/components/canvas/AIAssistant';
-import { LearningSection } from '@/components/canvas/LearningSection';
-import { HomeAtGlanceSection } from '@/components/canvas/HomeAtGlanceSection';
-import { WhyCosySection } from '@/components/canvas/WhyCosySection';
-import { WhatItMeansSection } from '@/components/canvas/WhatItMeansSection';
-import { ExploreOptionsSection } from '@/components/canvas/ExploreOptionsSection';
-import { IsThisRightSection } from '@/components/canvas/IsThisRightSection';
-import { FinalEstimateNextSection } from '@/components/canvas/FinalEstimateNextSection';
+import { CheckingHomeStep } from '@/components/wizard/CheckingHomeStep';
+import { HeatPumpPrimerStep } from '@/components/wizard/HeatPumpPrimerStep';
+import { HomeSnapshotStep } from '@/components/wizard/HomeSnapshotStep';
+import { EstimateExplainedStep } from '@/components/wizard/EstimateExplainedStep';
+import { PersonaliseBookStep } from '@/components/wizard/PersonaliseBookStep';
+import { AIAssistantPanel } from '@/components/wizard/AIAssistantPanel';
 import { useAssumptions } from '@/hooks/useAssumptions';
 import { useTariffs, type Tariff } from '@/hooks/useTariffs';
 import { calculateEstimate } from '@/lib/calculations';
@@ -27,26 +25,7 @@ function detectFuelType(mainFuel?: string): string {
   return 'gas';
 }
 
-type JourneyPhase = 
-  | 'learning' 
-  | 'glance' 
-  | 'why-cosy' 
-  | 'what-means' 
-  | 'explore' 
-  | 'is-right' 
-  | 'final' 
-  | 'booking';
-
-const AI_MESSAGES: Record<JourneyPhase, string> = {
-  learning: "I'm putting your estimate together now.",
-  glance: 'This is based on your EPC. Let me know if anything looks off.',
-  'why-cosy': 'Cosy is designed specifically for heat pumps — 8 cheap hours every day.',
-  'what-means': 'This is a realistic estimate based on homes like yours.',
-  explore: 'Higher efficiency costs more upfront, but saves more long-term.',
-  'is-right': 'These are the questions I hear most. Honest answers only.',
-  final: "Ready when you are. I'll hand you over to a human engineer.",
-  booking: 'Almost there! Just a few details to book your survey.',
-};
+type WizardStep = 'checking' | 'primer' | 'snapshot' | 'estimate' | 'personalise' | 'booking';
 
 export default function Estimate() {
   const navigate = useNavigate();
@@ -54,7 +33,7 @@ export default function Estimate() {
   const { data: tariffs, isLoading: tariffsLoading } = useTariffs();
   
   const [epcData, setEpcData] = useState<EPCData | null>(null);
-  const [phase, setPhase] = useState<JourneyPhase>('learning');
+  const [step, setStep] = useState<WizardStep>('checking');
   
   // Configuration state
   const [scop, setScop] = useState(3.4);
@@ -98,21 +77,12 @@ export default function Estimate() {
 
   const isLoading = assumptionsLoading || tariffsLoading;
 
-  // Navigation callbacks - forward
-  const goToGlance = useCallback(() => setPhase('glance'), []);
-  const goToWhyCosy = useCallback(() => setPhase('why-cosy'), []);
-  const goToWhatMeans = useCallback(() => setPhase('what-means'), []);
-  const goToExplore = useCallback(() => setPhase('explore'), []);
-  const goToIsRight = useCallback(() => setPhase('is-right'), []);
-  const goToFinal = useCallback(() => setPhase('final'), []);
-  
-  // Navigation callbacks - back
-  const backToGlance = useCallback(() => setPhase('glance'), []);
-  const backToWhyCosy = useCallback(() => setPhase('why-cosy'), []);
-  const backToWhatMeans = useCallback(() => setPhase('what-means'), []);
-  const backToExplore = useCallback(() => setPhase('explore'), []);
-  const backToIsRight = useCallback(() => setPhase('is-right'), []);
-  const goToBooking = useCallback(() => setPhase('booking'), []);
+  // Navigation callbacks
+  const goToPrimer = useCallback(() => setStep('primer'), []);
+  const goToSnapshot = useCallback(() => setStep('snapshot'), []);
+  const goToEstimate = useCallback(() => setStep('estimate'), []);
+  const goToPersonalise = useCallback(() => setStep('personalise'), []);
+  const goToBooking = useCallback(() => setStep('booking'), []);
 
   if (isLoading || !epcData || !results || !assumptions) {
     return (
@@ -126,12 +96,12 @@ export default function Estimate() {
   }
 
   // Booking form
-  if (phase === 'booking') {
+  if (step === 'booking') {
     return (
       <div className="min-h-screen bg-background">
         <Header />
         <main className="max-w-lg mx-auto px-4 py-8">
-          <Button variant="ghost" onClick={() => setPhase('final')} className="mb-6">
+          <Button variant="ghost" onClick={() => setStep('personalise')} className="mb-6">
             ← Back
           </Button>
           <LeadCaptureForm
@@ -149,57 +119,57 @@ export default function Estimate() {
             }}
           />
         </main>
-        <AIAssistant message={AI_MESSAGES.booking} isVisible />
+        <AIAssistantPanel currentStep="booking" />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-background relative">
-      {/* Header - hidden during learning phase */}
+      {/* Header - hidden during checking step */}
       <div className={cn(
         'transition-all duration-300',
-        phase === 'learning' ? 'opacity-0 pointer-events-none' : 'opacity-100'
+        step === 'checking' ? 'opacity-0 pointer-events-none' : 'opacity-100'
       )}>
         <Header />
       </div>
       
       <main>
-        {/* Section 1: Learning */}
-        {phase === 'learning' && (
-          <LearningSection onComplete={goToGlance} />
+        {/* Step 0: Checking your home */}
+        {step === 'checking' && (
+          <CheckingHomeStep onComplete={goToPrimer} />
         )}
 
-        {/* Section 2: Your home at a glance */}
-        {phase === 'glance' && (
-          <HomeAtGlanceSection
+        {/* Step 1: Heat pump primer */}
+        {step === 'primer' && (
+          <HeatPumpPrimerStep onContinue={goToSnapshot} />
+        )}
+
+        {/* Step 2: Home snapshot */}
+        {step === 'snapshot' && (
+          <HomeSnapshotStep
             epcData={epcData}
             results={results}
-            onContinue={goToWhyCosy}
+            onContinue={goToEstimate}
+            onBack={goToPrimer}
           />
         )}
 
-        {/* Section 3: Why Cosy is different */}
-        {phase === 'why-cosy' && (
-          <WhyCosySection 
-            onContinue={goToWhatMeans} 
-            onBack={backToGlance}
-          />
-        )}
-
-        {/* Section 4: What this means for your home */}
-        {phase === 'what-means' && (
-          <WhatItMeansSection
+        {/* Step 3: Estimate explained */}
+        {step === 'estimate' && (
+          <EstimateExplainedStep
             results={results}
             assumptions={assumptions}
-            onContinue={goToExplore}
-            onBack={backToWhyCosy}
+            selectedTariff={selectedTariff}
+            onTariffChange={setSelectedTariff}
+            onContinue={goToPersonalise}
+            onBack={goToSnapshot}
           />
         )}
 
-        {/* Section 5: Explore your options */}
-        {phase === 'explore' && (
-          <ExploreOptionsSection
+        {/* Step 4: Personalise + Book */}
+        {step === 'personalise' && (
+          <PersonaliseBookStep
             results={results}
             assumptions={assumptions}
             scop={scop}
@@ -207,39 +177,22 @@ export default function Estimate() {
             locationAdder={locationAdder}
             cylinderOption={cylinderOption}
             onScopChange={setScop}
-            onTariffChange={setSelectedTariff}
             onLocationChange={setLocationAdder}
             onCylinderChange={setCylinderOption}
-            onContinue={goToIsRight}
-            onBack={backToWhatMeans}
-          />
-        )}
-
-        {/* Section 6: Is this right for you? */}
-        {phase === 'is-right' && (
-          <IsThisRightSection 
-            onContinue={goToFinal} 
-            onBack={backToExplore}
-          />
-        )}
-
-        {/* Section 7: Final estimate & next steps */}
-        {phase === 'final' && (
-          <FinalEstimateNextSection
-            results={results}
-            assumptions={assumptions}
-            scop={scop}
-            selectedTariff={selectedTariff}
             onBook={goToBooking}
-            onBack={backToIsRight}
+            onBack={goToEstimate}
           />
         )}
       </main>
 
-      {/* AI Assistant */}
-      <AIAssistant
-        message={AI_MESSAGES[phase]}
-        isVisible={phase !== 'learning'}
+      {/* AI Assistant - visible on all steps except checking */}
+      <AIAssistantPanel
+        currentStep={step}
+        epcBand={results.epcBand}
+        currentFuel={currentFuel}
+        selectedTariff={selectedTariff?.name}
+        efficiency={scop}
+        isVisible={step !== 'checking'}
       />
     </div>
   );
