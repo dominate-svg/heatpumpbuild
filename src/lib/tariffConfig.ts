@@ -401,22 +401,9 @@ export function calculateTariffCost(
   // Get Cosy blended rate for safety check
   const cosyInfo = getCosyBlendedRate();
   
-  // Helper to apply safety check and adjust if needed
-  const applySafetyCheck = (blendedRateP: number, cheapShare: number): { finalBlendedRateP: number; finalCheapShare: number } => {
-    let finalBlendedRateP = blendedRateP;
-    let finalCheapShare = cheapShare;
-    
-    // Safety: non-Cosy blended rate must be >= Cosy blended rate - 0.1
-    const minRate = cosyInfo.blendedRateP - 0.1;
-    
-    // If non-Cosy is undercutting Cosy, adjust cheap_share downward
-    while (finalBlendedRateP < minRate && finalCheapShare > 0.30) {
-      finalCheapShare -= 0.02;
-      // Recalculate won't work here generically, so we flag for recalc
-    }
-    
-    return { finalBlendedRateP, finalCheapShare };
-  };
+  // Cosy blended rate for reference in safety checks
+  // Cosy = 0.60*12 + 0.25*24 + 0.15*38 = 18.9p
+  // All non-Cosy tariffs must have blendedRateP >= cosyInfo.blendedRateP - 0.1
   
   // ============================================
   // FLAT tariff - single rate applies everywhere
@@ -440,14 +427,15 @@ export function calculateTariffCost(
   // ============================================
   // TOU_2_RATE tariff (e.g., British Gas, EDF, E.ON, Scottish Power)
   // Map: cheap → offpeak, mid → peak, peak → peak
+  // Uses BASELINE profile (no load-shifting uplift)
   // ============================================
   if (tariffConfig.type === 'TOU_2_RATE') {
     const offpeakP = dbTariff?.offpeak_rate_p_per_kwh ?? tariffConfig.tou2?.offpeakP ?? 12;
     const peakP = dbTariff?.peak_rate_p_per_kwh ?? tariffConfig.tou2?.peakP ?? 24;
     
     // Use baseline profile (no uplift for non-Cosy)
-    let cheapShare = profile.cheap;  // 0.40
-    const midShare = profile.mid;     // 0.45
+    let cheapShare = profile.cheap;   // 0.40
+    let midShare = profile.mid;       // 0.45
     const peakShare = profile.peak;   // 0.15
     
     // For 2-rate tariffs:
@@ -455,21 +443,26 @@ export function calculateTariffCost(
     // - Mid window → peak rate (no mid rate available)
     // - Peak window → peak rate
     let blendedRateP = (cheapShare * offpeakP) + (midShare * peakP) + (peakShare * peakP);
-    // For BG: 0.40 * 12 + 0.45 * 24 + 0.15 * 24 = 4.8 + 10.8 + 3.6 = 19.2p
+    // For BG 12p/24p: 0.40*12 + 0.45*24 + 0.15*24 = 4.8 + 10.8 + 3.6 = 19.2p
     
-    // Safety check: ensure we don't undercut Cosy (18.9p)
-    const minRate = cosyInfo.blendedRateP - 0.1; // 18.8p
+    // ============================================
+    // SAFETY NET: Cosy must always be equal-or-cheaper
+    // If this tariff undercuts Cosy, reduce cheap_share iteratively
+    // ============================================
+    const minRate = cosyInfo.blendedRateP - 0.1; // Allow 0.1p tolerance
     
-    // If blendedRateP < minRate, reduce cheapShare
     while (blendedRateP < minRate && cheapShare > 0.30) {
       cheapShare -= 0.02;
-      const newMidShare = 1.0 - cheapShare - peakShare;
-      blendedRateP = (cheapShare * offpeakP) + (newMidShare * peakP) + (peakShare * peakP);
+      midShare = 1.0 - cheapShare - peakShare;
+      blendedRateP = (cheapShare * offpeakP) + (midShare * peakP) + (peakShare * peakP);
     }
     
-    const finalMidShare = 1.0 - cheapShare - peakShare;
-    const annualCost = (hpKwhTotal * blendedRateP) / 100;
+    // Final clamp: if still undercutting, force rate to minRate
+    if (blendedRateP < minRate) {
+      blendedRateP = minRate;
+    }
     
+    const annualCost = (hpKwhTotal * blendedRateP) / 100;
     const ratesLabel = `${offpeakP}p off-peak / ${peakP}p peak`;
     
     return {
@@ -479,7 +472,7 @@ export function calculateTariffCost(
       blendedRateP,
       ratesLabel,
       offpeakShare: cheapShare,
-      shoulderShare: finalMidShare,
+      shoulderShare: midShare,
       peakShare: peakShare,
       offpeakRateP: offpeakP,
       shoulderRateP: peakP,  // 2-rate uses peak for mid window
@@ -508,16 +501,29 @@ export function calculateTariffCost(
   
   // ============================================
   // TOU_3_RATE (non-Cosy, future use)
+  // Uses BASELINE profile (no load-shifting uplift)
   // ============================================
   if (tariffConfig.type === 'TOU_3_RATE' && tariffConfig.tou3) {
     const { offpeakP, shoulderP, peakP, label } = tariffConfig.tou3;
     
     // Use baseline profile
-    const cheapShare = profile.cheap;  // 0.40
-    const midShare = profile.mid;      // 0.45
+    let cheapShare = profile.cheap;   // 0.40
+    let midShare = profile.mid;       // 0.45
     const peakShareVal = profile.peak; // 0.15
     
-    const blendedRateP = (cheapShare * offpeakP) + (midShare * shoulderP) + (peakShareVal * peakP);
+    let blendedRateP = (cheapShare * offpeakP) + (midShare * shoulderP) + (peakShareVal * peakP);
+    
+    // Safety net: ensure Cosy stays equal-or-cheaper
+    const minRate = cosyInfo.blendedRateP - 0.1;
+    while (blendedRateP < minRate && cheapShare > 0.30) {
+      cheapShare -= 0.02;
+      midShare = 1.0 - cheapShare - peakShareVal;
+      blendedRateP = (cheapShare * offpeakP) + (midShare * shoulderP) + (peakShareVal * peakP);
+    }
+    if (blendedRateP < minRate) {
+      blendedRateP = minRate;
+    }
+    
     const annualCost = (hpKwhTotal * blendedRateP) / 100;
     
     return {
