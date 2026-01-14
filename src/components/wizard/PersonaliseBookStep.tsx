@@ -61,48 +61,48 @@ export function PersonaliseBookStep({
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
-      <div className="max-w-3xl mx-auto px-6 py-12">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 pb-28 sm:pb-12">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
         {/* Back button */}
         <button
           onClick={onBack}
-          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6 section-enter"
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-4 sm:mb-6 section-enter active:scale-95"
         >
           <ArrowLeft className="w-4 h-4" />
           <span className="text-sm">Back</span>
         </button>
 
         {/* Header */}
-        <div className="text-center mb-10 section-enter">
-          <h1 className="text-3xl sm:text-4xl font-semibold text-foreground tracking-tight mb-4">
+        <div className="text-center mb-6 sm:mb-10 section-enter">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-foreground tracking-tight mb-3 sm:mb-4">
             Personalise your estimate
           </h1>
-          <p className="text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
+          <p className="text-sm sm:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
             Choose what matters most — we'll show the impact.
           </p>
         </div>
 
         {/* Choice cards */}
-        <div className="space-y-6 mb-10">
+        <div className="space-y-4 sm:space-y-6 mb-6 sm:mb-10">
           {/* Choice 1: Efficiency */}
-          <div className="bg-card rounded-2xl border border-border shadow-soft p-6 section-enter" style={{ animationDelay: '100ms' }}>
-            <div className="flex items-start gap-4 mb-5">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Gauge className="w-6 h-6 text-primary" />
+          <div className="bg-card rounded-xl sm:rounded-2xl border border-border shadow-soft p-4 sm:p-6 section-enter" style={{ animationDelay: '100ms' }}>
+            <div className="flex items-start gap-3 sm:gap-4 mb-4 sm:mb-5">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Gauge className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-foreground mb-1">
-                  Efficiency (how much heat you get per £1 of electricity)
+                <h3 className="font-semibold text-foreground text-sm sm:text-base mb-0.5 sm:mb-1">
+                  Efficiency level
                 </h3>
-                <p className="text-sm text-muted-foreground">
-                  A more efficient system can reduce bills, but it sometimes needs extra radiator capacity.
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  Higher efficiency may need extra radiator capacity.
                 </p>
               </div>
             </div>
 
             {/* Slider */}
-            <div className="px-2 mb-4">
-              <div className="flex justify-between text-xs text-muted-foreground mb-3">
+            <div className="px-1 sm:px-2 mb-3 sm:mb-4">
+              <div className="flex justify-between text-[11px] sm:text-xs text-muted-foreground mb-2 sm:mb-3">
                 <span>Lower upfront</span>
                 <span>Highest efficiency</span>
               </div>
@@ -111,9 +111,9 @@ export function PersonaliseBookStep({
                 onValueChange={([val]) => onScopChange(EFFICIENCY_OPTIONS[val].value)}
                 max={2}
                 step={1}
-                className="py-2"
+                className="py-3"
               />
-              <div className="flex justify-between text-xs text-muted-foreground mt-3">
+              <div className="flex justify-between text-[11px] sm:text-xs text-muted-foreground mt-2 sm:mt-3">
                 {EFFICIENCY_OPTIONS.map((opt, idx) => (
                   <span
                     key={opt.value}
@@ -129,54 +129,49 @@ export function PersonaliseBookStep({
             </div>
 
             {/* Current selection */}
-            <div className="bg-muted/50 rounded-lg p-3 text-sm text-muted-foreground">
+            <div className="bg-muted/50 rounded-lg p-2.5 sm:p-3 text-xs sm:text-sm text-muted-foreground">
               <strong className="text-foreground">{currentEfficiency.label}</strong> — {currentEfficiency.radiators} radiators may need upgrading
             </div>
 
             {/* Radiator explainer */}
-            <div className="mt-3 flex items-start gap-2 text-xs text-muted-foreground">
+            <div className="mt-2.5 sm:mt-3 flex items-start gap-2 text-[11px] sm:text-xs text-muted-foreground">
               <Info className="w-3 h-3 mt-0.5 flex-shrink-0" />
-              <span>Radiators don't 'make' heat — they release it. Some homes need bigger radiators for best efficiency.</span>
+              <span>Some homes need bigger radiators for best efficiency.</span>
             </div>
           </div>
 
           {/* Choice 2: Location */}
-          <div className="bg-card rounded-2xl border border-border shadow-soft p-6 section-enter" style={{ animationDelay: '200ms' }}>
-            <div className="flex items-start gap-4 mb-5">
-              <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
-                <MapPin className="w-6 h-6 text-muted-foreground" />
+          <div className="bg-card rounded-xl sm:rounded-2xl border border-border shadow-soft p-4 sm:p-6 section-enter" style={{ animationDelay: '200ms' }}>
+            <div className="flex items-start gap-3 sm:gap-4 mb-4 sm:mb-5">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
+                <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-foreground mb-1">
-                  Where the heat pump goes
+                <h3 className="font-semibold text-foreground text-sm sm:text-base mb-0.5 sm:mb-1">
+                  Heat pump location
                 </h3>
-                <p className="text-sm text-muted-foreground">
-                  Longer pipe runs can increase install cost slightly.
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  Longer pipe runs increase install cost.
                 </p>
               </div>
             </div>
 
-            {/* Location illustration placeholder */}
-            <div className="bg-muted/30 rounded-xl border border-dashed border-border p-4 mb-4 text-center">
-              <p className="text-xs text-muted-foreground">Illustration: house + unit + pipe length</p>
-            </div>
-
-            {/* Location options */}
+            {/* Location options - stack vertically on very small screens */}
             <div className="grid grid-cols-3 gap-2">
               {locationOptions.map((option) => (
                 <button
                   key={option.value}
                   onClick={() => onLocationChange(option.value)}
                   className={cn(
-                    'p-3 rounded-xl border-2 text-center transition-all',
+                    'p-2.5 sm:p-3 rounded-lg sm:rounded-xl border-2 text-center transition-all active:scale-95',
                     locationAdder === option.value
                       ? 'border-primary bg-primary/5'
                       : 'border-border hover:border-primary/30'
                   )}
                 >
-                  <span className="block text-sm font-medium text-foreground">{option.label}</span>
-                  <span className="block text-xs text-muted-foreground">{option.sublabel}</span>
-                  <span className="block text-xs text-muted-foreground mt-1">
+                  <span className="block text-xs sm:text-sm font-medium text-foreground">{option.label}</span>
+                  <span className="block text-[10px] sm:text-xs text-muted-foreground">{option.sublabel}</span>
+                  <span className="block text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">
                     {option.price === 0 ? 'Included' : `+${formatCurrency(option.price)}`}
                   </span>
                 </button>
@@ -185,42 +180,37 @@ export function PersonaliseBookStep({
           </div>
 
           {/* Choice 3: Cylinder */}
-          <div className="bg-card rounded-2xl border border-border shadow-soft p-6 section-enter" style={{ animationDelay: '300ms' }}>
-            <div className="flex items-start gap-4 mb-5">
-              <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
-                <Droplets className="w-6 h-6 text-muted-foreground" />
+          <div className="bg-card rounded-xl sm:rounded-2xl border border-border shadow-soft p-4 sm:p-6 section-enter" style={{ animationDelay: '300ms' }}>
+            <div className="flex items-start gap-3 sm:gap-4 mb-4 sm:mb-5">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
+                <Droplets className="w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-foreground mb-1">
-                  Hot water storage
+                <h3 className="font-semibold text-foreground text-sm sm:text-base mb-0.5 sm:mb-1">
+                  Hot water cylinder
                 </h3>
-                <p className="text-sm text-muted-foreground">
-                  If you already have a good cylinder we can often reuse it. Bigger households may prefer a larger one.
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  We can reuse existing or install new.
                 </p>
               </div>
             </div>
 
-            {/* Cylinder illustration placeholder */}
-            <div className="bg-muted/30 rounded-xl border border-dashed border-border p-4 mb-4 text-center">
-              <p className="text-xs text-muted-foreground">Illustration: cylinder size comparison</p>
-            </div>
-
             {/* Cylinder options */}
-            <div className="grid grid-cols-3 gap-2 mb-3">
+            <div className="grid grid-cols-3 gap-2 mb-2.5 sm:mb-3">
               {cylinderOptions.map((option) => (
                 <button
                   key={option.value}
                   onClick={() => onCylinderChange(option.value)}
                   className={cn(
-                    'p-3 rounded-xl border-2 text-center transition-all',
+                    'p-2.5 sm:p-3 rounded-lg sm:rounded-xl border-2 text-center transition-all active:scale-95',
                     cylinderOption === option.value
                       ? 'border-primary bg-primary/5'
                       : 'border-border hover:border-primary/30'
                   )}
                 >
-                  <span className="block text-sm font-medium text-foreground">{option.label}</span>
-                  <span className="block text-xs text-muted-foreground">{option.sublabel}</span>
-                  <span className="block text-xs text-muted-foreground mt-1">
+                  <span className="block text-xs sm:text-sm font-medium text-foreground">{option.label}</span>
+                  <span className="block text-[10px] sm:text-xs text-muted-foreground">{option.sublabel}</span>
+                  <span className="block text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">
                     {option.price === 0 ? 'Included' : `+${formatCurrency(option.price)}`}
                   </span>
                 </button>
@@ -228,59 +218,59 @@ export function PersonaliseBookStep({
             </div>
 
             {/* Sizing tip */}
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Users className="w-3 h-3" />
+            <div className="flex items-center gap-2 text-[11px] sm:text-xs text-muted-foreground">
+              <Users className="w-3 h-3 flex-shrink-0" />
               <span>1–2 people: smaller • 3–4: medium • 5+: larger</span>
             </div>
           </div>
         </div>
 
         {/* Final summary card */}
-        <div className="bg-card rounded-2xl border-2 border-primary/20 shadow-elevated p-6 mb-8 section-enter" style={{ animationDelay: '400ms' }}>
-          <h3 className="font-semibold text-foreground mb-4 text-center">Your final estimate</h3>
+        <div className="bg-card rounded-xl sm:rounded-2xl border-2 border-primary/20 shadow-elevated p-4 sm:p-6 mb-6 sm:mb-8 section-enter" style={{ animationDelay: '400ms' }}>
+          <h3 className="font-semibold text-foreground text-sm sm:text-base mb-3 sm:mb-4 text-center">Your final estimate</h3>
           
-          <div className="space-y-3">
-            <div className="flex justify-between items-center py-2 border-b border-border">
-              <span className="text-muted-foreground">Install price</span>
-              <span className="text-xl font-bold text-foreground">{formatCurrency(customerContribution)}</span>
+          <div className="space-y-2 sm:space-y-3">
+            <div className="flex justify-between items-center py-1.5 sm:py-2 border-b border-border">
+              <span className="text-xs sm:text-sm text-muted-foreground">Install price</span>
+              <span className="text-lg sm:text-xl font-bold text-foreground">{formatCurrency(customerContribution)}</span>
             </div>
-            <div className="flex justify-between items-center py-2 border-b border-border">
-              <span className="text-muted-foreground">Grant included</span>
-              <span className="font-medium text-primary">{formatCurrency(grantApplied)}</span>
+            <div className="flex justify-between items-center py-1.5 sm:py-2 border-b border-border">
+              <span className="text-xs sm:text-sm text-muted-foreground">Grant included</span>
+              <span className="text-sm sm:text-base font-medium text-primary">{formatCurrency(grantApplied)}</span>
             </div>
-            <div className="flex justify-between items-center py-2 border-b border-border">
-              <span className="text-muted-foreground">Tariff</span>
-              <span className="font-medium text-foreground">{selectedTariff?.name || 'Cosy'}</span>
+            <div className="flex justify-between items-center py-1.5 sm:py-2 border-b border-border">
+              <span className="text-xs sm:text-sm text-muted-foreground">Tariff</span>
+              <span className="text-sm sm:text-base font-medium text-foreground">{selectedTariff?.name || 'Cosy'}</span>
             </div>
-            <div className="flex justify-between items-center py-2 border-b border-border">
-              <span className="text-muted-foreground">Efficiency</span>
-              <span className="font-medium text-foreground">{efficiencyPercent}%</span>
+            <div className="flex justify-between items-center py-1.5 sm:py-2 border-b border-border">
+              <span className="text-xs sm:text-sm text-muted-foreground">Efficiency</span>
+              <span className="text-sm sm:text-base font-medium text-foreground">{efficiencyPercent}%</span>
             </div>
-            <div className="flex justify-between items-center py-2">
-              <span className="text-muted-foreground">Annual savings</span>
+            <div className="flex justify-between items-center py-1.5 sm:py-2">
+              <span className="text-xs sm:text-sm text-muted-foreground">Annual savings</span>
               <span className={cn(
-                'text-xl font-bold flex items-center gap-1',
+                'text-lg sm:text-xl font-bold flex items-center gap-1',
                 isNegativeSavings ? 'text-amber-600' : 'text-green-600'
               )}>
-                {isNegativeSavings ? <TrendingDown className="w-5 h-5" /> : <TrendingUp className="w-5 h-5" />}
+                {isNegativeSavings ? <TrendingDown className="w-4 h-4 sm:w-5 sm:h-5" /> : <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />}
                 {isNegativeSavings ? '-' : ''}£{displaySavings}/yr
               </span>
             </div>
           </div>
         </div>
 
-        {/* CTA */}
-        <div className="text-center section-enter" style={{ animationDelay: '500ms' }}>
+        {/* CTA - sticky on mobile */}
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t border-border sm:relative sm:p-0 sm:bg-transparent sm:border-0 sm:text-center section-enter z-40" style={{ animationDelay: '500ms' }}>
           <Button
             onClick={onBook}
             size="lg"
-            className="h-14 px-10 text-base font-semibold rounded-xl shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all"
+            className="w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-10 text-sm sm:text-base font-semibold rounded-xl shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all"
           >
-            <CalendarCheck className="w-5 h-5 mr-2" />
+            <CalendarCheck className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
             Book free home survey
           </Button>
-          <p className="text-sm text-muted-foreground mt-3">
-            No obligation. Survey confirms the final design and price.
+          <p className="text-xs sm:text-sm text-muted-foreground mt-2 sm:mt-3 text-center sm:text-left">
+            No obligation. Survey confirms final design and price.
           </p>
         </div>
       </div>

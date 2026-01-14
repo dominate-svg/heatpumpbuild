@@ -36,24 +36,24 @@ export function CheckingHomeStep({ onComplete }: CheckingHomeStepProps) {
   const progress = (completedItems.length / CHECK_ITEMS.length) * 100;
 
   return (
-    <div className="min-h-[80vh] flex flex-col items-center justify-center px-6 py-12">
+    <div className="min-h-[85vh] sm:min-h-[80vh] flex flex-col items-center justify-center px-4 sm:px-6 py-8 sm:py-12">
       {/* Subtle animated background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/3 left-1/4 w-80 h-80 bg-primary/5 rounded-full blur-3xl animate-pulse-slow" />
-        <div className="absolute bottom-1/3 right-1/4 w-64 h-64 bg-primary/3 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/3 left-1/4 w-64 sm:w-80 h-64 sm:h-80 bg-primary/5 rounded-full blur-3xl animate-pulse-slow" />
+        <div className="absolute bottom-1/3 right-1/4 w-48 sm:w-64 h-48 sm:h-64 bg-primary/3 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '1s' }} />
       </div>
 
       <div className="relative z-10 max-w-md w-full text-center">
         {/* Title */}
-        <h1 className="text-3xl sm:text-4xl font-semibold text-foreground tracking-tight mb-3">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-foreground tracking-tight mb-2 sm:mb-3">
           Checking your home…
         </h1>
-        <p className="text-muted-foreground text-lg mb-10">
-          We're pulling your EPC and estimating your heating needs.
+        <p className="text-muted-foreground text-sm sm:text-lg mb-8 sm:mb-10">
+          Pulling your EPC and estimating heating needs.
         </p>
 
         {/* Check items */}
-        <div className="space-y-3 mb-8">
+        <div className="space-y-2 sm:space-y-3 mb-6 sm:mb-8">
           {CHECK_ITEMS.map((item, idx) => {
             const isCompleted = completedItems.includes(idx);
             const isCurrent = currentItem === idx && !isCompleted;
@@ -63,30 +63,30 @@ export function CheckingHomeStep({ onComplete }: CheckingHomeStepProps) {
               <div
                 key={idx}
                 className={cn(
-                  'flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-500 bg-card border',
+                  'flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3 sm:py-4 rounded-xl transition-all duration-500 bg-card border',
                   isCompleted && 'border-primary/20 bg-primary/5',
                   isCurrent && 'border-primary/40 shadow-soft',
                   !isCompleted && !isCurrent && 'border-border opacity-40'
                 )}
               >
                 <div className={cn(
-                  'w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500',
+                  'w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-500',
                   isCompleted && 'bg-primary text-primary-foreground',
                   isCurrent && 'bg-primary/20',
                   !isCompleted && !isCurrent && 'bg-muted'
                 )}>
                   {isCompleted ? (
-                    <Check className="w-5 h-5" strokeWidth={2.5} />
+                    <Check className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={2.5} />
                   ) : (
                     <Icon className={cn(
-                      'w-5 h-5',
+                      'w-4 h-4 sm:w-5 sm:h-5',
                       isCurrent && 'text-primary animate-pulse',
                       !isCurrent && 'text-muted-foreground/50'
                     )} />
                   )}
                 </div>
                 <span className={cn(
-                  'text-sm font-medium transition-colors duration-300 text-left',
+                  'text-xs sm:text-sm font-medium transition-colors duration-300 text-left',
                   isCompleted && 'text-foreground',
                   isCurrent && 'text-foreground',
                   !isCompleted && !isCurrent && 'text-muted-foreground'
@@ -99,7 +99,7 @@ export function CheckingHomeStep({ onComplete }: CheckingHomeStepProps) {
         </div>
 
         {/* Progress bar */}
-        <div className="h-2 bg-muted rounded-full overflow-hidden">
+        <div className="h-1.5 sm:h-2 bg-muted rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-primary to-primary/80 rounded-full transition-all duration-500 ease-out"
             style={{ width: `${progress}%` }}
