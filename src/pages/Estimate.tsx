@@ -3,17 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { LeadCaptureForm } from '@/components/LeadCaptureForm';
-import { WizardProgress } from '@/components/wizard/WizardProgress';
-import { PreparingEstimate } from '@/components/wizard/PreparingEstimate';
-import { YourHomeStep } from '@/components/wizard/YourHomeStep';
-import { YourEstimateStep } from '@/components/wizard/YourEstimateStep';
-import { RefineStep } from '@/components/wizard/RefineStep';
-import { SummaryStep } from '@/components/wizard/SummaryStep';
+import { AIAssistant } from '@/components/canvas/AIAssistant';
+import { LookingSection } from '@/components/canvas/LookingSection';
+import { FoundSection } from '@/components/canvas/FoundSection';
+import { MeansSection } from '@/components/canvas/MeansSection';
+import { PersonaliseSection } from '@/components/canvas/PersonaliseSection';
+import { ReadySection } from '@/components/canvas/ReadySection';
 import { useAssumptions } from '@/hooks/useAssumptions';
 import { useTariffs, type Tariff } from '@/hooks/useTariffs';
 import { calculateEstimate } from '@/lib/calculations';
 import type { EPCData } from '@/lib/calculations';
 import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 // Helper to detect fuel type from EPC data
 function detectFuelType(mainFuel?: string): string {
@@ -25,14 +26,17 @@ function detectFuelType(mainFuel?: string): string {
   return 'gas';
 }
 
-type WizardStep = 'preparing' | 'home' | 'estimate' | 'refine' | 'summary' | 'booking';
+type CanvasPhase = 'looking' | 'found' | 'means' | 'personalise' | 'ready' | 'booking';
 
-const WIZARD_STEPS = [
-  { label: 'Your home' },
-  { label: 'Estimate' },
-  { label: 'Refine' },
-  { label: 'Book' },
-];
+// AI messages for each phase
+const AI_MESSAGES: Record<CanvasPhase, string> = {
+  looking: '',
+  found: 'This is based on your EPC. Let me know if anything looks off.',
+  means: 'This is a realistic estimate based on homes like yours.',
+  personalise: 'Higher efficiency costs more upfront, but saves more long-term.',
+  ready: 'I\'ll hand you over to a human engineer after this.',
+  booking: 'Almost there! Just a few details to book your survey.',
+};
 
 export default function Estimate() {
   const navigate = useNavigate();
@@ -40,7 +44,8 @@ export default function Estimate() {
   const { data: tariffs, isLoading: tariffsLoading } = useTariffs();
   
   const [epcData, setEpcData] = useState<EPCData | null>(null);
-  const [wizardStep, setWizardStep] = useState<WizardStep>('preparing');
+  const [phase, setPhase] = useState<CanvasPhase>('looking');
+  const [isPersonaliseIdle, setIsPersonaliseIdle] = useState(false);
   
   // Estimate configuration state
   const [scop, setScop] = useState(3.4);
@@ -74,6 +79,16 @@ export default function Estimate() {
     }
   }, [tariffs, selectedTariff]);
 
+  // Auto-advance to ready when personalise is idle
+  useEffect(() => {
+    if (isPersonaliseIdle && phase === 'personalise') {
+      const timeout = setTimeout(() => {
+        setPhase('ready');
+      }, 500);
+      return () => clearTimeout(timeout);
+    }
+  }, [isPersonaliseIdle, phase]);
+
   const results = useMemo(() => {
     if (!epcData || !assumptions) return null;
     
@@ -94,42 +109,29 @@ export default function Estimate() {
 
   const isLoading = assumptionsLoading || tariffsLoading;
 
-  // Navigation handlers
-  const handlePreparingComplete = useCallback(() => {
-    setWizardStep('home');
+  // Phase handlers
+  const handleLookingComplete = useCallback(() => {
+    setPhase('found');
   }, []);
 
-  const handleHomeComplete = useCallback(() => {
-    setWizardStep('estimate');
+  const handleFoundComplete = useCallback(() => {
+    setPhase('means');
   }, []);
 
-  const handleEstimateComplete = useCallback(() => {
-    setWizardStep('refine');
-  }, []);
-
-  const handleRefineComplete = useCallback(() => {
-    setWizardStep('summary');
-  }, []);
-
-  const handleBackToRefine = useCallback(() => {
-    setWizardStep('refine');
+  const handleMeansComplete = useCallback(() => {
+    setPhase('personalise');
   }, []);
 
   const handleBook = useCallback(() => {
-    setWizardStep('booking');
+    setPhase('booking');
   }, []);
 
-  // Get current step number for progress indicator
-  const getCurrentStepNumber = () => {
-    switch (wizardStep) {
-      case 'home': return 1;
-      case 'estimate': return 2;
-      case 'refine': return 3;
-      case 'summary': return 4;
-      case 'booking': return 4;
-      default: return 0;
-    }
-  };
+  const handleIdleChange = useCallback((isIdle: boolean) => {
+    setIsPersonaliseIdle(isIdle);
+  }, []);
+
+  // Get current AI message
+  const currentAIMessage = AI_MESSAGES[phase];
 
   // Show loading while data loads
   if (isLoading || !epcData || !results || !assumptions) {
@@ -145,13 +147,8 @@ export default function Estimate() {
     );
   }
 
-  // Show preparing screen (no header)
-  if (wizardStep === 'preparing') {
-    return <PreparingEstimate onComplete={handlePreparingComplete} />;
-  }
-
-  // Booking/Lead capture (with header and back button)
-  if (wizardStep === 'booking') {
+  // Booking/Lead capture
+  if (phase === 'booking') {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -159,10 +156,10 @@ export default function Estimate() {
           <div className="mb-6">
             <Button 
               variant="ghost" 
-              onClick={() => setWizardStep('summary')}
+              onClick={() => setPhase('ready')}
               className="text-muted-foreground hover:text-foreground"
             >
-              ← Back to summary
+              ← Back
             </Button>
           </div>
           <LeadCaptureForm
@@ -180,38 +177,53 @@ export default function Estimate() {
             }}
           />
         </main>
+        <AIAssistant message={currentAIMessage} isVisible position="left" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
+    <div className="min-h-screen bg-background relative">
+      {/* Header - hidden during looking phase */}
+      <div className={cn(
+        'transition-all duration-500',
+        phase === 'looking' ? 'opacity-0 -translate-y-4' : 'opacity-100 translate-y-0'
+      )}>
+        <Header />
+      </div>
       
-      <main className="max-w-4xl mx-auto py-8">
-        {/* Progress indicator */}
-        <WizardProgress currentStep={getCurrentStepNumber()} steps={WIZARD_STEPS} />
+      {/* Canvas sections */}
+      <main className="relative">
+        {/* Looking section */}
+        {phase === 'looking' && (
+          <LookingSection onComplete={handleLookingComplete} />
+        )}
 
-        {/* Step content with transitions */}
-        <div className="transition-all duration-300">
-          {wizardStep === 'home' && (
-            <YourHomeStep
-              epcData={epcData}
-              results={results}
-              onContinue={handleHomeComplete}
-            />
-          )}
+        {/* Found section */}
+        {phase === 'found' && (
+          <FoundSection 
+            epcData={epcData} 
+            results={results} 
+            onContinue={handleFoundComplete} 
+          />
+        )}
 
-          {wizardStep === 'estimate' && (
-            <YourEstimateStep
-              results={results}
-              assumptions={assumptions}
-              onContinue={handleEstimateComplete}
-            />
-          )}
+        {/* Means section */}
+        {phase === 'means' && (
+          <MeansSection 
+            results={results} 
+            assumptions={assumptions}
+            onContinue={handleMeansComplete} 
+          />
+        )}
 
-          {wizardStep === 'refine' && (
-            <RefineStep
+        {/* Personalise section */}
+        {(phase === 'personalise' || phase === 'ready') && (
+          <div className={cn(
+            'transition-all duration-500',
+            phase === 'ready' ? 'opacity-40 scale-[0.98] pointer-events-none' : ''
+          )}>
+            <PersonaliseSection
               results={results}
               assumptions={assumptions}
               scop={scop}
@@ -222,22 +234,43 @@ export default function Estimate() {
               onTariffChange={setSelectedTariff}
               onLocationChange={setLocationAdder}
               onCylinderChange={setCylinderOption}
-              onContinue={handleRefineComplete}
+              onIdleChange={handleIdleChange}
             />
-          )}
+          </div>
+        )}
 
-          {wizardStep === 'summary' && (
-            <SummaryStep
+        {/* Ready section - overlays when active */}
+        {phase === 'ready' && (
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-start justify-center pt-16 animate-fade-in">
+            <ReadySection
               results={results}
               assumptions={assumptions}
               scop={scop}
               selectedTariff={selectedTariff}
-              onBack={handleBackToRefine}
               onBook={handleBook}
             />
-          )}
-        </div>
+          </div>
+        )}
       </main>
+
+      {/* AI Assistant - visible after looking phase */}
+      <AIAssistant 
+        message={currentAIMessage} 
+        isVisible={phase !== 'looking'} 
+        position="left" 
+      />
+
+      {/* Mobile sticky CTA for ready phase */}
+      {phase === 'ready' && (
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t border-border sm:hidden z-50">
+          <Button 
+            onClick={handleBook}
+            className="w-full h-14 text-base font-semibold rounded-xl"
+          >
+            Book my free home survey
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
