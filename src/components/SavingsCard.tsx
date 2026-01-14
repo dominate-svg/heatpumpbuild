@@ -97,7 +97,8 @@ export function SavingsCard({
                       <span className="text-sm text-muted-foreground">/year</span>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Balanced estimate using national averages and typical system performance. Survey confirms final savings.
+                      Balanced estimate using national averages, typical insulation for EPC {epcBand}, 
+                      {results.currentFuelType === 'oil' ? ' oil' : results.currentFuelType === 'lpg' ? ' LPG' : ' gas'} boiler efficiency, and realistic Cosy tariff usage. Survey confirms final savings.
                     </p>
                   </div>
                 </div>
@@ -108,10 +109,22 @@ export function SavingsCard({
                 <Badge variant="secondary" className="text-xs bg-success/10 text-success">
                   EPC {epcBand}
                 </Badge>
+                {results.oilDemandUplift && results.oilDemandUplift > 1 && (
+                  <Badge variant="outline" className="text-xs">
+                    Oil home (+{Math.round((results.oilDemandUplift - 1) * 100)}% demand)
+                  </Badge>
+                )}
               </div>
               
-              {/* Tariff dropdown */}
-              <div className="w-full">
+              {/* Tariff info */}
+              <div className="w-full space-y-2">
+                <div className="text-xs text-muted-foreground">
+                  <span className="font-medium text-foreground">Octopus Energy — Cosy</span>
+                  <br />
+                  Typical effective rate: ~17.8p/kWh
+                  <br />
+                  <span className="text-[10px]">Tariff bands: ~12p / ~25p / ~38p</span>
+                </div>
                 <Select 
                   value={selectedTariff?.id || ''} 
                   onValueChange={handleTariffChange}
@@ -128,6 +141,9 @@ export function SavingsCard({
                     ))}
                   </SelectContent>
                 </Select>
+                <p className="text-[10px] text-muted-foreground italic">
+                  We model Cosy using a blended rate that reflects when heat pumps actually run — mostly overnight and midday when power is cheapest.
+                </p>
               </div>
 
               {/* Cost breakdown */}
@@ -140,10 +156,10 @@ export function SavingsCard({
                 </span>
               </div>
 
-              {/* Credibility microcopy */}
+              {/* Safety & trust language */}
               <p className="text-[10px] sm:text-xs text-muted-foreground border-t border-border pt-3">
-                Based on typical insulation, a correctly sized system, and sensible use of cheap electricity hours. 
-                Your survey confirms final savings for your home.
+                This is an estimate, not a guarantee. It assumes average behaviour, typical insulation for EPC {epcBand}, 
+                and smart use of cheap electricity hours. Your home survey confirms final costs and savings.
               </p>
             </div>
           </div>
@@ -228,20 +244,29 @@ export function SavingsCard({
               </CollapsibleTrigger>
               <CollapsibleContent className="pt-3">
                 <div className="bg-muted/50 p-3 rounded-lg space-y-3 text-xs text-muted-foreground">
-                  {/* Methodology explanation */}
+                  {/* Summary explanation */}
                   <div className="space-y-2">
+                    <p>
+                      We estimate your current heating cost from your EPC, national averages, and typical boiler efficiency.
+                      We estimate heat pump running costs using the Cosy tariff structure and how heat pumps actually use electricity through the day.
+                      This gives a balanced, realistic estimate — not best-case and not pessimistic.
+                    </p>
+                  </div>
+
+                  {/* Methodology explanation */}
+                  <div className="space-y-2 pt-2 border-t border-border">
                     <p className="font-medium text-foreground">Your estimate is based on:</p>
                     <ul className="list-disc list-inside space-y-1">
-                      <li>EPC band {epcBand} typical heat demand ({results.annualHeatKwh.toLocaleString()} kWh/year)</li>
+                      <li>EPC band {epcBand} typical heat demand ({results.annualHeatKwh.toLocaleString()} kWh/year{results.oilDemandUplift && results.oilDemandUplift > 1 ? ` including +${Math.round((results.oilDemandUplift - 1) * 100)}% oil home uplift` : ''})</li>
                       <li>Typical boiler efficiency for {getFuelDisplayName(results.currentFuelType)} ({Math.round(results.boilerEfficiency * 100)}%)</li>
                       <li>Energy prices:
                         <ul className="list-none ml-4 mt-1 space-y-0.5">
                           {results.currentFuelType === 'gas' && <li>– Gas: 5.93p/kWh (Ofgem cap)</li>}
-                          {results.currentFuelType === 'oil' && results.oilPencePerLitre && (
-                            <li>– Oil: {results.oilPencePerLitre}p per litre (converted using 10.35 kWh/litre)</li>
+                          {results.currentFuelType === 'oil' && results.oilPricePerLitre && (
+                            <li>– Oil: £{results.oilPricePerLitre.toFixed(2)} per litre (converted using 10 kWh/litre at {Math.round(results.boilerEfficiency * 100)}% efficiency)</li>
                           )}
                           {results.currentFuelType === 'lpg' && <li>– LPG: 10.5p/kWh</li>}
-                          <li>– Electricity: 17.3p/kWh effective on Cosy</li>
+                          <li>– Electricity: 17.8p/kWh effective on Cosy (blended: 12p/25p/38p)</li>
                         </ul>
                       </li>
                       <li>Heat pump efficiency (SCOP {results.optimisticScop.toFixed(1)})</li>
@@ -259,6 +284,12 @@ export function SavingsCard({
                       <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
                         <span>Annual heat demand:</span>
                         <span className="font-medium text-foreground text-right">{results.annualHeatKwh.toLocaleString()} kWh/yr</span>
+                        {results.oilDemandUplift && results.oilDemandUplift > 1 && (
+                          <>
+                            <span>Oil home uplift:</span>
+                            <span className="font-medium text-foreground text-right">+{Math.round((results.oilDemandUplift - 1) * 100)}%</span>
+                          </>
+                        )}
                       </div>
                     </div>
 
@@ -275,7 +306,7 @@ export function SavingsCard({
                             <span>Oil consumption:</span>
                             <span className="font-medium text-foreground text-right">{results.oilLitresUsed.toLocaleString()} litres/yr</span>
                             <span>Oil price:</span>
-                            <span className="font-medium text-foreground text-right">{results.oilPencePerLitre}p/litre</span>
+                            <span className="font-medium text-foreground text-right">£{results.oilPricePerLitre?.toFixed(2)}/litre</span>
                           </>
                         )}
                         {results.currentFuelType !== 'oil' && (
@@ -298,7 +329,7 @@ export function SavingsCard({
                         <span>Electricity needed:</span>
                         <span className="font-medium text-foreground text-right">{results.hpElectricKwh.toLocaleString()} kWh</span>
                         <span>Cosy tariff rate:</span>
-                        <span className="font-medium text-foreground text-right">{(results.cosyRate * 100).toFixed(1)}p/kWh</span>
+                        <span className="font-medium text-foreground text-right">17.8p/kWh (blended)</span>
                         <span>Annual cost:</span>
                         <span className="font-medium text-foreground text-right">{formatCurrency(results.hpCost)}</span>
                       </div>
@@ -306,9 +337,9 @@ export function SavingsCard({
 
                     {/* Savings */}
                     <div>
-                      <p className="font-medium text-foreground/80 mb-1 text-[10px] uppercase tracking-wide">Potential savings</p>
+                      <p className="font-medium text-foreground/80 mb-1 text-[10px] uppercase tracking-wide">Estimated savings</p>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
-                        <span>Estimated annual savings:</span>
+                        <span>Annual savings:</span>
                         <span className="font-medium text-success text-right">{formatCurrency(Math.max(0, results.estimatedSavings))}</span>
                       </div>
                     </div>
