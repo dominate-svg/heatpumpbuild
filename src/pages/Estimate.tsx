@@ -7,7 +7,8 @@ import { WizardProgress } from '@/components/wizard/WizardProgress';
 import { PreparingEstimate } from '@/components/wizard/PreparingEstimate';
 import { YourHomeStep } from '@/components/wizard/YourHomeStep';
 import { YourEstimateStep } from '@/components/wizard/YourEstimateStep';
-import { FineTuneStep } from '@/components/wizard/FineTuneStep';
+import { RefineStep } from '@/components/wizard/RefineStep';
+import { SummaryStep } from '@/components/wizard/SummaryStep';
 import { useAssumptions } from '@/hooks/useAssumptions';
 import { useTariffs, type Tariff } from '@/hooks/useTariffs';
 import { calculateEstimate } from '@/lib/calculations';
@@ -24,12 +25,13 @@ function detectFuelType(mainFuel?: string): string {
   return 'gas';
 }
 
-type WizardStep = 'preparing' | 'home' | 'estimate' | 'finetune';
+type WizardStep = 'preparing' | 'home' | 'estimate' | 'refine' | 'summary' | 'booking';
 
 const WIZARD_STEPS = [
   { label: 'Your home' },
-  { label: 'Your estimate' },
-  { label: 'Fine-tune & book' },
+  { label: 'Estimate' },
+  { label: 'Refine' },
+  { label: 'Book' },
 ];
 
 export default function Estimate() {
@@ -39,7 +41,6 @@ export default function Estimate() {
   
   const [epcData, setEpcData] = useState<EPCData | null>(null);
   const [wizardStep, setWizardStep] = useState<WizardStep>('preparing');
-  const [showLeadForm, setShowLeadForm] = useState(false);
   
   // Estimate configuration state
   const [scop, setScop] = useState(3.4);
@@ -103,20 +104,19 @@ export default function Estimate() {
   }, []);
 
   const handleEstimateComplete = useCallback(() => {
-    setWizardStep('finetune');
+    setWizardStep('refine');
   }, []);
 
-  const handleBackToHome = useCallback(() => {
-    setWizardStep('home');
+  const handleRefineComplete = useCallback(() => {
+    setWizardStep('summary');
+  }, []);
+
+  const handleBackToRefine = useCallback(() => {
+    setWizardStep('refine');
   }, []);
 
   const handleBook = useCallback(() => {
-    setShowLeadForm(true);
-  }, []);
-
-  const handleLeadSuccess = useCallback(() => {
-    setShowLeadForm(false);
-    // Could navigate to thank you page or show success state
+    setWizardStep('booking');
   }, []);
 
   // Get current step number for progress indicator
@@ -124,7 +124,9 @@ export default function Estimate() {
     switch (wizardStep) {
       case 'home': return 1;
       case 'estimate': return 2;
-      case 'finetune': return 3;
+      case 'refine': return 3;
+      case 'summary': return 4;
+      case 'booking': return 4;
       default: return 0;
     }
   };
@@ -143,24 +145,24 @@ export default function Estimate() {
     );
   }
 
-  // Show preparing screen
+  // Show preparing screen (no header)
   if (wizardStep === 'preparing') {
     return <PreparingEstimate onComplete={handlePreparingComplete} />;
   }
 
-  // Lead capture modal
-  if (showLeadForm) {
+  // Booking/Lead capture (with header and back button)
+  if (wizardStep === 'booking') {
     return (
       <div className="min-h-screen bg-background">
         <Header />
         <main className="max-w-lg mx-auto px-4 py-8">
-          <div className="mb-4">
+          <div className="mb-6">
             <Button 
               variant="ghost" 
-              onClick={() => setShowLeadForm(false)}
-              className="text-muted-foreground"
+              onClick={() => setWizardStep('summary')}
+              className="text-muted-foreground hover:text-foreground"
             >
-              ← Back to estimate
+              ← Back to summary
             </Button>
           </div>
           <LeadCaptureForm
@@ -186,7 +188,7 @@ export default function Estimate() {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="max-w-4xl mx-auto py-6 sm:py-8">
+      <main className="max-w-4xl mx-auto py-8">
         {/* Progress indicator */}
         <WizardProgress currentStep={getCurrentStepNumber()} steps={WIZARD_STEPS} />
 
@@ -208,8 +210,8 @@ export default function Estimate() {
             />
           )}
 
-          {wizardStep === 'finetune' && (
-            <FineTuneStep
+          {wizardStep === 'refine' && (
+            <RefineStep
               results={results}
               assumptions={assumptions}
               scop={scop}
@@ -220,7 +222,17 @@ export default function Estimate() {
               onTariffChange={setSelectedTariff}
               onLocationChange={setLocationAdder}
               onCylinderChange={setCylinderOption}
-              onBack={handleBackToHome}
+              onContinue={handleRefineComplete}
+            />
+          )}
+
+          {wizardStep === 'summary' && (
+            <SummaryStep
+              results={results}
+              assumptions={assumptions}
+              scop={scop}
+              selectedTariff={selectedTariff}
+              onBack={handleBackToRefine}
               onBook={handleBook}
             />
           )}
