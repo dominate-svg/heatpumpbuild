@@ -91,13 +91,18 @@ const BOILER_EFFICIENCY: Record<string, number> = {
   'electric': 1.00,
 };
 
-// Fuel prices (£/kWh)
-const FUEL_RATES: Record<string, number> = {
-  'gas': 0.0593,
-  'oil': 0.095,
-  'lpg': 0.105,
-  'electric': 0.2769,
-};
+// Fuel prices
+// Gas, LPG, Electric: £/kWh
+// Oil: pence per litre (converted using 10.35 kWh/litre)
+const GAS_RATE = 0.0593; // £/kWh (Ofgem cap)
+const GAS_STANDING_CHARGE = 0.3509; // £/day
+const LPG_RATE = 0.105; // £/kWh
+const ELECTRIC_RATE = 0.2769; // £/kWh
+const ELECTRIC_STANDING_CHARGE = 0.5475; // £/day
+
+// Oil pricing (stored as pence per litre, converted properly)
+const OIL_PENCE_PER_LITRE = 65; // Default oil price in pence per litre
+const OIL_KWH_PER_LITRE = 10.35; // Energy content of heating oil
 
 // Cosy tariff - reasonable shifting (65% cheap)
 const COSY_CHEAP_SHARE = 0.65;
@@ -168,6 +173,9 @@ export interface EstimateResults {
   confidenceLabel: string;
   epcBand: string;
   isOilFuel: boolean;
+  // Oil-specific transparency
+  oilPencePerLitre?: number;
+  oilLitresUsed?: number;
 }
 
 // Floor area estimates by range (for manual entry)
@@ -219,43 +227,68 @@ function getConfidenceLabel(epcBand: string): string {
   }
 }
 
-// Get fuel unit rate in £/kWh (no standing charges for clarity)
-function getFuelRate(fuelType: string): number {
-  return FUEL_RATES[fuelType] || FUEL_RATES['gas'];
+// Get oil cost in £ for a given number of litres
+function calculateOilCost(litres: number): number {
+  return litres * (OIL_PENCE_PER_LITRE / 100);
+}
+
+export interface SavingsTransparency {
+  oilPencePerLitre?: number;
+  oilLitresUsed?: number;
 }
 
 /**
- * Calculate savings using the optimistic model
+ * Calculate savings using balanced model with correct oil pricing
  * 
- * Step 1: heat_demand = lookup(EPC_band) - upper quartile
- * Step 2: fuel_kWh = heat_demand / boiler_efficiency (older stock)
- *         current_cost = fuel_kWh × fuel_unit_rate (no standing charges)
- * Step 3: hp_kWh = heat_demand / SCOP (optimistic mapping)
- * Step 4: hp_cost = hp_kWh × cosy_effective_rate (75% cheap)
+ * Step 1: heat_demand = lookup(EPC_band) - upper-mid quartile
+ * Step 2: Calculate baseline cost:
+ *         - Gas: fuel_kWh = heat_demand / 0.82, cost = (fuel_kWh × 0.0593) + (standing × 365)
+ *         - Oil: fuel_kWh = heat_demand / 0.78, litres = fuel_kWh / 10.35, cost = litres × (p_per_litre / 100)
+ *         - LPG: fuel_kWh = heat_demand / 0.82, cost = fuel_kWh × 0.105
+ * Step 3: hp_kWh = heat_demand / SCOP
+ * Step 4: hp_cost = hp_kWh × 0.173 (Cosy effective rate)
  * Step 5: estimated_savings = current_cost − hp_cost (rounded to nearest 10)
  */
 function calculateSavings(
   epcBand: string,
   fuelType: string,
   scop: number
-): SavingsCalculation {
-  // Step 1: Heat demand from EPC band (upper quartile)
+): SavingsCalculation & SavingsTransparency {
+  // Step 1: Heat demand from EPC band (upper-mid quartile)
   const heatDemand = HEAT_DEMAND_BY_EPC[epcBand] || HEAT_DEMAND_BY_EPC['D'];
   
-  // Step 2: Current heating cost (older boiler stock, no standing charges)
-  const boilerEfficiency = BOILER_EFFICIENCY[fuelType] || 0.80;
+  // Step 2: Current heating cost
+  const boilerEfficiency = BOILER_EFFICIENCY[fuelType] || 0.82;
   const fuelKwh = heatDemand / boilerEfficiency;
-  const fuelRate = getFuelRate(fuelType);
-  const currentCost = fuelKwh * fuelRate;
   
-  // Step 3: Heat pump electricity use (optimistic SCOP)
+  let currentCost: number;
+  let oilPencePerLitre: number | undefined;
+  let oilLitresUsed: number | undefined;
+  
+  if (fuelType === 'oil') {
+    // Oil: convert fuel kWh to litres, then calculate cost from p/litre
+    oilLitresUsed = fuelKwh / OIL_KWH_PER_LITRE;
+    oilPencePerLitre = OIL_PENCE_PER_LITRE;
+    currentCost = calculateOilCost(oilLitresUsed);
+  } else if (fuelType === 'gas') {
+    // Gas: include standing charge for comparison
+    currentCost = (fuelKwh * GAS_RATE) + (GAS_STANDING_CHARGE * 365);
+  } else if (fuelType === 'lpg') {
+    // LPG: simple rate
+    currentCost = fuelKwh * LPG_RATE;
+  } else {
+    // Default to gas calculation
+    currentCost = (fuelKwh * GAS_RATE) + (GAS_STANDING_CHARGE * 365);
+  }
+  
+  // Step 3: Heat pump electricity use (balanced SCOP)
   const optimisticScop = SCOP_MAP[scop] || scop;
   const hpKwh = heatDemand / optimisticScop;
   
-  // Step 4: Heat pump running cost (best-case Cosy performance)
+  // Step 4: Heat pump running cost (65% cheap Cosy performance)
   const hpCost = hpKwh * COSY_EFFECTIVE_RATE;
   
-  // Step 5: Savings (no conservative reduction)
+  // Step 5: Savings (no bias applied)
   const rawSavings = currentCost - hpCost;
   const estimatedSavings = roundToNearest10(rawSavings);
   
@@ -269,6 +302,8 @@ function calculateSavings(
     estimatedSavings,
     boilerEfficiency,
     optimisticScop,
+    oilPencePerLitre,
+    oilLitresUsed,
   };
 }
 
@@ -398,6 +433,9 @@ export function calculateEstimate(
     confidenceLabel: getConfidenceLabel(epcBand),
     epcBand,
     isOilFuel: fuelType === 'oil',
+    // Oil-specific transparency
+    oilPencePerLitre: savings.oilPencePerLitre,
+    oilLitresUsed: savings.oilLitresUsed ? Math.round(savings.oilLitresUsed) : undefined,
   };
 }
 
