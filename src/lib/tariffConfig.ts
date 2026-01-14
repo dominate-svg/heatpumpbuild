@@ -42,32 +42,10 @@ export interface TariffConfig {
 export const DEFAULT_STANDING_CHARGE_P_PER_DAY = 54.75;
 
 // ============================================
-// GO TARIFF: Conservative offpeak splits
-// (4-hour overnight window, harder to shift load)
+// STANDARD TOU SPLIT FOR ALL NON-COSY TARIFFS
+// 35% off-peak, 65% peak (conservative assumption)
 // ============================================
-const GO_SPLIT_BY_EPC: Record<string, { offpeak: number; peak: number }> = {
-  'A': { offpeak: 0.45, peak: 0.55 },
-  'B': { offpeak: 0.45, peak: 0.55 },
-  'C': { offpeak: 0.40, peak: 0.60 },
-  'D': { offpeak: 0.35, peak: 0.65 },
-  'E': { offpeak: 0.30, peak: 0.70 },
-  'F': { offpeak: 0.25, peak: 0.75 },
-  'G': { offpeak: 0.20, peak: 0.80 },
-};
-
-// ============================================
-// HEAT PUMP TARIFFS: Better offpeak splits
-// (6+ hour windows, easier to shift load)
-// ============================================
-const HEAT_PUMP_TARIFF_SPLIT_BY_EPC: Record<string, { offpeak: number; peak: number }> = {
-  'A': { offpeak: 0.55, peak: 0.45 },
-  'B': { offpeak: 0.55, peak: 0.45 },
-  'C': { offpeak: 0.50, peak: 0.50 },
-  'D': { offpeak: 0.45, peak: 0.55 },
-  'E': { offpeak: 0.40, peak: 0.60 },
-  'F': { offpeak: 0.35, peak: 0.65 },
-  'G': { offpeak: 0.30, peak: 0.70 },
-};
+const STANDARD_TOU_SPLIT = { offpeak: 0.35, peak: 0.65 };
 
 // ============================================
 // TARIFF CONFIGURATIONS
@@ -144,9 +122,8 @@ export const TARIFF_CONFIGS: TariffConfig[] = [
     standingChargePPerDay: DEFAULT_STANDING_CHARGE_P_PER_DAY,
     source: 'TYPICAL',
     modelling: {
-      assumedSplitByEpc: GO_SPLIT_BY_EPC,
-      defaultSplit: { offpeak: 0.30, peak: 0.70 },
-      explainer: 'Go has a 4-hour overnight off-peak window. We assume some heating runs overnight but most still runs during the day.',
+      defaultSplit: STANDARD_TOU_SPLIT,
+      explainer: 'Go has a 4-hour overnight off-peak window. We assume 35% off-peak, 65% peak usage.',
     },
   },
   
@@ -167,9 +144,8 @@ export const TARIFF_CONFIGS: TariffConfig[] = [
     standingChargePPerDay: DEFAULT_STANDING_CHARGE_P_PER_DAY,
     source: 'TYPICAL',
     modelling: {
-      assumedSplitByEpc: HEAT_PUMP_TARIFF_SPLIT_BY_EPC,
-      defaultSplit: { offpeak: 0.40, peak: 0.60 },
-      explainer: 'Heat pump tariffs offer extended off-peak periods. We assume moderate load-shifting to cheaper hours.',
+      defaultSplit: STANDARD_TOU_SPLIT,
+      explainer: 'Heat pump tariffs offer extended off-peak periods. We assume 35% off-peak, 65% peak usage.',
     },
   },
   
@@ -190,9 +166,8 @@ export const TARIFF_CONFIGS: TariffConfig[] = [
     standingChargePPerDay: DEFAULT_STANDING_CHARGE_P_PER_DAY,
     source: 'TYPICAL',
     modelling: {
-      assumedSplitByEpc: HEAT_PUMP_TARIFF_SPLIT_BY_EPC,
-      defaultSplit: { offpeak: 0.40, peak: 0.60 },
-      explainer: 'Heat pump tariffs offer extended off-peak periods. We assume moderate load-shifting to cheaper hours.',
+      defaultSplit: STANDARD_TOU_SPLIT,
+      explainer: 'Heat pump tariffs offer extended off-peak periods. We assume 35% off-peak, 65% peak usage.',
     },
   },
   
@@ -213,9 +188,8 @@ export const TARIFF_CONFIGS: TariffConfig[] = [
     standingChargePPerDay: DEFAULT_STANDING_CHARGE_P_PER_DAY,
     source: 'TYPICAL',
     modelling: {
-      assumedSplitByEpc: HEAT_PUMP_TARIFF_SPLIT_BY_EPC,
-      defaultSplit: { offpeak: 0.40, peak: 0.60 },
-      explainer: 'Heat pump tariffs offer extended off-peak periods. We assume moderate load-shifting to cheaper hours.',
+      defaultSplit: STANDARD_TOU_SPLIT,
+      explainer: 'Heat pump tariffs offer extended off-peak periods. We assume 35% off-peak, 65% peak usage.',
     },
   },
   
@@ -236,9 +210,8 @@ export const TARIFF_CONFIGS: TariffConfig[] = [
     standingChargePPerDay: DEFAULT_STANDING_CHARGE_P_PER_DAY,
     source: 'TYPICAL',
     modelling: {
-      assumedSplitByEpc: HEAT_PUMP_TARIFF_SPLIT_BY_EPC,
-      defaultSplit: { offpeak: 0.40, peak: 0.60 },
-      explainer: 'Heat pump tariffs offer extended off-peak periods. We assume moderate load-shifting to cheaper hours.',
+      defaultSplit: STANDARD_TOU_SPLIT,
+      explainer: 'Heat pump tariffs offer extended off-peak periods. We assume 35% off-peak, 65% peak usage.',
     },
   },
 ];
@@ -391,11 +364,8 @@ export function calculateTariffCost(
     const offpeakP = dbTariff?.offpeak_rate_p_per_kwh ?? tariffConfig.tou2?.offpeakP ?? 12;
     const peakP = dbTariff?.peak_rate_p_per_kwh ?? tariffConfig.tou2?.peakP ?? 24;
     
-    // Get EPC-sensitive split
-    let split = tariffConfig.modelling?.defaultSplit || { offpeak: 0.35, peak: 0.65 };
-    if (tariffConfig.modelling?.assumedSplitByEpc?.[validEpc]) {
-      split = tariffConfig.modelling.assumedSplitByEpc[validEpc];
-    }
+    // Use standard 35/65 split for all non-Cosy tariffs
+    const split = tariffConfig.modelling?.defaultSplit || { offpeak: 0.35, peak: 0.65 };
     
     const offpeakKwh = hpKwhTotal * split.offpeak;
     const peakKwh = hpKwhTotal * split.peak;

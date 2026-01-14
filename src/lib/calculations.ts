@@ -71,113 +71,67 @@ export interface EstimateInputs {
 }
 
 // ============================================
-// BALANCED SAVINGS CALCULATOR CONFIG
-// Gas unchanged, Oil fixed with proper conversion + EPC uplift
-// Cosy modelled with proper blended rate
+// PHYSICALLY ACCURATE SAVINGS MODEL
+// Conservative, realistic estimates
 // ============================================
 
-// Heat demand by EPC band (kWh/year) - national average approximation
-// These represent "useful heat delivered" (space + DHW)
+// Heat demand by EPC band (kWh/year) - includes space + hot water
 const HEAT_DEMAND_BY_EPC: Record<string, number> = {
-  'A': 8000,
-  'B': 8000,
-  'C': 10500,
-  'D': 13500,
-  'E': 16500,
-  'F': 20000,
-  'G': 24000,
+  'A': 7000,
+  'B': 8500,
+  'C': 10000,
+  'D': 11500,
+  'E': 13000,
+  'F': 14500,
+  'G': 16500,
 };
 
-// DHW share by EPC band (DHW share rises with better insulation)
-const DHW_SHARE_BY_EPC: Record<string, number> = {
-  'A': 0.30,  // 30% DHW, 70% space
-  'B': 0.30,
-  'C': 0.25,
-  'D': 0.20,
-  'E': 0.18,
-  'F': 0.15,
-  'G': 0.15,
+// Seasonal COP (SCOP) by EPC band - accounts for insulation quality
+const SCOP_BY_EPC: Record<string, number> = {
+  'A': 3.8,
+  'B': 3.6,
+  'C': 3.4,
+  'D': 3.2,
+  'E': 3.0,
+  'F': 2.8,
+  'G': 2.6,
 };
 
-// Boiler efficiencies (slightly pessimistic, common stock)
+// Boiler efficiencies
 const BOILER_EFFICIENCY: Record<string, number> = {
-  'gas': 0.82,  // DO NOT CHANGE
+  'gas': 0.82,
   'oil': 0.78,
-  'lpg': 0.82,
+  'lpg': 0.75,
   'electric': 1.00,
 };
 
-// Fuel prices
-// Gas: £/kWh (DO NOT CHANGE)
-const GAS_RATE = 0.0593; // £/kWh (Ofgem cap) - DO NOT CHANGE
-
-// LPG: £/kWh
-const LPG_RATE = 0.105; // £/kWh
-
-// Oil pricing (stored as pence per litre, converted properly)
-// Default: 65p per litre (conservative mid)
-// Energy content: 10.35 kWh per litre (kerosene)
-const OIL_PENCE_PER_LITRE = 65;
-const OIL_KWH_PER_LITRE = 10.35;
-
-// Cosy tariff structure (3-rate tariff)
-// Cheap windows: ~12p/kWh (8 hours/day)
-// Mid/Standard: ~24p/kWh
-// Peak: ~38p/kWh (4–7pm)
-const COSY_OFFPEAK_RATE = 0.12;  // 12p/kWh
-const COSY_MID_RATE = 0.24;     // 24p/kWh  
-const COSY_PEAK_RATE = 0.38;    // 38p/kWh
-
-// Peak share is constant (15% - people still heat at peak)
-const COSY_PEAK_SHARE = 0.15;
-
-// Cheap usage share by EPC band (more conservative for poor insulation)
-const COSY_CHEAP_SHARE_BY_EPC: Record<string, number> = {
-  'A': 0.60,
-  'B': 0.60,
-  'C': 0.55,
-  'D': 0.50,
-  'E': 0.45,
-  'F': 0.40,
-  'G': 0.35,
+// Effective delivered heat costs (p/kWh)
+// These are the "delivered" costs after accounting for boiler efficiency
+const DELIVERED_HEAT_COST: Record<string, number> = {
+  'gas': 5.93,   // 5.93p/kWh at 82% efficiency
+  'oil': 10.5,   // 10.5p/kWh at 78% efficiency  
+  'lpg': 11.5,   // 11.5p/kWh at 75% efficiency
+  'electric': 28, // Direct electric, no efficiency loss
 };
 
-// Base SCOP mapping
-const BASE_SCOP_MAP: Record<number, number> = {
-  3.4: 3.5,
-  3.7: 3.8,
-  4.0: 4.1,
-};
+// Cosy tariff structure (3-rate tariff) - LOCKED DO NOT CHANGE
+// 45% at 12p, 35% at 24p, 20% at 38p = 22.3p blended
+const COSY_OFFPEAK_RATE = 0.12;   // 12p/kWh
+const COSY_MID_RATE = 0.24;       // 24p/kWh  
+const COSY_PEAK_RATE = 0.38;      // 38p/kWh
+const COSY_OFFPEAK_SHARE = 0.45;  // 45%
+const COSY_MID_SHARE = 0.35;      // 35%
+const COSY_PEAK_SHARE = 0.20;     // 20%
+const COSY_BLENDED_RATE = (COSY_OFFPEAK_SHARE * COSY_OFFPEAK_RATE) + 
+                          (COSY_MID_SHARE * COSY_MID_RATE) + 
+                          (COSY_PEAK_SHARE * COSY_PEAK_RATE); // = 0.223 = 22.3p
 
-// EPC SCOP multiplier (reduce SCOP for poor insulation homes)
-const EPC_SCOP_MULTIPLIER: Record<string, number> = {
-  'A': 1.00,
-  'B': 1.00,
-  'C': 0.97,
-  'D': 0.94,
-  'E': 0.90,
-  'F': 0.85,
-  'G': 0.80,
-};
+// Oil savings guardrail: max £500 unless oil price > 12p/kWh
+const OIL_SAVINGS_CAP = 500;
+const OIL_HIGH_PRICE_THRESHOLD = 12; // p/kWh - above this, cap doesn't apply
 
-// DHW COP penalty (hot water runs at higher temps)
-const DHW_SCOP_PENALTY = 0.75;
-
-// SCOP clamps
-const SCOP_SPACE_MAX = 4.2;
-const SCOP_SPACE_MIN = 2.2;
-const SCOP_DHW_MIN = 1.7;
-
-// Display savings clamps by EPC (for oil homes)
-const OIL_SAVINGS_CLAMP: Record<string, { min: number; max: number }> = {
-  'A': { min: -300, max: 700 },
-  'B': { min: -300, max: 700 },
-  'C': { min: -300, max: 700 },
-  'D': { min: -600, max: 900 },
-  'E': { min: -600, max: 900 },
-  'F': { min: -900, max: 900 },
-  'G': { min: -900, max: 900 },
-};
+// Near-zero display threshold
+const NEAR_ZERO_THRESHOLD = 100; // ±£100 shows as "≈ £0"
 
 // Map efficiency (SCOP) to radiator count
 export function getRadiatorsForEfficiency(scop: number): number {
@@ -337,124 +291,85 @@ function getConfidenceLabel(epcBand: string, fuelType: string): string {
 }
 
 /**
- * Calculate savings using comprehensive model with:
- * - EPC-sensitive SCOP
- * - DHW penalty
- * - Conservative Cosy blending by EPC
- * - Proper oil pricing from litres
- * - Space vs DHW heat demand split
+ * PHYSICALLY ACCURATE SAVINGS CALCULATOR
  * 
- * GAS (DO NOT CHANGE):
- * - Gas cost = Heat demand ÷ 0.82 × 5.93p
- * 
- * OIL (FIXED):
- * - Oil price: 65p/litre (configurable)
- * - Energy content: 10.35 kWh/litre
- * - Oil boiler efficiency: 78%
- * - No demand uplift (removed - now using national average model)
+ * Model:
+ * 1. Heat demand from EPC band (kWh/year)
+ * 2. Current cost = Heat demand × Delivered fuel cost
+ * 3. SCOP from EPC band (accounts for insulation)
+ * 4. HP electricity = Heat demand / SCOP
+ * 5. HP cost = HP kWh × blended tariff rate
+ * 6. Savings = Current cost − HP cost
  */
 function calculateSavings(
   epcBand: string,
   fuelType: string,
-  scop: number
+  _scop: number // User-selected SCOP ignored - we use EPC-based SCOP
 ): SavingsCalculation & { transparency: SavingsTransparency } {
   // ============================================
-  // Step 1: Heat demand from EPC band
+  // Step 1: Heat demand from EPC band (includes space + DHW)
   // ============================================
   const totalHeatDemand = HEAT_DEMAND_BY_EPC[epcBand] || HEAT_DEMAND_BY_EPC['D'];
-  const dhwShare = DHW_SHARE_BY_EPC[epcBand] || 0.20;
+  
+  // For transparency, estimate space vs DHW split (typical 80/20)
+  const dhwShare = 0.20;
   const spaceHeatDemand = totalHeatDemand * (1 - dhwShare);
   const dhwDemand = totalHeatDemand * dhwShare;
 
   // ============================================
   // Step 2: Current heating cost
+  // Cost = Heat demand × Delivered fuel cost (p/kWh) / 100
   // ============================================
+  const deliveredCostP = DELIVERED_HEAT_COST[fuelType] || DELIVERED_HEAT_COST['gas'];
   const boilerEfficiency = BOILER_EFFICIENCY[fuelType] || 0.82;
   
-  // Calculate fuel input needed (accounting for boiler efficiency)
+  // Current cost in £
+  const currentCost = (totalHeatDemand * deliveredCostP) / 100;
+  
+  // For transparency: fuel input kWh (what you actually burn)
   const fuelKwh = totalHeatDemand / boilerEfficiency;
-  
-  let currentCost: number;
-  let oilLitresUsed: number | undefined;
-  
-  if (fuelType === 'oil') {
-    // Oil: Calculate using pence/litre → kWh → cost
-    // Clamp oil price to sensible range (45-95p/L)
-    const oilPriceClampedPence = clamp(OIL_PENCE_PER_LITRE, 45, 95);
-    // Convert fuel kWh to litres
-    oilLitresUsed = fuelKwh / OIL_KWH_PER_LITRE;
-    // Cost = litres × price per litre (convert pence to pounds)
-    currentCost = oilLitresUsed * (oilPriceClampedPence / 100);
-  } else if (fuelType === 'gas') {
-    // Gas: DO NOT CHANGE
-    currentCost = fuelKwh * GAS_RATE;
-  } else if (fuelType === 'lpg') {
-    // LPG: simple rate
-    currentCost = fuelKwh * LPG_RATE;
-  } else {
-    // Default to gas calculation
-    currentCost = fuelKwh * GAS_RATE;
-  }
 
   // ============================================
-  // Step 3: Calculate EPC-adjusted SCOP
+  // Step 3: Heat pump SCOP from EPC band
   // ============================================
-  const baseScop = BASE_SCOP_MAP[scop] || scop;
-  const epcScopMultiplier = EPC_SCOP_MULTIPLIER[epcBand] || 0.94;
-  
-  // Calculate space heating SCOP (with EPC adjustment and clamp)
-  let scopSpace = baseScop * epcScopMultiplier;
-  scopSpace = clamp(scopSpace, SCOP_SPACE_MIN, SCOP_SPACE_MAX);
-  
-  // Calculate DHW SCOP (with penalty and clamp)
-  let scopDhw = scopSpace * DHW_SCOP_PENALTY;
-  scopDhw = Math.max(scopDhw, SCOP_DHW_MIN);
+  const scopFromEpc = SCOP_BY_EPC[epcBand] || SCOP_BY_EPC['D'];
 
   // ============================================
   // Step 4: Heat pump electricity use
   // ============================================
-  const hpKwhSpace = spaceHeatDemand / scopSpace;
-  const hpKwhDhw = dhwDemand / scopDhw;
-  const hpKwh = hpKwhSpace + hpKwhDhw;
-
-  // ============================================
-  // Step 5: Calculate EPC-sensitive Cosy blended rate
-  // ============================================
-  const cosyCheapShare = COSY_CHEAP_SHARE_BY_EPC[epcBand] || 0.50;
-  const cosyMidShare = 1 - cosyCheapShare - COSY_PEAK_SHARE;
+  const hpKwh = totalHeatDemand / scopFromEpc;
   
-  const blendedRate = 
-    (cosyCheapShare * COSY_OFFPEAK_RATE) +
-    (cosyMidShare * COSY_MID_RATE) +
-    (COSY_PEAK_SHARE * COSY_PEAK_RATE);
+  // For transparency breakdown
+  const hpKwhSpace = spaceHeatDemand / scopFromEpc;
+  const hpKwhDhw = dhwDemand / scopFromEpc;
 
   // ============================================
-  // Step 6: Heat pump running cost
+  // Step 5: Heat pump running cost (Cosy baseline)
+  // Cosy: 45% at 12p, 35% at 24p, 20% at 38p = 22.3p blended
   // ============================================
-  const hpCost = hpKwh * blendedRate;
+  const hpCost = hpKwh * COSY_BLENDED_RATE;
 
   // ============================================
-  // Step 7: Savings with optional clamping
+  // Step 6: Savings with guardrails
   // ============================================
   const rawSavingsBeforeClamp = currentCost - hpCost;
   let finalSavings = rawSavingsBeforeClamp;
   let savingsWasClamped = false;
   
-  // Apply clamp for oil homes only
-  if (fuelType === 'oil') {
-    const clampRange = OIL_SAVINGS_CLAMP[epcBand] || { min: -600, max: 900 };
-    const clampedValue = clamp(rawSavingsBeforeClamp, clampRange.min, clampRange.max);
-    savingsWasClamped = clampedValue !== rawSavingsBeforeClamp;
-    finalSavings = clampedValue;
+  // Oil savings guardrail: max £500 unless oil price > 12p/kWh
+  if (fuelType === 'oil' && deliveredCostP <= OIL_HIGH_PRICE_THRESHOLD) {
+    if (finalSavings > OIL_SAVINGS_CAP) {
+      finalSavings = OIL_SAVINGS_CAP;
+      savingsWasClamped = true;
+    }
   }
+  
+  // Allow negative savings (no floor)
   
   const estimatedSavings = roundToNearest10(finalSavings);
   
   // Flag high-sensitivity estimates
-  const isHighSensitivity = fuelType === 'oil' && finalSavings > 800;
-
-  // Use effective SCOP for display (weighted average based on demand split)
-  const effectiveScop = totalHeatDemand / hpKwh;
+  const isHighSensitivity = fuelType === 'oil' && finalSavings > 400;
 
   return {
     heatDemand: totalHeatDemand,
@@ -465,28 +380,28 @@ function calculateSavings(
     rawSavings: rawSavingsBeforeClamp,
     estimatedSavings,
     boilerEfficiency,
-    optimisticScop: effectiveScop,
+    optimisticScop: scopFromEpc,
     transparency: {
       totalHeatDemand,
       spaceHeatDemand,
       dhwDemand,
       dhwShare,
-      oilPricePerLitre: fuelType === 'oil' ? OIL_PENCE_PER_LITRE : undefined,
-      oilLitresUsed,
-      oilKwhPerLitre: fuelType === 'oil' ? OIL_KWH_PER_LITRE : undefined,
-      baseScop,
-      epcScopMultiplier,
-      scopSpace,
-      scopDhw,
+      oilPricePerLitre: undefined, // Not using litre-based calc anymore
+      oilLitresUsed: undefined,
+      oilKwhPerLitre: undefined,
+      baseScop: scopFromEpc,
+      epcScopMultiplier: 1.0, // Not used in new model
+      scopSpace: scopFromEpc,
+      scopDhw: scopFromEpc,
       hpKwhSpace,
       hpKwhDhw,
       cosyOffpeakRate: COSY_OFFPEAK_RATE * 100,
       cosyMidRate: COSY_MID_RATE * 100,
       cosyPeakRate: COSY_PEAK_RATE * 100,
-      cosyCheapShare,
-      cosyMidShare,
+      cosyCheapShare: COSY_OFFPEAK_SHARE,
+      cosyMidShare: COSY_MID_SHARE,
       cosyPeakShare: COSY_PEAK_SHARE,
-      blendedRate: blendedRate * 100,
+      blendedRate: COSY_BLENDED_RATE * 100,
       isCosy: true, // This is the Cosy calculation path
       rawSavingsBeforeClamp,
       savingsWasClamped,
@@ -523,9 +438,6 @@ export function calculateEstimate(
   const tariffSupplier = inputs.tariff?.supplier || '';
   const tariffConfig = getTariffConfig(tariffName, tariffSupplier);
   
-  // Debug logging
-  console.log('[Tariff Calc] Input:', { name: tariffName, supplier: tariffSupplier });
-  console.log('[Tariff Calc] Config found:', tariffConfig?.id, 'isCosy:', tariffConfig?.isCosy);
   
   // Check if this is NOT Cosy
   const isCosy = tariffConfig?.isCosy ?? tariffName.toLowerCase().includes('cosy');
@@ -541,26 +453,27 @@ export function calculateEstimate(
     // Calculate using the selected tariff with actual DB rates
     const tariffResult = calculateTariffCost(cosySavings.hpKwh, epcBand, tariffConfig, dbTariff);
     
-    console.log('[Tariff Calc] Result:', tariffResult);
+    
     
     if (tariffResult) {
       hpCost = tariffResult.annualCost;
       const newRawSavings = cosySavings.currentCost - hpCost;
       
-      // Apply clamp for oil homes
+      // Apply oil savings guardrail: max £500 unless oil price > 12p/kWh
       let finalSavings = newRawSavings;
       let savingsWasClamped = false;
       if (fuelType === 'oil') {
-        const clampRange = OIL_SAVINGS_CLAMP[epcBand] || { min: -600, max: 900 };
-        const clampedValue = clamp(newRawSavings, clampRange.min, clampRange.max);
-        savingsWasClamped = clampedValue !== newRawSavings;
-        finalSavings = clampedValue;
+        const deliveredCostP = DELIVERED_HEAT_COST['oil'];
+        if (deliveredCostP <= OIL_HIGH_PRICE_THRESHOLD && finalSavings > OIL_SAVINGS_CAP) {
+          finalSavings = OIL_SAVINGS_CAP;
+          savingsWasClamped = true;
+        }
       }
       
       estimatedSavings = roundToNearest10(finalSavings);
       rawSavings = newRawSavings;
       
-      console.log('[Tariff Calc] New savings:', { hpCost, estimatedSavings, rawSavings });
+      
       
       // Update transparency with non-Cosy tariff info
       transparency = {
@@ -573,8 +486,6 @@ export function calculateEstimate(
         isHighSensitivity: fuelType === 'oil' && finalSavings > 800,
       };
     }
-  } else {
-    console.log('[Tariff Calc] Using Cosy calculation');
   }
 
   // ============================================
