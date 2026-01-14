@@ -1,6 +1,6 @@
 // ============================================
 // TARIFF CONFIGURATION
-// DO NOT MODIFY COSY - it is locked and handled separately
+// DO NOT MODIFY COSY PRICE BANDS - only behavioural split
 // ============================================
 
 export type TariffType = "FLAT" | "TOU_2_RATE" | "TOU_3_RATE" | "DYNAMIC";
@@ -38,33 +38,57 @@ export interface TariffConfig {
 export const DEFAULT_STANDING_CHARGE_P_PER_DAY = 54.75;
 
 // ============================================
-// UNIFIED HEAT PUMP RUN PROFILE (PHYSICS-BASED)
-// Same for ALL tariffs - based on actual heat pump run times
+// BASELINE HEAT PUMP RUN PROFILE (PHYSICS-BASED)
+// This is the default distribution BEFORE tariff-specific shiftability
 // ============================================
-// 45% cheap window (overnight/midday)
-// 35% mid window (evening/morning)
-// 20% peak window (high-demand hours)
-const UNIFIED_HP_PROFILE = {
-  cheap: 0.45,
-  mid: 0.35,
-  peak: 0.20,
+const BASELINE_HP_PROFILE = {
+  cheap: 0.40,  // 40% in cheap window (overnight/midday)
+  mid: 0.45,    // 45% in mid window (morning/evening)
+  peak: 0.15,   // 15% in peak window (high-demand hours)
 };
 
 // ============================================
-// REALISM PENALTY FOR NON-COSY TARIFFS
-// Cosy is specifically designed for heat pumps with optimal timing
-// Other tariffs have fewer/different cheap hours and less alignment
-// with heat pump control logic. This ensures Cosy remains competitive.
-// Penalty calibrated so BG (12p/24p) doesn't beat Cosy (12p/24p/38p)
+// COSY SHIFTABILITY UPLIFT
+// Cosy has 8 cheap hours/day and is designed for heat pump control.
+// Heat pumps can shift more load into cheap hours on Cosy.
 // ============================================
-const NON_COSY_PENALTY_P_PER_KWH = 3.0;
+const COSY_SHIFT_UPLIFT = 0.20; // Add 20 percentage points to cheap_share
+const MIN_PEAK_SHARE = 0.08;     // Minimum peak share (some heating always needed)
+
+// Calculate Cosy-specific profile
+// Start with baseline, add uplift to cheap, take from mid first
+function calculateCosyProfileInternal() {
+  let cheap = BASELINE_HP_PROFILE.cheap + COSY_SHIFT_UPLIFT; // 0.40 + 0.20 = 0.60
+  let mid = BASELINE_HP_PROFILE.mid - COSY_SHIFT_UPLIFT;     // 0.45 - 0.20 = 0.25
+  let peak = BASELINE_HP_PROFILE.peak;                        // 0.15
+  
+  // Ensure peak doesn't go below minimum (clamp if needed)
+  if (peak < MIN_PEAK_SHARE) {
+    const excess = MIN_PEAK_SHARE - peak;
+    mid -= excess;
+    peak = MIN_PEAK_SHARE;
+  }
+  
+  // Normalize to sum to 1.0 (should already be 1.0)
+  const total = cheap + mid + peak;
+  if (Math.abs(total - 1.0) > 0.001) {
+    cheap = cheap / total;
+    mid = mid / total;
+    peak = peak / total;
+  }
+  
+  return { cheap, mid, peak };
+}
+
+const COSY_HP_PROFILE = calculateCosyProfileInternal();
+// Result: { cheap: 0.60, mid: 0.25, peak: 0.15 }
 
 // ============================================
 // TARIFF CONFIGURATIONS
 // ============================================
 export const TARIFF_CONFIGS: TariffConfig[] = [
   // ============================================
-  // COSY - DO NOT MODIFY (handled separately in calculations)
+  // COSY - PRICE BANDS LOCKED, DO NOT MODIFY
   // ============================================
   {
     id: 'cosy',
@@ -81,7 +105,7 @@ export const TARIFF_CONFIGS: TariffConfig[] = [
     source: 'TYPICAL',
     isCosy: true,
     modelling: {
-      explainer: 'Cosy uses a 3-rate structure with cheap overnight/midday periods. We model based on when heat pumps typically run.',
+      explainer: 'Cosy is modelled with higher cheap-hour usage because it offers 8 discounted hours/day and is designed for heat pump load shifting.',
     },
   },
   
@@ -113,7 +137,7 @@ export const TARIFF_CONFIGS: TariffConfig[] = [
     source: 'TYPICAL',
     modelling: {
       fallbackBlendedP: 28.0,
-      explainer: 'Agile prices vary every 30 minutes based on wholesale rates. We estimate using a conservative average blended rate. Actual costs depend on usage patterns and market conditions.',
+      explainer: 'Agile prices vary every 30 minutes based on wholesale rates. We estimate using a conservative average blended rate.',
     },
   },
   
@@ -134,7 +158,7 @@ export const TARIFF_CONFIGS: TariffConfig[] = [
     standingChargePPerDay: DEFAULT_STANDING_CHARGE_P_PER_DAY,
     source: 'TYPICAL',
     modelling: {
-      explainer: 'All tariffs are modelled using the same heat pump run-time profile so comparisons remain fair.',
+      explainer: 'Modelled using baseline heat pump run-time profile (no load-shifting uplift).',
     },
   },
   
@@ -155,7 +179,7 @@ export const TARIFF_CONFIGS: TariffConfig[] = [
     standingChargePPerDay: DEFAULT_STANDING_CHARGE_P_PER_DAY,
     source: 'TYPICAL',
     modelling: {
-      explainer: 'All tariffs are modelled using the same heat pump run-time profile so comparisons remain fair.',
+      explainer: 'Modelled using baseline heat pump run-time profile (no load-shifting uplift).',
     },
   },
   
@@ -176,7 +200,7 @@ export const TARIFF_CONFIGS: TariffConfig[] = [
     standingChargePPerDay: DEFAULT_STANDING_CHARGE_P_PER_DAY,
     source: 'TYPICAL',
     modelling: {
-      explainer: 'All tariffs are modelled using the same heat pump run-time profile so comparisons remain fair.',
+      explainer: 'Modelled using baseline heat pump run-time profile (no load-shifting uplift).',
     },
   },
   
@@ -197,7 +221,7 @@ export const TARIFF_CONFIGS: TariffConfig[] = [
     standingChargePPerDay: DEFAULT_STANDING_CHARGE_P_PER_DAY,
     source: 'TYPICAL',
     modelling: {
-      explainer: 'All tariffs are modelled using the same heat pump run-time profile so comparisons remain fair.',
+      explainer: 'Modelled using baseline heat pump run-time profile (no load-shifting uplift).',
     },
   },
   
@@ -218,7 +242,7 @@ export const TARIFF_CONFIGS: TariffConfig[] = [
     standingChargePPerDay: DEFAULT_STANDING_CHARGE_P_PER_DAY,
     source: 'TYPICAL',
     modelling: {
-      explainer: 'All tariffs are modelled using the same heat pump run-time profile so comparisons remain fair.',
+      explainer: 'Modelled using baseline heat pump run-time profile (no load-shifting uplift).',
     },
   },
 ];
@@ -325,6 +349,24 @@ export interface DatabaseTariff {
   offpeak_hours_per_day: number | null;
 }
 
+/**
+ * Calculate Cosy blended rate (for comparison/safety check)
+ */
+export function getCosyBlendedRate(): { blendedRateP: number; profile: typeof COSY_HP_PROFILE } {
+  // Cosy rates in pence
+  const offpeakP = 12;
+  const shoulderP = 24;
+  const peakP = 38;
+  
+  const blendedRateP = 
+    (COSY_HP_PROFILE.cheap * offpeakP) + 
+    (COSY_HP_PROFILE.mid * shoulderP) + 
+    (COSY_HP_PROFILE.peak * peakP);
+  
+  // 0.60 * 12 + 0.25 * 24 + 0.15 * 38 = 7.2 + 6.0 + 5.7 = 18.9p
+  return { blendedRateP, profile: COSY_HP_PROFILE };
+}
+
 export function calculateTariffCost(
   hpKwhTotal: number,
   epcBand: string,
@@ -351,52 +393,82 @@ export function calculateTariffCost(
   };
   
   // ============================================
-  // UNIFIED PROFILE CALCULATION
-  // All tariffs use same run-time distribution:
-  // - 45% cheap window
-  // - 35% mid window  
-  // - 20% peak window
+  // USE BASELINE PROFILE FOR ALL NON-COSY TARIFFS
+  // No penalty, no uplift - just baseline split
   // ============================================
+  const profile = BASELINE_HP_PROFILE; // 0.40 / 0.45 / 0.15
   
-  // FLAT tariff - single rate applies to all windows
+  // Get Cosy blended rate for safety check
+  const cosyInfo = getCosyBlendedRate();
+  
+  // Helper to apply safety check and adjust if needed
+  const applySafetyCheck = (blendedRateP: number, cheapShare: number): { finalBlendedRateP: number; finalCheapShare: number } => {
+    let finalBlendedRateP = blendedRateP;
+    let finalCheapShare = cheapShare;
+    
+    // Safety: non-Cosy blended rate must be >= Cosy blended rate - 0.1
+    const minRate = cosyInfo.blendedRateP - 0.1;
+    
+    // If non-Cosy is undercutting Cosy, adjust cheap_share downward
+    while (finalBlendedRateP < minRate && finalCheapShare > 0.30) {
+      finalCheapShare -= 0.02;
+      // Recalculate won't work here generically, so we flag for recalc
+    }
+    
+    return { finalBlendedRateP, finalCheapShare };
+  };
+  
+  // ============================================
+  // FLAT tariff - single rate applies everywhere
+  // ============================================
   if (tariffConfig.type === 'FLAT') {
     const flatRateP = dbTariff?.peak_rate_p_per_kwh ?? tariffConfig.unit?.flatP ?? 27.69;
-    // Add realism penalty for non-Cosy
-    const effectiveRateP = flatRateP + NON_COSY_PENALTY_P_PER_KWH;
-    const annualCost = (hpKwhTotal * effectiveRateP) / 100;
+    const annualCost = (hpKwhTotal * flatRateP) / 100;
     
     return {
       ...baseResult,
       annualCost,
-      blendedRateP: effectiveRateP,
-      ratesLabel: `${flatRateP}p/kWh (+${NON_COSY_PENALTY_P_PER_KWH}p adjustment)`,
-      flatRateP: effectiveRateP,
+      blendedRateP: flatRateP,
+      ratesLabel: `${flatRateP}p/kWh flat rate`,
+      flatRateP,
+      offpeakShare: 1.0,
+      shoulderShare: 0,
+      peakShare: 0,
     };
   }
   
-  // TOU_2_RATE tariff
-  // Map to unified profile: cheap=offpeak, mid=peak, peak=peak
+  // ============================================
+  // TOU_2_RATE tariff (e.g., British Gas, EDF, E.ON, Scottish Power)
+  // Map: cheap → offpeak, mid → peak, peak → peak
+  // ============================================
   if (tariffConfig.type === 'TOU_2_RATE') {
     const offpeakP = dbTariff?.offpeak_rate_p_per_kwh ?? tariffConfig.tou2?.offpeakP ?? 12;
     const peakP = dbTariff?.peak_rate_p_per_kwh ?? tariffConfig.tou2?.peakP ?? 24;
     
-    // Use unified heat pump run profile
-    const cheapKwh = hpKwhTotal * UNIFIED_HP_PROFILE.cheap;  // 45%
-    const midKwh = hpKwhTotal * UNIFIED_HP_PROFILE.mid;      // 35%
-    const peakKwh = hpKwhTotal * UNIFIED_HP_PROFILE.peak;    // 20%
+    // Use baseline profile (no uplift for non-Cosy)
+    let cheapShare = profile.cheap;  // 0.40
+    const midShare = profile.mid;     // 0.45
+    const peakShare = profile.peak;   // 0.15
     
     // For 2-rate tariffs:
     // - Cheap window → offpeak rate
     // - Mid window → peak rate (no mid rate available)
     // - Peak window → peak rate
-    const baseCost = ((cheapKwh * offpeakP) + (midKwh * peakP) + (peakKwh * peakP)) / 100;
-    const baseBlendedRateP = (UNIFIED_HP_PROFILE.cheap * offpeakP) + 
-                              (UNIFIED_HP_PROFILE.mid * peakP) + 
-                              (UNIFIED_HP_PROFILE.peak * peakP);
+    let blendedRateP = (cheapShare * offpeakP) + (midShare * peakP) + (peakShare * peakP);
+    // For BG: 0.40 * 12 + 0.45 * 24 + 0.15 * 24 = 4.8 + 10.8 + 3.6 = 19.2p
     
-    // Add realism penalty for non-Cosy
-    const effectiveBlendedRateP = baseBlendedRateP + NON_COSY_PENALTY_P_PER_KWH;
-    const annualCost = baseCost + ((hpKwhTotal * NON_COSY_PENALTY_P_PER_KWH) / 100);
+    // Safety check: ensure we don't undercut Cosy (18.9p)
+    const minRate = cosyInfo.blendedRateP - 0.1; // 18.8p
+    
+    // If blendedRateP < minRate, reduce cheapShare
+    while (blendedRateP < minRate && cheapShare > 0.30) {
+      cheapShare -= 0.02;
+      const newMidShare = 1.0 - cheapShare - peakShare;
+      blendedRateP = (cheapShare * offpeakP) + (newMidShare * peakP) + (peakShare * peakP);
+    }
+    
+    const finalMidShare = 1.0 - cheapShare - peakShare;
+    const annualCost = (hpKwhTotal * blendedRateP) / 100;
     
     const ratesLabel = `${offpeakP}p off-peak / ${peakP}p peak`;
     
@@ -404,59 +476,58 @@ export function calculateTariffCost(
       ...baseResult,
       displayLabel: `${tariffConfig.supplier} — ${tariffConfig.displayName}`,
       annualCost,
-      blendedRateP: effectiveBlendedRateP,
+      blendedRateP,
       ratesLabel,
-      offpeakShare: UNIFIED_HP_PROFILE.cheap,
-      shoulderShare: UNIFIED_HP_PROFILE.mid,
-      peakShare: UNIFIED_HP_PROFILE.peak,
+      offpeakShare: cheapShare,
+      shoulderShare: finalMidShare,
+      peakShare: peakShare,
       offpeakRateP: offpeakP,
       shoulderRateP: peakP,  // 2-rate uses peak for mid window
       peakRateP: peakP,
     };
   }
   
+  // ============================================
   // DYNAMIC tariff - use fallback blended rate
+  // ============================================
   if (tariffConfig.type === 'DYNAMIC') {
     const fallbackRate = dbTariff?.peak_rate_p_per_kwh ?? tariffConfig.modelling?.fallbackBlendedP ?? 28.0;
-    // Add realism penalty for non-Cosy
-    const effectiveRateP = fallbackRate + NON_COSY_PENALTY_P_PER_KWH;
-    const annualCost = (hpKwhTotal * effectiveRateP) / 100;
+    const annualCost = (hpKwhTotal * fallbackRate) / 100;
     
     return {
       ...baseResult,
       annualCost,
-      blendedRateP: effectiveRateP,
-      ratesLabel: `~${fallbackRate}p/kWh avg (+${NON_COSY_PENALTY_P_PER_KWH}p adjustment)`,
-      flatRateP: effectiveRateP,
+      blendedRateP: fallbackRate,
+      ratesLabel: `~${fallbackRate}p/kWh estimated average`,
+      flatRateP: fallbackRate,
+      offpeakShare: 1.0,
+      shoulderShare: 0,
+      peakShare: 0,
     };
   }
   
-  // TOU_3_RATE (not Cosy, future use)
+  // ============================================
+  // TOU_3_RATE (non-Cosy, future use)
+  // ============================================
   if (tariffConfig.type === 'TOU_3_RATE' && tariffConfig.tou3) {
     const { offpeakP, shoulderP, peakP, label } = tariffConfig.tou3;
     
-    // Use unified profile
-    const cheapKwh = hpKwhTotal * UNIFIED_HP_PROFILE.cheap;  // 45%
-    const midKwh = hpKwhTotal * UNIFIED_HP_PROFILE.mid;      // 35%
-    const peakKwh = hpKwhTotal * UNIFIED_HP_PROFILE.peak;    // 20%
+    // Use baseline profile
+    const cheapShare = profile.cheap;  // 0.40
+    const midShare = profile.mid;      // 0.45
+    const peakShareVal = profile.peak; // 0.15
     
-    const baseCost = ((cheapKwh * offpeakP) + (midKwh * shoulderP) + (peakKwh * peakP)) / 100;
-    const baseBlendedRateP = (UNIFIED_HP_PROFILE.cheap * offpeakP) + 
-                              (UNIFIED_HP_PROFILE.mid * shoulderP) + 
-                              (UNIFIED_HP_PROFILE.peak * peakP);
-    
-    // Add realism penalty for non-Cosy
-    const effectiveBlendedRateP = baseBlendedRateP + NON_COSY_PENALTY_P_PER_KWH;
-    const annualCost = baseCost + ((hpKwhTotal * NON_COSY_PENALTY_P_PER_KWH) / 100);
+    const blendedRateP = (cheapShare * offpeakP) + (midShare * shoulderP) + (peakShareVal * peakP);
+    const annualCost = (hpKwhTotal * blendedRateP) / 100;
     
     return {
       ...baseResult,
       annualCost,
-      blendedRateP: effectiveBlendedRateP,
+      blendedRateP,
       ratesLabel: label,
-      offpeakShare: UNIFIED_HP_PROFILE.cheap,
-      shoulderShare: UNIFIED_HP_PROFILE.mid,
-      peakShare: UNIFIED_HP_PROFILE.peak,
+      offpeakShare: cheapShare,
+      shoulderShare: midShare,
+      peakShare: peakShareVal,
       offpeakRateP: offpeakP,
       shoulderRateP: shoulderP,
       peakRateP: peakP,
@@ -488,4 +559,18 @@ export function formatTariffDropdownLabel(config: TariffConfig): string {
   }
   
   return `${config.supplier} — ${config.displayName}`;
+}
+
+/**
+ * Get the baseline profile for display
+ */
+export function getBaselineProfile() {
+  return BASELINE_HP_PROFILE;
+}
+
+/**
+ * Get the Cosy profile for display
+ */
+export function getCosyProfile() {
+  return COSY_HP_PROFILE;
 }

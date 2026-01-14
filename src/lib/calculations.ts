@@ -114,17 +114,18 @@ const DELIVERED_HEAT_COST: Record<string, number> = {
   'electric': 28, // Direct electric, no efficiency loss
 };
 
-// Cosy tariff structure (3-rate tariff) - LOCKED DO NOT CHANGE
-// 45% at 12p, 35% at 24p, 20% at 38p = 22.3p blended
+// Cosy tariff structure (3-rate tariff) - PRICE BANDS LOCKED, DO NOT CHANGE
+// Profile: 60% at 12p, 25% at 24p, 15% at 38p (with load-shifting uplift)
+// Blended rate = 0.60*12 + 0.25*24 + 0.15*38 = 7.2 + 6.0 + 5.7 = 18.9p
 const COSY_OFFPEAK_RATE = 0.12;   // 12p/kWh
 const COSY_MID_RATE = 0.24;       // 24p/kWh  
 const COSY_PEAK_RATE = 0.38;      // 38p/kWh
-const COSY_OFFPEAK_SHARE = 0.45;  // 45%
-const COSY_MID_SHARE = 0.35;      // 35%
-const COSY_PEAK_SHARE = 0.20;     // 20%
+const COSY_OFFPEAK_SHARE = 0.60;  // 60% (with load-shifting uplift from 40% baseline)
+const COSY_MID_SHARE = 0.25;      // 25% (reduced from 45% baseline)
+const COSY_PEAK_SHARE = 0.15;     // 15% (unchanged from baseline)
 const COSY_BLENDED_RATE = (COSY_OFFPEAK_SHARE * COSY_OFFPEAK_RATE) + 
                           (COSY_MID_SHARE * COSY_MID_RATE) + 
-                          (COSY_PEAK_SHARE * COSY_PEAK_RATE); // = 0.223 = 22.3p
+                          (COSY_PEAK_SHARE * COSY_PEAK_RATE); // = 0.189 = 18.9p
 
 // Oil savings guardrail: max £500 unless oil price > 12p/kWh
 const OIL_SAVINGS_CAP = 500;
@@ -345,7 +346,7 @@ function calculateSavings(
 
   // ============================================
   // Step 5: Heat pump running cost (Cosy baseline)
-  // Cosy: 45% at 12p, 35% at 24p, 20% at 38p = 22.3p blended
+  // Cosy with load-shifting: 60% at 12p, 25% at 24p, 15% at 38p = 18.9p blended
   // ============================================
   const hpCost = hpKwh * COSY_BLENDED_RATE;
 

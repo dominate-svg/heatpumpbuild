@@ -160,21 +160,27 @@ export function SavingsCard({
               {/* Tariff info */}
               <div className="w-full space-y-2">
                 {transparency.isCosy ? (
-                  /* COSY TARIFF DISPLAY - DO NOT CHANGE */
+                  /* COSY TARIFF DISPLAY */
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div className="text-xs text-muted-foreground cursor-help">
                           <span className="font-medium text-foreground">Octopus Energy — Cosy (3-rate tariff)</span>
                           <br />
-                          Typical effective rate: ~{transparency.blendedRate.toFixed(1)}p/kWh
+                          Modelled blended rate: ~{transparency.blendedRate.toFixed(1)}p/kWh
                           <br />
-                          <span className="text-[10px]">Tariff bands: ~{transparency.cosyOffpeakRate}p / ~{transparency.cosyMidRate}p / ~{transparency.cosyPeakRate}p (varies by region)</span>
+                          <span className="text-[10px]">
+                            Tariff bands: ~{transparency.cosyOffpeakRate}p / ~{transparency.cosyMidRate}p / ~{transparency.cosyPeakRate}p
+                          </span>
+                          <br />
+                          <span className="text-[10px]">
+                            Assumed usage split: cheap {Math.round(transparency.cosyCheapShare * 100)}% / mid {Math.round(transparency.cosyMidShare * 100)}% / peak {Math.round(transparency.cosyPeakShare * 100)}%
+                          </span>
                         </div>
                       </TooltipTrigger>
                       <TooltipContent className="max-w-xs">
                         <p className="text-xs">
-                          We model Cosy using a blended rate that reflects when heat pumps actually run — mostly overnight and midday when power is cheapest. For EPC {epcBand}, we assume {Math.round(transparency.cosyCheapShare * 100)}% cheap / {Math.round(transparency.cosyMidShare * 100)}% mid / {Math.round(transparency.cosyPeakShare * 100)}% peak usage.
+                          Cosy is modelled with higher cheap-hour usage because it offers 8 discounted hours/day and is designed for heat pump load shifting. We assume {Math.round(transparency.cosyCheapShare * 100)}% cheap / {Math.round(transparency.cosyMidShare * 100)}% mid / {Math.round(transparency.cosyPeakShare * 100)}% peak usage.
                         </p>
                       </TooltipContent>
                     </Tooltip>
@@ -194,14 +200,19 @@ export function SavingsCard({
                           <span className="text-[10px]">
                             {transparency.tariffCostResult?.ratesLabel || `${selectedTariff?.peak_rate_p_per_kwh}p/kWh`}
                           </span>
+                          {transparency.tariffCostResult?.offpeakShare !== undefined && (
+                            <>
+                              <br />
+                              <span className="text-[10px]">
+                                Assumed usage split: cheap {Math.round((transparency.tariffCostResult.offpeakShare || 0) * 100)}% / mid {Math.round((transparency.tariffCostResult.shoulderShare || 0) * 100)}% / peak {Math.round((transparency.tariffCostResult.peakShare || 0) * 100)}%
+                              </span>
+                            </>
+                          )}
                         </div>
                       </TooltipTrigger>
                       <TooltipContent className="max-w-xs">
                         <p className="text-xs">
                           {transparency.tariffCostResult?.explainer || 'Calculated using tariff rates and typical heat pump usage patterns.'}
-                          {transparency.tariffCostResult?.offpeakShare !== undefined && (
-                            <> For EPC {epcBand}, we assume {Math.round((transparency.tariffCostResult.offpeakShare || 0) * 100)}% off-peak / {Math.round((transparency.tariffCostResult.peakShare || 0) * 100)}% peak usage.</>
-                          )}
                         </p>
                       </TooltipContent>
                     </Tooltip>
@@ -223,15 +234,11 @@ export function SavingsCard({
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-[10px] text-muted-foreground italic">
-                  All tariffs are modelled using the same heat pump run-time profile so comparisons remain fair.
-                </p>
-                <p className="text-[10px] text-muted-foreground">
-                  {transparency.isCosy 
-                    ? `Modelled blended rate: ~${transparency.blendedRate.toFixed(1)}p/kWh (based on typical heat pump run times)`
-                    : `Modelled blended rate: ~${transparency.blendedRate.toFixed(1)}p/kWh (based on typical heat pump run times)`
-                  }
-                </p>
+                {transparency.isCosy && (
+                  <p className="text-[10px] text-muted-foreground italic">
+                    Cosy is modelled with higher cheap-hour usage because it offers 8 discounted hours/day and is designed for heat pump load shifting.
+                  </p>
+                )}
               </div>
 
               {/* Cost breakdown */}
