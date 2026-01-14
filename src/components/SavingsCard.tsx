@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TrendingUp, ChevronDown, ChevronUp, Info, Leaf, Calculator, Fuel } from 'lucide-react';
+import { TrendingUp, TrendingDown, ChevronDown, ChevronUp, Info, Leaf, Calculator, Fuel, AlertTriangle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -14,6 +14,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { formatCurrency, getFuelDisplayName } from '@/lib/calculations';
 import type { EstimateResults, Assumptions } from '@/lib/calculations';
 import { useTariffs, formatTariffLabel, type Tariff } from '@/hooks/useTariffs';
@@ -55,7 +61,9 @@ export function SavingsCard({
   const [isCalculationOpen, setIsCalculationOpen] = useState(false);
   const { data: tariffs, isLoading: tariffsLoading } = useTariffs();
 
-  const { estimatedSavings, epcBand } = results;
+  const { estimatedSavings, epcBand, transparency } = results;
+  const isNegativeSavings = estimatedSavings < 0;
+  const displaySavings = Math.abs(estimatedSavings);
 
   const handleTariffChange = (tariffId: string) => {
     const tariff = tariffs?.find(t => t.id === tariffId);
@@ -78,53 +86,96 @@ export function SavingsCard({
 
       <Card className="border border-border shadow-card overflow-hidden">
         <CardContent className="p-0">
-          {/* Savings display - always positive framing */}
-          <div className="p-4 md:p-5 border-b border-border bg-gradient-to-r from-success/5 to-accent/5">
+          {/* Savings display - supports negative values */}
+          <div className={`p-4 md:p-5 border-b border-border ${
+            isNegativeSavings 
+              ? 'bg-gradient-to-r from-amber-50/50 to-orange-50/50 dark:from-amber-950/20 dark:to-orange-950/20' 
+              : 'bg-gradient-to-r from-success/5 to-accent/5'
+          }`}>
             <div className="flex flex-col gap-4">
               {/* Main savings figure */}
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0 bg-success/10">
-                  <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-success" />
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0 ${
+                  isNegativeSavings ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-success/10'
+                }`}>
+                  {isNegativeSavings ? (
+                    <TrendingDown className="w-5 h-5 sm:w-6 sm:h-6 text-amber-600 dark:text-amber-400" />
+                  ) : (
+                    <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-success" />
+                  )}
                 </div>
                 <div className="flex-1">
                   <p className="text-xs text-muted-foreground mb-1">Estimated annual savings</p>
                   
                   <div className="space-y-2">
                     <div className="flex items-baseline gap-2 flex-wrap">
-                      <span className="text-2xl sm:text-3xl md:text-4xl font-bold text-success">
-                        £{Math.max(0, estimatedSavings)}
+                      <span className={`text-2xl sm:text-3xl md:text-4xl font-bold ${
+                        isNegativeSavings ? 'text-amber-600 dark:text-amber-400' : 'text-success'
+                      }`}>
+                        {isNegativeSavings ? '-' : ''}£{displaySavings}
                       </span>
                       <span className="text-sm text-muted-foreground">/year</span>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Balanced estimate using national averages, typical insulation for EPC {epcBand}, 
-                      {results.currentFuelType === 'oil' ? ' oil' : results.currentFuelType === 'lpg' ? ' LPG' : ' gas'} boiler efficiency, and realistic Cosy tariff usage. Survey confirms final savings.
+                      Balanced estimate using national averages and conservative assumptions. Survey confirms actual costs.
                     </p>
                   </div>
                 </div>
               </div>
 
+              {/* High sensitivity warning */}
+              {transparency.isHighSensitivity && (
+                <div className="flex items-center gap-2 p-2 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+                  <span className="text-xs text-amber-700 dark:text-amber-300">
+                    High-sensitivity estimate — survey will confirm
+                  </span>
+                </div>
+              )}
+
+              {/* Negative savings message */}
+              {isNegativeSavings && (
+                <div className="p-3 rounded-lg bg-muted/50 border border-border">
+                  <p className="text-xs text-muted-foreground">
+                    Many homes still choose Cosy for comfort + future-proofing — survey can often improve this with design tweaks.
+                  </p>
+                </div>
+              )}
+
               {/* EPC badge */}
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="text-xs bg-success/10 text-success">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge variant="secondary" className={`text-xs ${
+                  isNegativeSavings ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' : 'bg-success/10 text-success'
+                }`}>
                   EPC {epcBand}
                 </Badge>
-                {results.oilDemandUplift && results.oilDemandUplift > 1 && (
+                {results.isOilFuel && (
                   <Badge variant="outline" className="text-xs">
-                    Oil home (+{Math.round((results.oilDemandUplift - 1) * 100)}% demand)
+                    Oil home (national average model)
                   </Badge>
                 )}
               </div>
               
               {/* Tariff info */}
               <div className="w-full space-y-2">
-                <div className="text-xs text-muted-foreground">
-                  <span className="font-medium text-foreground">Octopus Energy — Cosy</span>
-                  <br />
-                  Typical effective rate: ~17.8p/kWh
-                  <br />
-                  <span className="text-[10px]">Tariff bands: ~12p / ~25p / ~38p</span>
-                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="text-xs text-muted-foreground cursor-help">
+                        <span className="font-medium text-foreground">Octopus Energy — Cosy (3-rate tariff)</span>
+                        <br />
+                        Typical effective rate: ~{transparency.blendedRate.toFixed(1)}p/kWh
+                        <br />
+                        <span className="text-[10px]">Tariff bands: ~{transparency.cosyOffpeakRate}p / ~{transparency.cosyMidRate}p / ~{transparency.cosyPeakRate}p (varies by region)</span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p className="text-xs">
+                        We model Cosy using a blended rate that reflects when heat pumps actually run — mostly overnight and midday when power is cheapest. For EPC {epcBand}, we assume {Math.round(transparency.cosyCheapShare * 100)}% cheap / {Math.round(transparency.cosyMidShare * 100)}% mid / {Math.round(transparency.cosyPeakShare * 100)}% peak usage.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <Select 
                   value={selectedTariff?.id || ''} 
                   onValueChange={handleTariffChange}
@@ -142,7 +193,7 @@ export function SavingsCard({
                   </SelectContent>
                 </Select>
                 <p className="text-[10px] text-muted-foreground italic">
-                  We model Cosy using a blended rate that reflects when heat pumps actually run — mostly overnight and midday when power is cheapest.
+                  We model Cosy using a blended rate based on when heat pumps typically run (cheap hours + some peak use).
                 </p>
               </div>
 
@@ -223,7 +274,7 @@ export function SavingsCard({
               </CollapsibleTrigger>
               <CollapsibleContent className="pt-2">
                 <p className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
-                  Higher efficiency = more heat per unit of electricity. At 370% (SCOP 3.9), you get 3.9kWh of heat for every 1kWh used. 
+                  Higher efficiency = more heat per unit of electricity. At 370% (SCOP 3.8), you get 3.8kWh of heat for every 1kWh used. 
                   Higher efficiency typically requires more radiator upgrades to run at lower flow temperatures.
                 </p>
               </CollapsibleContent>
@@ -257,19 +308,22 @@ export function SavingsCard({
                   <div className="space-y-2 pt-2 border-t border-border">
                     <p className="font-medium text-foreground">Your estimate is based on:</p>
                     <ul className="list-disc list-inside space-y-1">
-                      <li>EPC band {epcBand} typical heat demand ({results.annualHeatKwh.toLocaleString()} kWh/year{results.oilDemandUplift && results.oilDemandUplift > 1 ? ` including +${Math.round((results.oilDemandUplift - 1) * 100)}% oil home uplift` : ''})</li>
+                      <li>EPC band {epcBand} typical heat demand ({transparency.totalHeatDemand.toLocaleString()} kWh/year)</li>
+                      <li>Heat split: space {Math.round((1 - transparency.dhwShare) * 100)}% / hot water {Math.round(transparency.dhwShare * 100)}%</li>
                       <li>Typical boiler efficiency for {getFuelDisplayName(results.currentFuelType)} ({Math.round(results.boilerEfficiency * 100)}%)</li>
                       <li>Energy prices:
                         <ul className="list-none ml-4 mt-1 space-y-0.5">
                           {results.currentFuelType === 'gas' && <li>– Gas: 5.93p/kWh (Ofgem cap)</li>}
-                          {results.currentFuelType === 'oil' && results.oilPricePerLitre && (
-                            <li>– Oil: £{results.oilPricePerLitre.toFixed(2)} per litre (converted using 10 kWh/litre at {Math.round(results.boilerEfficiency * 100)}% efficiency)</li>
+                          {results.currentFuelType === 'oil' && transparency.oilPricePerLitre && (
+                            <li>– Oil: {transparency.oilPricePerLitre}p per litre (≈ {(transparency.oilPricePerLitre / (transparency.oilKwhPerLitre || 10.35)).toFixed(2)}p/kWh input energy)</li>
                           )}
                           {results.currentFuelType === 'lpg' && <li>– LPG: 10.5p/kWh</li>}
-                          <li>– Electricity: 17.8p/kWh effective on Cosy (blended: 12p/25p/38p)</li>
+                          <li>– Electricity: {transparency.blendedRate.toFixed(1)}p/kWh effective on Cosy</li>
                         </ul>
                       </li>
-                      <li>Heat pump efficiency (SCOP {results.optimisticScop.toFixed(1)})</li>
+                      <li>Selected efficiency target: {Math.round(scop * 100)}% (base SCOP {transparency.baseScop.toFixed(1)})</li>
+                      <li>EPC performance adjustment: ×{transparency.epcScopMultiplier.toFixed(2)} → space SCOP {transparency.scopSpace.toFixed(2)}</li>
+                      <li>Hot water SCOP penalty: ×0.75 → DHW SCOP {transparency.scopDhw.toFixed(2)}</li>
                     </ul>
                     <p className="italic">Your final design and survey confirm exact figures.</p>
                   </div>
@@ -282,14 +336,12 @@ export function SavingsCard({
                     <div className="pb-2 border-b border-border/50">
                       <p className="font-medium text-foreground/80 mb-1 text-[10px] uppercase tracking-wide">Heat demand (EPC {epcBand})</p>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
-                        <span>Annual heat demand:</span>
-                        <span className="font-medium text-foreground text-right">{results.annualHeatKwh.toLocaleString()} kWh/yr</span>
-                        {results.oilDemandUplift && results.oilDemandUplift > 1 && (
-                          <>
-                            <span>Oil home uplift:</span>
-                            <span className="font-medium text-foreground text-right">+{Math.round((results.oilDemandUplift - 1) * 100)}%</span>
-                          </>
-                        )}
+                        <span>Total heat demand:</span>
+                        <span className="font-medium text-foreground text-right">{transparency.totalHeatDemand.toLocaleString()} kWh/yr</span>
+                        <span>Space heating ({Math.round((1 - transparency.dhwShare) * 100)}%):</span>
+                        <span className="font-medium text-foreground text-right">{Math.round(transparency.spaceHeatDemand).toLocaleString()} kWh/yr</span>
+                        <span>Hot water ({Math.round(transparency.dhwShare * 100)}%):</span>
+                        <span className="font-medium text-foreground text-right">{Math.round(transparency.dhwDemand).toLocaleString()} kWh/yr</span>
                       </div>
                     </div>
 
@@ -301,12 +353,14 @@ export function SavingsCard({
                         <span className="font-medium text-foreground text-right">{getFuelDisplayName(results.currentFuelType)}</span>
                         <span>Boiler efficiency:</span>
                         <span className="font-medium text-foreground text-right">{Math.round(results.boilerEfficiency * 100)}%</span>
-                        {results.currentFuelType === 'oil' && results.oilLitresUsed && (
+                        {results.currentFuelType === 'oil' && transparency.oilLitresUsed && (
                           <>
                             <span>Oil consumption:</span>
-                            <span className="font-medium text-foreground text-right">{results.oilLitresUsed.toLocaleString()} litres/yr</span>
+                            <span className="font-medium text-foreground text-right">{Math.round(transparency.oilLitresUsed).toLocaleString()} litres/yr</span>
                             <span>Oil price:</span>
-                            <span className="font-medium text-foreground text-right">£{results.oilPricePerLitre?.toFixed(2)}/litre</span>
+                            <span className="font-medium text-foreground text-right">{transparency.oilPricePerLitre}p/litre</span>
+                            <span>Energy per litre:</span>
+                            <span className="font-medium text-foreground text-right">{transparency.oilKwhPerLitre} kWh</span>
                           </>
                         )}
                         {results.currentFuelType !== 'oil' && (
@@ -324,12 +378,33 @@ export function SavingsCard({
                     <div className="pb-2 border-b border-border/50">
                       <p className="font-medium text-foreground/80 mb-1 text-[10px] uppercase tracking-wide">Heat pump</p>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
-                        <span>System efficiency (SCOP):</span>
-                        <span className="font-medium text-foreground text-right">{results.optimisticScop.toFixed(1)}</span>
-                        <span>Electricity needed:</span>
+                        <span>Space heating SCOP:</span>
+                        <span className="font-medium text-foreground text-right">{transparency.scopSpace.toFixed(2)}</span>
+                        <span>Hot water SCOP:</span>
+                        <span className="font-medium text-foreground text-right">{transparency.scopDhw.toFixed(2)}</span>
+                        <span>Electricity (space):</span>
+                        <span className="font-medium text-foreground text-right">{Math.round(transparency.hpKwhSpace).toLocaleString()} kWh</span>
+                        <span>Electricity (DHW):</span>
+                        <span className="font-medium text-foreground text-right">{Math.round(transparency.hpKwhDhw).toLocaleString()} kWh</span>
+                        <span>Total electricity:</span>
                         <span className="font-medium text-foreground text-right">{results.hpElectricKwh.toLocaleString()} kWh</span>
-                        <span>Cosy tariff rate:</span>
-                        <span className="font-medium text-foreground text-right">17.8p/kWh (blended)</span>
+                      </div>
+                    </div>
+
+                    {/* Cosy tariff */}
+                    <div className="pb-2 border-b border-border/50">
+                      <p className="font-medium text-foreground/80 mb-1 text-[10px] uppercase tracking-wide">Cosy tariff (3-rate)</p>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+                        <span>Off-peak rate:</span>
+                        <span className="font-medium text-foreground text-right">{transparency.cosyOffpeakRate}p/kWh</span>
+                        <span>Mid rate:</span>
+                        <span className="font-medium text-foreground text-right">{transparency.cosyMidRate}p/kWh</span>
+                        <span>Peak rate:</span>
+                        <span className="font-medium text-foreground text-right">{transparency.cosyPeakRate}p/kWh</span>
+                        <span>Usage split (EPC {epcBand}):</span>
+                        <span className="font-medium text-foreground text-right">{Math.round(transparency.cosyCheapShare * 100)}% / {Math.round(transparency.cosyMidShare * 100)}% / {Math.round(transparency.cosyPeakShare * 100)}%</span>
+                        <span>Blended rate:</span>
+                        <span className="font-medium text-foreground text-right">{transparency.blendedRate.toFixed(1)}p/kWh</span>
                         <span>Annual cost:</span>
                         <span className="font-medium text-foreground text-right">{formatCurrency(results.hpCost)}</span>
                       </div>
@@ -340,8 +415,23 @@ export function SavingsCard({
                       <p className="font-medium text-foreground/80 mb-1 text-[10px] uppercase tracking-wide">Estimated savings</p>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
                         <span>Annual savings:</span>
-                        <span className="font-medium text-success text-right">{formatCurrency(Math.max(0, results.estimatedSavings))}</span>
+                        <span className={`font-medium text-right ${isNegativeSavings ? 'text-amber-600 dark:text-amber-400' : 'text-success'}`}>
+                          {isNegativeSavings ? '-' : ''}{formatCurrency(displaySavings)}
+                        </span>
+                        {transparency.savingsWasClamped && (
+                          <>
+                            <span className="text-[10px]">Raw calculation:</span>
+                            <span className="text-[10px] text-right">{formatCurrency(transparency.rawSavingsBeforeClamp)}</span>
+                          </>
+                        )}
                       </div>
+                    </div>
+
+                    {/* Standing charges note */}
+                    <div className="pt-2 border-t border-border">
+                      <p className="text-[10px] italic">
+                        Standing charges excluded from savings comparison (you pay them either way).
+                      </p>
                     </div>
                   </div>
                 </div>
