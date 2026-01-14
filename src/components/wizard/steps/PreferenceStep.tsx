@@ -99,7 +99,6 @@ export function PreferenceStep({
         onClick={onContinue} 
         className="w-full h-12 text-base"
         size="lg"
-        disabled={!selectedPreference}
       >
         Continue →
       </Button>

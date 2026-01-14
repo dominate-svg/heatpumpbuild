@@ -50,7 +50,7 @@ export default function Estimate() {
   const [subStep, setSubStep] = useState<SubStep>('main');
   
   // Configuration state
-  const [preference, setPreference] = useState<'upfront' | 'running' | 'future' | null>(null);
+  const [preference, setPreference] = useState<'upfront' | 'running' | 'future' | null>('running');
   const [selectedTariff, setSelectedTariff] = useState<Tariff | null>(null);
   const [locationAdder, setLocationAdder] = useState<'included' | '6m' | '9m'>('included');
   const [people, setPeople] = useState<'1-2' | '3-4' | '5+'>('3-4');
@@ -62,21 +62,7 @@ export default function Estimate() {
 
   useEffect(() => {
     const stored = sessionStorage.getItem('epcData');
-    if (!stored) {
-      // For development/testing, use mock data if no EPC data exists
-      const mockEpcData: EPCData = {
-        address: '123 Example Street, London',
-        postcode: 'SW1A 1AA',
-        totalFloorArea: 120,
-        epcBand: 'D',
-        mainFuel: 'mains gas',
-        propertyType: 'Semi-detached',
-        region: 'England',
-      };
-      setEpcData(mockEpcData);
-      setCurrentFuel(detectFuelType(mockEpcData.mainFuel));
-      return;
-    }
+    if (!stored) { navigate('/'); return; }
     try {
       const parsed = JSON.parse(stored) as EPCData;
       setEpcData(parsed);
