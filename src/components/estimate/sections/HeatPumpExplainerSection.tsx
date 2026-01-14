@@ -1,4 +1,4 @@
-import { Zap, Flame, ThermometerSun, ArrowRight, ArrowDown } from 'lucide-react';
+import { Zap, Flame, ThermometerSun, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -30,41 +30,39 @@ const EXPLAINER_CARDS = [
 export function HeatPumpExplainerSection({ onContinue }: HeatPumpExplainerSectionProps) {
   return (
     <section className="py-8 sm:py-12 animate-fade-in">
-      {/* Visual diagram - mobile optimized */}
+      {/* Visual diagram - compact on mobile, horizontal layout */}
       <div className="relative mb-6 sm:mb-8">
-        <div className="aspect-[4/3] sm:aspect-video rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden p-4">
-          {/* Simple animated illustration - stacked on mobile */}
-          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6">
+        <div className="rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 overflow-hidden p-4 sm:p-6">
+          {/* Horizontal flow on all screen sizes */}
+          <div className="flex items-center justify-center gap-2 sm:gap-6">
             {/* Outside air */}
-            <div className="text-center">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-blue-100 flex items-center justify-center mb-1 sm:mb-2 animate-pulse">
-                <span className="text-xl sm:text-2xl">🌬️</span>
+            <div className="text-center flex-shrink-0">
+              <div className="w-11 h-11 sm:w-16 sm:h-16 rounded-full bg-blue-100 flex items-center justify-center mb-1 animate-pulse mx-auto">
+                <span className="text-lg sm:text-2xl">🌬️</span>
               </div>
-              <p className="text-[10px] sm:text-xs text-muted-foreground">Outside air</p>
+              <p className="text-[9px] sm:text-xs text-muted-foreground">Outside air</p>
             </div>
             
             {/* Arrow */}
-            <ArrowDown className="w-5 h-5 sm:hidden text-primary animate-pulse" />
-            <ArrowRight className="hidden sm:block w-6 h-6 sm:w-8 sm:h-8 text-primary animate-pulse" />
+            <ArrowRight className="w-4 h-4 sm:w-6 sm:h-6 text-primary animate-pulse flex-shrink-0" />
             
             {/* Heat pump */}
-            <div className="text-center">
-              <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-lg sm:rounded-xl bg-primary/20 flex items-center justify-center mb-1 sm:mb-2">
-                <span className="text-2xl sm:text-3xl">⚡</span>
+            <div className="text-center flex-shrink-0">
+              <div className="w-12 h-12 sm:w-20 sm:h-20 rounded-lg sm:rounded-xl bg-primary/20 flex items-center justify-center mb-1 mx-auto">
+                <span className="text-xl sm:text-3xl">⚡</span>
               </div>
-              <p className="text-[10px] sm:text-xs text-muted-foreground">Heat pump</p>
+              <p className="text-[9px] sm:text-xs text-muted-foreground">Heat pump</p>
             </div>
             
             {/* Arrow */}
-            <ArrowDown className="w-5 h-5 sm:hidden text-primary animate-pulse" />
-            <ArrowRight className="hidden sm:block w-6 h-6 sm:w-8 sm:h-8 text-primary animate-pulse" />
+            <ArrowRight className="w-4 h-4 sm:w-6 sm:h-6 text-primary animate-pulse flex-shrink-0" />
             
             {/* Warm home */}
-            <div className="text-center">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-orange-100 flex items-center justify-center mb-1 sm:mb-2">
-                <span className="text-xl sm:text-2xl">🏠</span>
+            <div className="text-center flex-shrink-0">
+              <div className="w-11 h-11 sm:w-16 sm:h-16 rounded-full bg-orange-100 flex items-center justify-center mb-1 mx-auto">
+                <span className="text-lg sm:text-2xl">🏠</span>
               </div>
-              <p className="text-[10px] sm:text-xs text-muted-foreground">Warm home</p>
+              <p className="text-[9px] sm:text-xs text-muted-foreground">Warm home</p>
             </div>
           </div>
         </div>

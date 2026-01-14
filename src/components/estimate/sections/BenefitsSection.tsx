@@ -36,11 +36,11 @@ const BENEFITS = [
 export function BenefitsSection({ onContinue }: BenefitsSectionProps) {
   return (
     <section className="py-8 sm:py-12 animate-fade-in">
-      {/* Visual - warm home illustration placeholder */}
-      <div className="aspect-[4/3] sm:aspect-video rounded-xl sm:rounded-2xl bg-gradient-to-br from-orange-50 to-purple-50 border border-border mb-6 sm:mb-8 flex items-center justify-center overflow-hidden">
-        <div className="text-center p-6 sm:p-8">
-          <div className="text-5xl sm:text-6xl mb-3 sm:mb-4">🏡</div>
-          <p className="text-base sm:text-lg font-semibold text-foreground mb-1">A warmer, smarter home</p>
+      {/* Visual - warm home illustration - compact on mobile */}
+      <div className="rounded-xl sm:rounded-2xl bg-gradient-to-br from-orange-50 to-purple-50 border border-border mb-6 sm:mb-8 overflow-hidden">
+        <div className="text-center py-6 px-4 sm:py-10 sm:px-8">
+          <div className="text-4xl sm:text-6xl mb-2 sm:mb-4">🏡</div>
+          <p className="text-sm sm:text-lg font-semibold text-foreground mb-0.5 sm:mb-1">A warmer, smarter home</p>
           <p className="text-xs sm:text-sm text-muted-foreground">Future-proof heating that saves you money</p>
         </div>
       </div>
