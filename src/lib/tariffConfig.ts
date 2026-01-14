@@ -338,10 +338,18 @@ export interface TariffCostResult {
   explainer: string;
 }
 
+// Database tariff type for rate overrides
+export interface DatabaseTariff {
+  peak_rate_p_per_kwh: number;
+  offpeak_rate_p_per_kwh: number | null;
+  offpeak_hours_per_day: number | null;
+}
+
 export function calculateTariffCost(
   hpKwhTotal: number,
   epcBand: string,
-  tariffConfig: TariffConfig
+  tariffConfig: TariffConfig,
+  dbTariff?: DatabaseTariff  // Optional: pass actual DB rates to override config
 ): TariffCostResult | undefined {
   // DO NOT calculate for Cosy - it's handled separately
   if (tariffConfig.isCosy) {
@@ -363,8 +371,9 @@ export function calculateTariffCost(
   };
   
   // FLAT tariff
-  if (tariffConfig.type === 'FLAT' && tariffConfig.unit) {
-    const flatRateP = tariffConfig.unit.flatP;
+  if (tariffConfig.type === 'FLAT') {
+    // Use DB rate if available, otherwise fall back to config
+    const flatRateP = dbTariff?.peak_rate_p_per_kwh ?? tariffConfig.unit?.flatP ?? 27.69;
     const annualCost = (hpKwhTotal * flatRateP) / 100;
     
     return {
@@ -377,8 +386,10 @@ export function calculateTariffCost(
   }
   
   // TOU_2_RATE tariff
-  if (tariffConfig.type === 'TOU_2_RATE' && tariffConfig.tou2) {
-    const { offpeakP, peakP, label } = tariffConfig.tou2;
+  if (tariffConfig.type === 'TOU_2_RATE') {
+    // Use DB rates if available, otherwise fall back to config
+    const offpeakP = dbTariff?.offpeak_rate_p_per_kwh ?? tariffConfig.tou2?.offpeakP ?? 12;
+    const peakP = dbTariff?.peak_rate_p_per_kwh ?? tariffConfig.tou2?.peakP ?? 24;
     
     // Get EPC-sensitive split
     let split = tariffConfig.modelling?.defaultSplit || { offpeak: 0.35, peak: 0.65 };
@@ -392,11 +403,15 @@ export function calculateTariffCost(
     const annualCost = ((offpeakKwh * offpeakP) + (peakKwh * peakP)) / 100;
     const blendedRateP = (split.offpeak * offpeakP) + (split.peak * peakP);
     
+    // Generate dynamic label based on actual rates
+    const ratesLabel = `${offpeakP}p off-peak / ${peakP}p peak`;
+    
     return {
       ...baseResult,
+      displayLabel: `${tariffConfig.supplier} — ${tariffConfig.displayName} (${offpeakP}p / ${peakP}p)`,
       annualCost,
       blendedRateP,
-      ratesLabel: label,
+      ratesLabel,
       offpeakShare: split.offpeak,
       peakShare: split.peak,
       offpeakRateP: offpeakP,
@@ -406,7 +421,8 @@ export function calculateTariffCost(
   
   // DYNAMIC tariff
   if (tariffConfig.type === 'DYNAMIC') {
-    const fallbackRate = tariffConfig.modelling?.fallbackBlendedP || 28.0;
+    // For dynamic tariffs, use DB peak rate as approximation if available
+    const fallbackRate = dbTariff?.peak_rate_p_per_kwh ?? tariffConfig.modelling?.fallbackBlendedP ?? 28.0;
     const annualCost = (hpKwhTotal * fallbackRate) / 100;
     
     return {
