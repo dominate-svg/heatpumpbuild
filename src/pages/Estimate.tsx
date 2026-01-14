@@ -62,7 +62,21 @@ export default function Estimate() {
 
   useEffect(() => {
     const stored = sessionStorage.getItem('epcData');
-    if (!stored) { navigate('/'); return; }
+    if (!stored) {
+      // For development/testing, use mock data if no EPC data exists
+      const mockEpcData: EPCData = {
+        address: '123 Example Street, London',
+        postcode: 'SW1A 1AA',
+        totalFloorArea: 120,
+        epcBand: 'D',
+        mainFuel: 'mains gas',
+        propertyType: 'Semi-detached',
+        region: 'England',
+      };
+      setEpcData(mockEpcData);
+      setCurrentFuel(detectFuelType(mockEpcData.mainFuel));
+      return;
+    }
     try {
       const parsed = JSON.parse(stored) as EPCData;
       setEpcData(parsed);
