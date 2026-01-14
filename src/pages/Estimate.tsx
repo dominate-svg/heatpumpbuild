@@ -175,6 +175,17 @@ export default function Estimate() {
 
         {/* Timeline */}
         <Timeline />
+
+        {/* AI Chat Section */}
+        <div className="mt-10 sm:mt-8">
+          <EstimateChat
+            epcData={epcData}
+            results={results}
+            selectedTariff={selectedTariff}
+            currentFuel={currentFuel}
+            scop={scop}
+          />
+        </div>
       </main>
       
       {/* Sticky CTA */}
@@ -183,15 +194,6 @@ export default function Estimate() {
         results={results}
         assumptions={assumptions}
         inputs={inputs}
-      />
-      
-      {/* AI Chat */}
-      <EstimateChat
-        epcData={epcData}
-        results={results}
-        selectedTariff={selectedTariff}
-        currentFuel={currentFuel}
-        scop={scop}
       />
     </div>
   );
