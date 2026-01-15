@@ -24,40 +24,60 @@ function AnimatedNumber({
 }: AnimatedNumberProps) {
   const [displayValue, setDisplayValue] = useState(value);
   const [isAnimating, setIsAnimating] = useState(false);
-  const prevValue = useRef(value);
+  const prevValueRef = useRef(value);
+  const animationRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (prevValue.current !== value) {
-      setIsAnimating(true);
-      
-      // Animate the number change
-      const startValue = prevValue.current;
-      const endValue = value;
-      const duration = 400;
-      const startTime = Date.now();
-      
-      const animate = () => {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
-        
-        setDisplayValue(Math.round(startValue + (endValue - startValue) * eased));
-        
-        if (progress < 1) {
-          requestAnimationFrame(animate);
-        } else {
-          prevValue.current = value;
-          setTimeout(() => setIsAnimating(false), 200);
-        }
-      };
-      
-      requestAnimationFrame(animate);
+    // Always update if value changes
+    if (prevValueRef.current === value) return;
+    
+    // Cancel any existing animation
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
     }
+    
+    setIsAnimating(true);
+    
+    const startValue = prevValueRef.current;
+    const endValue = value;
+    const duration = 400;
+    const startTime = performance.now();
+    
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+      
+      const newValue = Math.round(startValue + (endValue - startValue) * eased);
+      setDisplayValue(newValue);
+      
+      if (progress < 1) {
+        animationRef.current = requestAnimationFrame(animate);
+      } else {
+        prevValueRef.current = value;
+        animationRef.current = null;
+        setTimeout(() => setIsAnimating(false), 200);
+      }
+    };
+    
+    animationRef.current = requestAnimationFrame(animate);
+    
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
   }, [value]);
+
+  // Sync display value on mount or if value changes without animation
+  useEffect(() => {
+    prevValueRef.current = value;
+    setDisplayValue(value);
+  }, []); // Only on mount
 
   return (
     <span className={cn(
-      'transition-colors duration-300',
+      'transition-colors duration-300 inline-block',
       isAnimating && highlightDirection === 'down' && 'text-green-600',
       isAnimating && highlightDirection === 'up' && 'text-amber-600',
     )}>
