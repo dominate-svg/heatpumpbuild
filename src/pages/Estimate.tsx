@@ -8,6 +8,7 @@ import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // Section components
+import { EstimateProgress } from '@/components/estimate/EstimateProgress';
 import { StickyEstimateBar } from '@/components/estimate/StickyEstimateBar';
 import { EducationSection } from '@/components/estimate/sections/EducationSection';
 import { HomeDataSection } from '@/components/estimate/sections/HomeDataSection';
@@ -255,12 +256,19 @@ export default function Estimate() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Progress indicator - fixed at top */}
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border/50 px-4 py-3">
+        <div className="max-w-lg mx-auto">
+          <EstimateProgress currentStep={currentStep} totalSteps={STEPS.length} />
+        </div>
+      </div>
+
       {/* Main content area */}
-      <div className="overflow-y-auto min-h-screen" ref={contentRef}>
+      <div className="overflow-y-auto" ref={contentRef}>
         <div className={cn(
           'max-w-lg mx-auto px-4 sm:px-6',
           // Add bottom padding for sticky bar on mobile
-          showStickyBar ? 'pb-32' : 'pb-6',
+          showStickyBar ? 'pb-36' : 'pb-6',
           // Safe area for iOS
           'pb-[max(2rem,env(safe-area-inset-bottom))]'
         )}>

@@ -129,10 +129,10 @@ export function LocationSection2({
               key={option.value}
               onClick={() => onLocationChange(option.value)}
               className={cn(
-                'w-full p-4 rounded-xl border-2 text-left transition-all duration-150 active:scale-[0.99]',
+                'option-card w-full p-4 rounded-xl border-2 text-left touch-manipulation',
                 'bg-card',
                 isSelected 
-                  ? 'border-primary shadow-md ring-1 ring-primary/20' 
+                  ? 'option-card-selected border-primary' 
                   : 'border-border hover:border-muted-foreground/30'
               )}
             >

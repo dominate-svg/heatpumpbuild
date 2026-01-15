@@ -201,10 +201,10 @@ export function OptimisationSection({
               key={option.id}
               onClick={() => handleSelect(option.id)}
               className={cn(
-                'relative w-full p-4 rounded-2xl border-2 text-left transition-all duration-200',
-                'bg-card active:scale-[0.99]',
+                'option-card relative w-full p-4 rounded-2xl border-2 text-left',
+                'bg-card touch-manipulation',
                 isSelected 
-                  ? 'border-primary shadow-lg ring-2 ring-primary/20' 
+                  ? 'option-card-selected border-primary' 
                   : 'border-border hover:border-muted-foreground/40'
               )}
             >
