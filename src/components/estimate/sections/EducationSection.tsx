@@ -1,5 +1,6 @@
-import { Home, Zap, Thermometer } from 'lucide-react';
+import { Home, Zap, Thermometer, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 interface EducationSectionProps {
   onContinue: () => void;
@@ -24,8 +25,19 @@ const BENEFITS = [
 ];
 
 export function EducationSection({ onContinue }: EducationSectionProps) {
+  const navigate = useNavigate();
+
   return (
     <section className="py-6 sm:py-10 animate-fade-in">
+      {/* Back button */}
+      <button 
+        onClick={() => navigate('/')}
+        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back
+      </button>
+
       {/* Title */}
       <div className="text-center mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
