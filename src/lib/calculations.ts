@@ -1,4 +1,5 @@
 import type { Tariff } from '@/hooks/useTariffs';
+import { calculateTariffOutcome } from './tariffCalculations';
 import { type TariffCostResult, type TariffConfig } from './tariffConfig';
 
 export interface Assumptions {
@@ -121,12 +122,13 @@ const OIL_PENCE_PER_LITRE = 65;
 const OIL_KWH_PER_LITRE = 10.35;
 
 // Cosy tariff structure (3-rate tariff)
-// Cheap windows: ~12p/kWh (8 hours/day)
-// Mid/Standard: ~24p/kWh
-// Peak: ~38p/kWh (4–7pm)
-const COSY_OFFPEAK_RATE = 0.12;  // 12p/kWh
-const COSY_MID_RATE = 0.24;     // 24p/kWh  
-const COSY_PEAK_RATE = 0.38;    // 38p/kWh
+// Cheap windows: 7p/kWh
+// Mid/Standard: 19p/kWh
+// Peak: 40p/kWh (4–7pm)
+// NOTE: These values must match what we show in the UI.
+const COSY_OFFPEAK_RATE = 0.07;  // 7p/kWh
+const COSY_MID_RATE = 0.19;     // 19p/kWh
+const COSY_PEAK_RATE = 0.40;    // 40p/kWh
 
 // Peak share is constant (15% - people still heat at peak)
 const COSY_PEAK_SHARE = 0.15;
@@ -523,33 +525,21 @@ export function calculateEstimate(
   
   if (inputs.tariff && !isCosy) {
     // ============================================
-    // Use ACTUAL database tariff rates directly
-    // This ensures different tariffs produce different results
+    // Non-Cosy tariffs: compute running cost & savings
+    // from the SAME hp kWh + current cost model.
+    // Rate modelling + safety gates live in calculateTariffOutcome.
     // ============================================
-    const tariff = inputs.tariff;
-    const hasOffpeak = tariff.offpeak_hours_per_day > 0 && tariff.offpeak_rate_p_per_kwh !== null;
-    
-    // Get EPC-sensitive off-peak share
-    const offpeakShare = COSY_CHEAP_SHARE_BY_EPC[epcBand] || 0.45;
-    const peakShare = 1 - offpeakShare;
-    
-    let blendedRateP: number;
-    
-    if (hasOffpeak) {
-      // Two-rate TOU tariff: blend off-peak and peak rates
-      const offpeakRateP = tariff.offpeak_rate_p_per_kwh!;
-      const peakRateP = tariff.peak_rate_p_per_kwh;
-      blendedRateP = (offpeakShare * offpeakRateP) + (peakShare * peakRateP);
-    } else {
-      // Flat rate tariff: use peak_rate as flat rate
-      blendedRateP = tariff.peak_rate_p_per_kwh;
-    }
-    
-    // Calculate HP cost with this tariff's blended rate
-    hpCost = (cosySavings.hpKwh * blendedRateP) / 100;
-    const newRawSavings = cosySavings.currentCost - hpCost;
-    
-    // Apply clamp for oil homes
+    const outcome = calculateTariffOutcome(
+      inputs.tariff,
+      epcBand,
+      cosySavings.hpKwh,
+      cosySavings.currentCost
+    );
+
+    hpCost = outcome.heatPumpCostAnnual;
+    const newRawSavings = outcome.annualSavings;
+
+    // Apply clamp for oil homes (existing behaviour)
     let finalSavings = newRawSavings;
     let savingsWasClamped = false;
     if (fuelType === 'oil') {
@@ -558,15 +548,15 @@ export function calculateEstimate(
       savingsWasClamped = clampedValue !== newRawSavings;
       finalSavings = clampedValue;
     }
-    
+
     estimatedSavings = roundToNearest10(finalSavings);
     rawSavings = newRawSavings;
-    
-    // Update transparency with actual tariff info
+
+    // Update transparency with actual tariff info (keep shape stable for UI)
     transparency = {
       ...cosySavings.transparency,
       isCosy: false,
-      blendedRate: blendedRateP,
+      blendedRate: outcome.effectiveRateP,
       rawSavingsBeforeClamp: newRawSavings,
       savingsWasClamped,
       isHighSensitivity: fuelType === 'oil' && finalSavings > 800,
