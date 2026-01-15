@@ -307,7 +307,7 @@ export function EfficiencySection({
       <Button 
         onClick={onContinue}
         size="lg"
-        className="w-full h-12 sm:h-14 text-base sm:text-lg font-semibold rounded-xl active:scale-[0.98] transition-transform"
+        className="w-full h-12 sm:h-14 text-base sm:text-lg font-semibold rounded-xl active:scale-[0.98] transition-all cta-hover-lift"
       >
         Continue
       </Button>
