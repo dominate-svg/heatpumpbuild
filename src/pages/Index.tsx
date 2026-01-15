@@ -243,7 +243,7 @@ export default function Index() {
               <div className="space-y-2 md:space-y-3">
                 <div className="flex items-center gap-2 md:gap-3">
                   <div className="w-14 md:w-20 text-xs md:text-sm text-muted-foreground">12am</div>
-                  <div className="flex-1 h-7 md:h-8 rounded bg-muted-foreground/10 relative overflow-hidden">
+                  <div className="flex-1 h-7 md:h-8 rounded bg-primary/5 relative overflow-hidden">
                     <div className="absolute left-0 top-0 bottom-0 w-[29%] bg-octopus/30 border-l-2 border-r-2 border-octopus flex items-center justify-center">
                       <span className="text-[10px] md:text-xs font-medium text-octopus">4–7am</span>
                     </div>
@@ -251,18 +251,18 @@ export default function Index() {
                 </div>
                 <div className="flex items-center gap-2 md:gap-3">
                   <div className="w-14 md:w-20 text-xs md:text-sm text-muted-foreground">12pm</div>
-                  <div className="flex-1 h-7 md:h-8 rounded bg-muted-foreground/10 relative overflow-hidden">
+                  <div className="flex-1 h-7 md:h-8 rounded bg-primary/5 relative overflow-hidden">
                     <div className="absolute left-[8%] top-0 bottom-0 w-[25%] bg-octopus/30 border-l-2 border-r-2 border-octopus flex items-center justify-center">
                       <span className="text-[10px] md:text-xs font-medium text-octopus">1–4pm</span>
                     </div>
-                    <div className="absolute left-[33%] top-0 bottom-0 w-[25%] bg-muted-foreground/30 flex items-center justify-center">
-                      <span className="text-[10px] md:text-xs font-medium text-muted-foreground">Peak</span>
+                    <div className="absolute left-[33%] top-0 bottom-0 w-[25%] bg-primary/10 flex items-center justify-center">
+                      <span className="text-[10px] md:text-xs font-medium text-primary/70">Peak</span>
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 md:gap-3">
                   <div className="w-14 md:w-20 text-xs md:text-sm text-muted-foreground">Evening</div>
-                  <div className="flex-1 h-7 md:h-8 rounded bg-muted-foreground/10 relative overflow-hidden">
+                  <div className="flex-1 h-7 md:h-8 rounded bg-primary/5 relative overflow-hidden">
                     <div className="absolute right-0 top-0 bottom-0 w-[33%] bg-octopus/30 border-l-2 border-r-2 border-octopus flex items-center justify-center">
                       <span className="text-[10px] md:text-xs font-medium text-octopus">10pm+</span>
                     </div>
@@ -275,7 +275,7 @@ export default function Index() {
                   <span>Half-price</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="inline-block w-2.5 h-2.5 md:w-3 md:h-3 bg-muted-foreground/30 rounded"></span>
+                  <span className="inline-block w-2.5 h-2.5 md:w-3 md:h-3 bg-primary/10 rounded"></span>
                   <span>Peak (4–7pm)</span>
                 </div>
               </div>
