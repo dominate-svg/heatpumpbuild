@@ -305,7 +305,7 @@ export function FinalEstimateSection({
             <>
               <div 
                 ref={scrollRef}
-                className="max-h-[200px] overflow-y-auto p-4"
+                className="max-h-[300px] sm:max-h-[250px] overflow-y-auto p-4"
               >
                 <div className="space-y-3">
                   {messages.map((msg, i) => (
