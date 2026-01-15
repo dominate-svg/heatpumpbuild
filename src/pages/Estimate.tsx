@@ -9,6 +9,7 @@ import { Loader2 } from 'lucide-react';
 // Section components
 import { StickyEstimatePanel } from '@/components/estimate/StickyEstimatePanel';
 import { EducationSection } from '@/components/estimate/sections/EducationSection';
+import { HomeDataSection } from '@/components/estimate/sections/HomeDataSection';
 import { InitialEstimateSection } from '@/components/estimate/sections/InitialEstimateSection';
 import { EfficiencySection } from '@/components/estimate/sections/EfficiencySection';
 import { FineTuneSection } from '@/components/estimate/sections/FineTuneSection';
@@ -24,8 +25,8 @@ function detectFuelType(mainFuel?: string): string {
   return 'gas';
 }
 
-// Simplified 6-step flow: education → initial-estimate → efficiency → finetune → final-estimate → booking
-const STEPS = ['education', 'initial-estimate', 'efficiency', 'finetune', 'final-estimate', 'booking'];
+// 7-step flow: education → home-data → initial-estimate → efficiency → finetune → final-estimate → booking
+const STEPS = ['education', 'home-data', 'initial-estimate', 'efficiency', 'finetune', 'final-estimate', 'booking'];
 
 export default function Estimate() {
   const navigate = useNavigate();
@@ -121,8 +122,11 @@ export default function Estimate() {
     );
   }
 
-  // Show sticky panel after initial estimate (step 2+)
-  const showStickyPanel = currentStep >= 2 && currentStep < STEPS.length - 1;
+  // Show sticky panel after initial estimate (step 3+)
+  const showStickyPanel = currentStep >= 3 && currentStep < STEPS.length - 1;
+
+  // Calculate heat loss for display
+  const heatLossKw = results?.heatLossKw || 8;
 
   const guideContext = { 
     epcBand: epcData.epcBand, 
@@ -136,6 +140,8 @@ export default function Estimate() {
     switch (STEPS[currentStep]) {
       case 'education': 
         return <EducationSection onContinue={goNext} />;
+      case 'home-data':
+        return <HomeDataSection epcData={epcData} heatLossKw={heatLossKw} currentFuel={currentFuel} onEditFuel={() => {}} onContinue={goNext} onBack={goBack} />;
       case 'initial-estimate': 
         return results ? <InitialEstimateSection results={results} currentFuel={currentFuel} onContinue={goNext} onBack={goBack} /> : null;
       case 'efficiency': 

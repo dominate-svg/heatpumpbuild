@@ -1,4 +1,4 @@
-import { Home, Thermometer, Flame, Zap, Check, Pencil, Info } from 'lucide-react';
+import { Home, Thermometer, Flame, Zap, Check, Pencil, Info, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { EPCData } from '@/lib/calculations';
@@ -15,6 +15,7 @@ interface HomeDataSectionProps {
   currentFuel: string;
   onEditFuel: () => void;
   onContinue: () => void;
+  onBack: () => void;
 }
 
 const FUEL_LABELS: Record<string, string> = {
@@ -99,14 +100,24 @@ export function HomeDataSection({
   heatLossKw, 
   currentFuel, 
   onEditFuel, 
-  onContinue 
+  onContinue,
+  onBack,
 }: HomeDataSectionProps) {
   const epcBand = (epcData.epcBand?.toUpperCase() || 'D') as keyof typeof EPC_COLORS;
   const floorArea = epcData.totalFloorArea || 100;
   const epcColor = EPC_COLORS[epcBand] || EPC_COLORS.D;
 
   return (
-    <section className="py-8 sm:py-12 animate-fade-in">
+    <section className="py-6 sm:py-10 animate-fade-in">
+      {/* Back button */}
+      <button 
+        onClick={onBack}
+        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back
+      </button>
+
       {/* Header */}
       <div className="text-center mb-6 sm:mb-8">
         <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-primary/10 mb-3 sm:mb-4">
