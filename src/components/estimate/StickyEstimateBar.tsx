@@ -246,6 +246,11 @@ export function StickyEstimateBar({ results, currentFuel, className }: StickyEst
                     </span>
                   </div>
                 </div>
+                
+                {/* Credibility note */}
+                <p className="text-[10px] text-muted-foreground mt-3 leading-relaxed">
+                  Balanced estimate using national averages & conservative Cosy usage. Survey confirms final costs.
+                </p>
               </div>
             </div>
           </div>

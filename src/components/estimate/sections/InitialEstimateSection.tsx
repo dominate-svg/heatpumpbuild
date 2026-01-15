@@ -117,7 +117,7 @@ export function InitialEstimateSection({
       <div className="flex gap-3 p-3 rounded-xl bg-muted/50 mb-6">
         <Info className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
         <p className="text-sm text-muted-foreground">
-          This estimate is based on your EPC data and national averages. You can fine-tune it next.
+          Balanced estimate using national averages, EPC-based performance, and conservative tariff modelling. Survey confirms final costs.
         </p>
       </div>
 
