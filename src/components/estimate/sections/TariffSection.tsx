@@ -183,19 +183,19 @@ export function TariffSection({
                   )}
                 </div>
 
-                {/* Rate breakdown - MUST MATCH calculations.ts (7p/19p/40p) */}
+                {/* Rate breakdown - Typical rates (12p/24p/38p) */}
                 <div className="grid grid-cols-3 gap-2 text-xs">
                   <div className="p-2 rounded-lg bg-green-50 text-center">
                     <p className="text-[10px] text-green-700 uppercase tracking-wide mb-0.5">Off-peak</p>
-                    <p className="font-bold text-green-700">~7p/kWh</p>
+                    <p className="font-bold text-green-700">~12p/kWh</p>
                   </div>
                   <div className="p-2 rounded-lg bg-amber-50 text-center">
                     <p className="text-[10px] text-amber-700 uppercase tracking-wide mb-0.5">Mid</p>
-                    <p className="font-bold text-amber-700">~19p/kWh</p>
+                    <p className="font-bold text-amber-700">~24p/kWh</p>
                   </div>
                   <div className="p-2 rounded-lg bg-muted text-center">
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Peak</p>
-                    <p className="font-bold text-foreground">~40p/kWh</p>
+                    <p className="font-bold text-foreground">~38p/kWh</p>
                   </div>
                 </div>
                 <p className="text-[10px] text-muted-foreground mt-2 text-center italic">
@@ -236,7 +236,7 @@ export function TariffSection({
               Why we recommend Cosy
             </h3>
             <p className="text-xs text-amber-700 leading-relaxed mb-2">
-              Heat pumps work best overnight when electricity is cheapest. Cosy's ~7p/kWh off-peak rate (vs 24p+ on standard tariffs) means <strong>lower running costs</strong>.
+              Heat pumps work best overnight when electricity is cheapest. Cosy's ~12p/kWh off-peak rate (vs 28p+ on standard tariffs) means <strong>lower running costs</strong>.
             </p>
             <p className="text-[10px] text-amber-600 italic">
               We model Cosy using a blended rate based on when heat pumps typically run (cheap hours + some peak use).
