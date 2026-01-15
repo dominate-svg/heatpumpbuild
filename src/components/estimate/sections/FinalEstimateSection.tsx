@@ -62,131 +62,129 @@ export function FinalEstimateSection({
   const [isLoading, setIsLoading] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const messagesRef = useRef<Message[]>([]);
 
   const savingsPositive = results.estimatedSavings > 0;
   const fuelLabel = FUEL_LABELS[currentFuel] || 'current';
 
   useEffect(() => {
+    messagesRef.current = messages;
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
 
+  const updateLastAssistantMessage = (content: string) => {
+    setMessages(prev => {
+      const updated = [...prev];
+      for (let i = updated.length - 1; i >= 0; i--) {
+        if (updated[i].role === 'assistant') {
+          updated[i] = { role: 'assistant', content };
+          return updated;
+        }
+      }
+      return [...updated, { role: 'assistant', content }];
+    });
+  };
+
   const handleSend = async (question: string) => {
-    if (!question.trim() || isLoading) return;
+    const trimmed = question.trim();
+    if (!trimmed || isLoading) return;
 
     setShowChat(true);
-    const userMessage: Message = { role: 'user', content: question.trim() };
-    setMessages(prev => [...prev, userMessage]);
+
+    const userMessage: Message = { role: 'user', content: trimmed };
+    const conversation = [...messagesRef.current, userMessage];
+
+    // Keep a synced ref so fast-taps on mobile don't lose context.
+    messagesRef.current = conversation;
+
+    // Show the user message immediately.
+    setMessages(conversation);
     setInput('');
     setIsLoading(true);
 
-    try {
-      const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/estimate-chat`;
-      
-      const resp = await fetch(CHAT_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+    // Add an assistant placeholder we can stream into.
+    setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
+
+    const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/estimate-chat`;
+
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      Accept: 'text/event-stream',
+      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+    };
+
+    const buildBody = (stream: boolean) =>
+      JSON.stringify({
+        stream,
+        messages: conversation.map(m => ({ role: m.role, content: m.content })),
+        estimateContext: {
+          ...context,
+          installCostAfterGrant: results.customerContribution,
+          fullPrice: results.grossInstallPrice,
+          annualSavings: results.estimatedSavings,
+          annualHeatingCost: results.hpCost,
+          currentHeatingCost: results.baselineCost,
+          scop: results.scopUsed,
+          currentFuel,
         },
-        body: JSON.stringify({
-          messages: [...messages, userMessage].map(m => ({
-            role: m.role,
-            content: m.content,
-          })),
-          estimateContext: {
-            ...context,
-            installCostAfterGrant: results.customerContribution,
-            fullPrice: results.grossInstallPrice,
-            annualSavings: results.estimatedSavings,
-            annualHeatingCost: results.hpCost,
-            currentHeatingCost: results.baselineCost,
-            scop: results.scopUsed,
-            currentFuel,
-          },
-        }),
       });
+
+    const request = async (stream: boolean) => {
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), 30000);
+      try {
+        return await fetch(CHAT_URL, {
+          method: 'POST',
+          headers,
+          body: buildBody(stream),
+          signal: controller.signal,
+          cache: 'no-store',
+        });
+      } finally {
+        window.clearTimeout(timeoutId);
+      }
+    };
+
+    let assistantContent = '';
+    const pushDelta = (delta: string) => {
+      assistantContent += delta;
+      updateLastAssistantMessage(assistantContent);
+    };
+
+    try {
+      // Try streaming first.
+      let resp = await request(true);
+
+      // Some mobile browsers/proxies strip streaming bodies. Retry non-streaming.
+      if (resp.ok && (!resp.body || typeof resp.body.getReader !== 'function')) {
+        resp = await request(false);
+      }
 
       if (!resp.ok) {
         const errorData = await resp.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to get response');
+        throw new Error(errorData.error || `Failed to get response (${resp.status})`);
       }
 
-      if (!resp.body) throw new Error('No response body');
+      const contentType = resp.headers.get('content-type') || '';
 
-      const reader = resp.body.getReader();
-      const decoder = new TextDecoder();
-      let textBuffer = '';
-      let assistantContent = '';
-
-      // Add empty assistant message that we'll update
-      setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        textBuffer += decoder.decode(value, { stream: true });
-
-        let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf('\n')) !== -1) {
-          let line = textBuffer.slice(0, newlineIndex);
-          textBuffer = textBuffer.slice(newlineIndex + 1);
-
-          if (line.endsWith('\r')) line = line.slice(0, -1);
-          if (line.startsWith(':') || line.trim() === '') continue;
-          if (!line.startsWith('data: ')) continue;
-
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === '[DONE]') break;
-
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) {
-              assistantContent += content;
-              setMessages(prev => {
-                const updated = [...prev];
-                updated[updated.length - 1] = { role: 'assistant', content: assistantContent };
-                return updated;
-              });
-            }
-          } catch {
-            // Incomplete JSON, put it back
-            textBuffer = line + '\n' + textBuffer;
-            break;
-          }
+      if (contentType.includes('text/event-stream') && resp.body) {
+        await streamOpenAITextFromSSE(resp, pushDelta);
+        if (!assistantContent.trim()) {
+          updateLastAssistantMessage("I didn’t receive any text back — please try again.");
         }
+      } else {
+        const data = await resp.json().catch(() => null);
+        const text = extractAssistantMessageFromNonStreamResponse(data) ?? '';
+        updateLastAssistantMessage(text || "I didn’t receive any text back — please try again.");
       }
-
-      // Handle any remaining buffer
-      if (textBuffer.trim()) {
-        for (let raw of textBuffer.split('\n')) {
-          if (!raw || raw.startsWith(':') || !raw.startsWith('data: ')) continue;
-          const jsonStr = raw.slice(6).trim();
-          if (jsonStr === '[DONE]') continue;
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) {
-              assistantContent += content;
-              setMessages(prev => {
-                const updated = [...prev];
-                updated[updated.length - 1] = { role: 'assistant', content: assistantContent };
-                return updated;
-              });
-            }
-          } catch { /* ignore */ }
-        }
-      }
-
     } catch (error) {
       console.error('Chat error:', error);
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: "I'm having trouble answering right now. Feel free to book a call and we can discuss in person." 
-      }]);
+      updateLastAssistantMessage(
+        "I'm having trouble answering right now. Feel free to book a call and we can discuss in person.",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -293,8 +291,9 @@ export function FinalEstimateSection({
                 {STARTER_QUESTIONS.map((q) => (
                   <button
                     key={q}
+                    type="button"
                     onClick={() => handleSend(q)}
-                    className="text-left px-3 py-2 rounded-lg bg-muted/50 hover:bg-muted active:bg-muted text-sm text-foreground transition-colors"
+                    className="touch-manipulation text-left px-3 py-2 rounded-lg bg-muted/50 hover:bg-muted active:bg-muted text-sm text-foreground transition-colors"
                   >
                     {q}
                   </button>

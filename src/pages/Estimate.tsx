@@ -158,7 +158,7 @@ export default function Estimate() {
   return (
     <div className="min-h-screen bg-background">
       <div className="overflow-y-auto min-h-screen" ref={contentRef}>
-        <div className="max-w-lg mx-auto px-4 sm:px-6 pb-32 lg:pb-6">
+        <div className="max-w-lg mx-auto px-4 sm:px-6 pb-[calc(8rem+env(safe-area-inset-bottom,0px))] lg:pb-6">
           {renderSection()}
         </div>
       </div>

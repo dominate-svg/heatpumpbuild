@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
 import type { EPCData, EstimateResults } from '@/lib/calculations';
 import type { Tariff } from '@/hooks/useTariffs';
+import { streamOpenAITextFromSSE, extractAssistantMessageFromNonStreamResponse } from '@/lib/sse';
 
 type Message = { role: 'user' | 'assistant'; content: string };
 
@@ -103,63 +104,65 @@ export function EstimateChat({ epcData, results, selectedTariff, currentFuel, sc
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Accept: 'text/event-stream',
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
         body: JSON.stringify({
+          stream: true,
           messages: newMessages,
           estimateContext: buildEstimateContext(),
         }),
+        cache: 'no-store',
       });
 
-      if (!resp.ok) {
-        const errorData = await resp.json().catch(() => ({}));
-        throw new Error(errorData.error || `Error ${resp.status}`);
+      // Some mobile browsers/proxies strip streaming bodies. Retry non-streaming.
+      let finalResp = resp;
+      if (resp.ok && (!resp.body || typeof resp.body.getReader !== 'function')) {
+        finalResp = await fetch(CHAT_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            stream: false,
+            messages: newMessages,
+            estimateContext: buildEstimateContext(),
+          }),
+          cache: 'no-store',
+        });
       }
 
-      if (!resp.body) throw new Error('No response body');
-
-      const reader = resp.body.getReader();
-      const decoder = new TextDecoder();
-      let textBuffer = '';
+      if (!finalResp.ok) {
+        const errorData = await finalResp.json().catch(() => ({}));
+        throw new Error(errorData.error || `Error ${finalResp.status}`);
+      }
 
       // Add empty assistant message to start streaming into
       setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        textBuffer += decoder.decode(value, { stream: true });
+      const contentType = finalResp.headers.get('content-type') || '';
 
-        let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf('\n')) !== -1) {
-          let line = textBuffer.slice(0, newlineIndex);
-          textBuffer = textBuffer.slice(newlineIndex + 1);
-
-          if (line.endsWith('\r')) line = line.slice(0, -1);
-          if (line.startsWith(':') || line.trim() === '') continue;
-          if (!line.startsWith('data: ')) continue;
-
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === '[DONE]') break;
-
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content;
-            if (content) {
-              assistantContent += content;
-              setMessages(prev => {
-                const updated = [...prev];
-                updated[updated.length - 1] = { role: 'assistant', content: assistantContent };
-                return updated;
-              });
-            }
-          } catch {
-            // Incomplete JSON, put back and wait
-            textBuffer = line + '\n' + textBuffer;
-            break;
-          }
-        }
+      if (contentType.includes('text/event-stream') && finalResp.body) {
+        await streamOpenAITextFromSSE(finalResp, (delta) => {
+          assistantContent += delta;
+          setMessages(prev => {
+            const updated = [...prev];
+            updated[updated.length - 1] = { role: 'assistant', content: assistantContent };
+            return updated;
+          });
+        });
+      } else {
+        const data = await finalResp.json().catch(() => null);
+        const text = extractAssistantMessageFromNonStreamResponse(data) ?? '';
+        assistantContent = text;
+        setMessages(prev => {
+          const updated = [...prev];
+          updated[updated.length - 1] = { role: 'assistant', content: assistantContent };
+          return updated;
+        });
       }
     } catch (error) {
       console.error('Chat error:', error);
