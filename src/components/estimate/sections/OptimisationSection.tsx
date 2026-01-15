@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Check, ChevronDown, ArrowLeft, Settings, Info, PiggyBank } from 'lucide-react';
+import { Check, ChevronDown, ArrowLeft, Zap, Info, PiggyBank, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
@@ -24,6 +24,7 @@ type OptLevel = 'simple' | 'balanced' | 'optimised';
 interface OptOption {
   id: OptLevel;
   scop: number;
+  efficiency: number; // percentage (340, 370, 400)
   label: string;
   tag: string;
   tagType: 'neutral' | 'popular' | 'savings';
@@ -34,28 +35,32 @@ const OPT_OPTIONS: OptOption[] = [
   {
     id: 'simple',
     scop: 3.4,
+    efficiency: 340,
     label: 'Simple setup',
     tag: 'Lowest upfront',
     tagType: 'neutral',
-    description: 'We change as little as possible. Lowest install cost, slightly higher bills.',
+    description: 'Minimal changes. Lower install cost but higher running bills.',
   },
   {
     id: 'balanced',
     scop: 3.7,
+    efficiency: 370,
     label: 'Balanced upgrade',
     tag: 'Recommended',
     tagType: 'popular',
-    description: 'A few upgrades to reduce your bills without big changes.',
+    description: 'Best value. A few upgrades for noticeably lower bills.',
   },
   {
     id: 'optimised',
     scop: 4.0,
+    efficiency: 400,
     label: 'Fully optimised',
     tag: 'Lowest bills',
     tagType: 'savings',
-    description: 'More upgrades now for the lowest possible bills long-term.',
+    description: 'Maximum efficiency. Higher upfront but lowest bills long-term.',
   },
 ];
+
 export function OptimisationSection({ 
   scop, 
   onScopChange,
@@ -134,7 +139,7 @@ export function OptimisationSection({
       {/* Icon */}
       <div className="flex justify-center mb-4">
         <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
-          <Settings className="w-7 h-7 text-primary" />
+          <Zap className="w-7 h-7 text-primary" />
         </div>
       </div>
 
@@ -142,7 +147,7 @@ export function OptimisationSection({
       <div className="text-center mb-2">
         <div className="flex items-center justify-center gap-2">
           <h2 className="text-xl sm:text-2xl font-bold text-foreground">
-            How optimised should your system be?
+            Choose your efficiency level
           </h2>
           <TooltipProvider>
             <Tooltip>
@@ -153,10 +158,10 @@ export function OptimisationSection({
               </TooltipTrigger>
               <TooltipContent className="max-w-xs">
                 <div className="space-y-2 text-xs">
-                  <p className="font-semibold">Why we ask this</p>
-                  <p>A more optimised system runs more efficiently, lowering your electricity bills but requiring more upfront investment.</p>
-                  <p className="font-semibold pt-1">How we calculate this</p>
-                  <p>We use your heat loss, EPC rating, and radiator sizing to determine what upgrades would improve efficiency.</p>
+                  <p className="font-semibold">What is efficiency?</p>
+                  <p>Efficiency (SCOP) measures how much heat you get per £1 of electricity. 370% means £1 of electricity produces £3.70 worth of heat.</p>
+                  <p className="font-semibold pt-1">Higher efficiency = lower bills</p>
+                  <p>But may require upgrading some radiators to work at lower water temperatures.</p>
                 </div>
               </TooltipContent>
             </Tooltip>
@@ -165,9 +170,25 @@ export function OptimisationSection({
       </div>
 
       {/* Subtitle */}
-      <p className="text-center text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
-        This affects how much we upgrade to lower your bills.
+      <p className="text-center text-sm text-muted-foreground mb-4 max-w-sm mx-auto">
+        Higher efficiency means lower bills. We'll recommend upgrades to achieve it.
       </p>
+
+      {/* Educational callout */}
+      <div className="bg-gradient-to-r from-primary/5 to-green-50 border border-primary/10 rounded-xl p-3.5 mb-5">
+        <div className="flex items-start gap-3">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <TrendingUp className="w-4 h-4 text-primary" />
+          </div>
+          <div className="text-sm">
+            <p className="font-medium text-foreground mb-0.5">How efficiency works</p>
+            <p className="text-muted-foreground text-xs leading-relaxed">
+              At <strong className="text-foreground">370% efficiency</strong>, every £1 of electricity produces £3.70 of heat. 
+              Higher efficiency = less electricity needed = <strong className="text-green-700">lower bills</strong>.
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* Option cards */}
       <div className="space-y-3 mb-5">
@@ -175,15 +196,18 @@ export function OptimisationSection({
           const isSelected = selectedLevel === option.id;
           const values = optionValues?.[option.id];
           
+          // Efficiency bar percentage (340-400 mapped to 0-100%)
+          const efficiencyPercent = ((option.efficiency - 300) / 120) * 100;
+          
           return (
             <button
               key={option.id}
               onClick={() => handleSelect(option.id)}
               className={cn(
-                'option-card relative w-full p-4 rounded-2xl border-2 text-left',
+                'option-card relative w-full p-4 rounded-2xl border-2 text-left transition-all',
                 'bg-card touch-manipulation',
                 isSelected 
-                  ? 'option-card-selected border-primary' 
+                  ? 'option-card-selected border-primary ring-2 ring-primary/20' 
                   : 'border-border hover:border-muted-foreground/40'
               )}
             >
@@ -200,7 +224,7 @@ export function OptimisationSection({
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <h3 className="font-semibold text-foreground text-base">
                       {option.label}
                     </h3>
@@ -213,6 +237,36 @@ export function OptimisationSection({
                       {option.tag}
                     </span>
                   </div>
+
+                  {/* Efficiency indicator - prominent */}
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <Zap className={cn(
+                        'w-4 h-4',
+                        option.efficiency >= 400 ? 'text-green-600' :
+                        option.efficiency >= 370 ? 'text-primary' : 'text-muted-foreground'
+                      )} />
+                      <span className={cn(
+                        'text-lg font-bold tabular-nums',
+                        option.efficiency >= 400 ? 'text-green-600' :
+                        option.efficiency >= 370 ? 'text-primary' : 'text-foreground'
+                      )}>
+                        {option.efficiency}%
+                      </span>
+                      <span className="text-xs text-muted-foreground">efficiency</span>
+                    </div>
+                    {/* Mini efficiency bar */}
+                    <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden max-w-20">
+                      <div 
+                        className={cn(
+                          'h-full rounded-full transition-all duration-300',
+                          option.efficiency >= 400 ? 'bg-green-500' :
+                          option.efficiency >= 370 ? 'bg-primary' : 'bg-muted-foreground/50'
+                        )}
+                        style={{ width: `${efficiencyPercent}%` }}
+                      />
+                    </div>
+                  </div>
                   
                   <p className="text-sm text-muted-foreground mb-3 leading-relaxed">
                     {option.description}
@@ -220,27 +274,53 @@ export function OptimisationSection({
 
                   {/* Price impact badges - exact numbers */}
                   {values && (
-                    <div className="flex items-center gap-2.5 text-xs flex-wrap">
-                      <span className={cn(
-                        'px-2.5 py-1.5 rounded-lg font-bold tabular-nums',
-                        values.installDiff === 0 
-                          ? 'bg-green-50 text-green-700' 
-                          : 'bg-amber-50 text-amber-700'
-                      )}>
-                        {values.installDiff === 0 ? '+£0 install' : `+£${values.installDiff.toLocaleString()} install`}
-                      </span>
-                      {/* Prominent savings badge with icon */}
-                      <span className={cn(
-                        'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold tabular-nums',
+                    <div className="flex flex-col gap-2">
+                      {/* Upfront cost badge */}
+                      <div className="flex items-center gap-2.5 text-xs flex-wrap">
+                        <span className={cn(
+                          'px-2.5 py-1.5 rounded-lg font-bold tabular-nums',
+                          values.installDiff === 0 
+                            ? 'bg-green-50 text-green-700' 
+                            : 'bg-amber-50 text-amber-700'
+                        )}>
+                          {values.installDiff === 0 ? '+£0 upfront' : `+£${values.installDiff.toLocaleString()} upfront`}
+                        </span>
+                      </div>
+                      
+                      {/* Prominent annual savings badge */}
+                      <div className={cn(
+                        'flex items-center gap-2 px-3 py-2 rounded-xl',
                         values.savings > 0 
-                          ? 'bg-green-100 text-green-700 ring-1 ring-green-200' 
-                          : 'bg-amber-100 text-amber-700 ring-1 ring-amber-200'
+                          ? 'bg-gradient-to-r from-green-100 to-green-50 border border-green-200' 
+                          : 'bg-gradient-to-r from-amber-100 to-amber-50 border border-amber-200'
                       )}>
-                        <PiggyBank className="w-3.5 h-3.5" />
-                        {values.savings > 0 
-                          ? `Save £${values.savings.toLocaleString()}/yr` 
-                          : `£${Math.abs(values.savings).toLocaleString()}/yr extra`}
-                      </span>
+                        <div className={cn(
+                          'w-8 h-8 rounded-lg flex items-center justify-center',
+                          values.savings > 0 ? 'bg-green-200/50' : 'bg-amber-200/50'
+                        )}>
+                          <PiggyBank className={cn(
+                            'w-4 h-4',
+                            values.savings > 0 ? 'text-green-700' : 'text-amber-700'
+                          )} />
+                        </div>
+                        <div className="flex-1">
+                          <p className={cn(
+                            'text-lg font-bold tabular-nums leading-tight',
+                            values.savings > 0 ? 'text-green-700' : 'text-amber-700'
+                          )}>
+                            {values.savings > 0 
+                              ? `Save £${values.savings.toLocaleString()}` 
+                              : `£${Math.abs(values.savings).toLocaleString()} extra`}
+                            <span className="text-sm font-semibold">/year</span>
+                          </p>
+                          <p className={cn(
+                            'text-[10px]',
+                            values.savings > 0 ? 'text-green-600' : 'text-amber-600'
+                          )}>
+                            {values.savings > 0 ? 'on your energy bills' : 'on your energy bills'}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -253,7 +333,7 @@ export function OptimisationSection({
       {/* Collapsible explainer */}
       <Collapsible open={explainerOpen} onOpenChange={setExplainerOpen} className="mb-6">
         <CollapsibleTrigger className="flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 transition-colors mx-auto group">
-          <span>How does this work?</span>
+          <span>Learn more about efficiency</span>
           <ChevronDown className={cn(
             'w-4 h-4 transition-transform duration-200',
             explainerOpen && 'rotate-180'
@@ -261,14 +341,21 @@ export function OptimisationSection({
         </CollapsibleTrigger>
         <CollapsibleContent className="mt-4 overflow-hidden data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
           <div className="bg-muted/50 rounded-xl p-4 text-sm space-y-3">
+            <div className="flex items-center gap-2 mb-2">
+              <Zap className="w-5 h-5 text-primary" />
+              <span className="font-semibold text-foreground">What is SCOP/efficiency?</span>
+            </div>
             <p className="text-muted-foreground leading-relaxed">
-              A more efficient heat pump uses less electricity to produce the same warmth — like a car that goes further on the same tank of fuel.
+              <strong className="text-foreground">SCOP (Seasonal Coefficient of Performance)</strong> measures how efficiently a heat pump converts electricity into heat over a year.
             </p>
             <p className="text-muted-foreground leading-relaxed">
-              To run more efficiently, we may recommend larger radiators that transfer heat better at lower temperatures. This costs more upfront but saves money every year.
+              A heat pump with <strong className="text-foreground">370% efficiency (SCOP 3.7)</strong> produces 3.7 kWh of heat for every 1 kWh of electricity — that's <strong className="text-green-700">3.7× more energy out than you put in</strong>.
             </p>
-            <p className="text-foreground font-medium">
-              We'll confirm exactly what's needed during your design visit.
+            <p className="text-muted-foreground leading-relaxed">
+              To achieve higher efficiency, heat pumps run at lower water temperatures. This sometimes requires <strong className="text-foreground">larger radiators</strong> so your home stays just as warm.
+            </p>
+            <p className="text-foreground font-medium pt-1">
+              We'll confirm exactly what's needed during your home survey.
             </p>
           </div>
         </CollapsibleContent>
