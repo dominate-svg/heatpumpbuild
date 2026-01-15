@@ -18,7 +18,8 @@ const STEP_LABELS = [
 ];
 
 export function EstimateProgress({ currentStep, totalSteps, className }: EstimateProgressProps) {
-  const progress = ((currentStep + 1) / totalSteps) * 100;
+  // Align the filled bar with the active dot positions (which are evenly spaced between 0% and 100%).
+  const progress = totalSteps <= 1 ? 100 : (currentStep / (totalSteps - 1)) * 100;
   
   return (
     <div className={cn('w-full', className)}>
