@@ -101,51 +101,51 @@ export function StickyEstimateBar({ results, currentFuel, className }: StickyEst
       {/* Backdrop when expanded */}
       {isExpanded && (
         <div 
-          className="fixed inset-0 bg-black/30 z-40 lg:hidden backdrop-blur-sm"
+          className="fixed inset-0 bg-black/30 z-40 backdrop-blur-sm"
           onClick={() => setIsExpanded(false)}
         />
       )}
       
-      {/* Panel - mobile bottom, desktop right side */}
+      {/* Panel - mobile bottom (compact), desktop top-right corner */}
       <div 
         className={cn(
           'fixed z-50 bg-card border shadow-xl transition-all duration-300',
-          // Mobile: bottom bar
-          'bottom-0 left-0 right-0 border-t rounded-t-2xl',
-          // Desktop: right side panel
-          'lg:left-auto lg:right-6 lg:top-1/2 lg:-translate-y-1/2 lg:bottom-auto lg:w-72 lg:rounded-2xl lg:border',
-          isExpanded && 'rounded-t-2xl',
+          // Mobile: compact bottom bar with safe spacing
+          'bottom-0 left-0 right-0 border-t rounded-t-xl',
+          // Desktop: top-right corner, below header
+          'lg:left-auto lg:right-4 lg:top-20 lg:bottom-auto lg:w-64 lg:rounded-xl lg:border lg:shadow-lg',
+          isExpanded && 'rounded-t-xl lg:rounded-xl',
           className
         )}
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
-        {/* Header - always visible */}
+        {/* Header - always visible, compact on mobile */}
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full px-4 py-3 lg:py-4 flex items-center justify-between active:bg-muted/50 transition-colors"
+          className="w-full px-3 py-2 lg:px-4 lg:py-3 flex items-center justify-between active:bg-muted/50 transition-colors"
         >
           <div className="flex-1 text-left">
-            <p className="text-[10px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1">
-              Current estimate
+            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-0.5 lg:mb-1">
+              Your estimate
             </p>
-            <div className="flex items-center gap-3 lg:flex-col lg:items-start lg:gap-1">
+            <div className="flex items-center gap-2 sm:gap-3 lg:flex-col lg:items-start lg:gap-1">
               <div className="flex items-baseline gap-1">
-                <span className="text-xl lg:text-2xl font-bold text-foreground">
+                <span className="text-lg sm:text-xl lg:text-xl font-bold text-foreground">
                   <AnimatedNumber value={results.customerContribution} highlightDirection="up" />
                 </span>
-                <span className="text-[10px] text-muted-foreground">after grant</span>
+                <span className="text-[9px] sm:text-[10px] text-muted-foreground">after grant</span>
               </div>
               
               <div className={cn(
-                'flex items-center gap-1',
+                'flex items-center gap-0.5',
                 savingsPositive ? 'text-green-600' : 'text-amber-600'
               )}>
                 {savingsPositive ? (
-                  <TrendingDown className="w-3.5 h-3.5" />
+                  <TrendingDown className="w-3 h-3" />
                 ) : (
-                  <TrendingUp className="w-3.5 h-3.5" />
+                  <TrendingUp className="w-3 h-3" />
                 )}
-                <span className="text-sm font-bold tabular-nums">
+                <span className="text-xs sm:text-sm font-bold tabular-nums">
                   <AnimatedNumber 
                     value={Math.abs(results.estimatedSavings)} 
                     prefix={savingsPositive ? '−£' : '+£'}
@@ -157,8 +157,8 @@ export function StickyEstimateBar({ results, currentFuel, className }: StickyEst
             </div>
           </div>
           
-          <div className="flex items-center gap-2 text-muted-foreground ml-4">
-            <span className="text-xs font-medium">Details</span>
+          <div className="flex items-center gap-1 text-muted-foreground ml-2">
+            <span className="text-[10px] sm:text-xs font-medium hidden sm:inline">Details</span>
             {isExpanded ? (
               <ChevronDown className="w-4 h-4" />
             ) : (
