@@ -6,22 +6,27 @@
 import type { Tariff } from '@/hooks/useTariffs';
 
 // ============================================
-// OFF-PEAK SHARE BY EPC BAND
-// Represents what % of heat pump usage happens during off-peak hours
-// Better insulated homes = more flexibility to shift load
+// TARIFF USAGE SHARES
+// Fixed shares based on tariff type (not EPC-dependent)
 // ============================================
-const OFFPEAK_SHARE_BY_EPC: Record<string, number> = {
-  'A': 0.60,
-  'B': 0.60,
-  'C': 0.55,
-  'D': 0.50,
-  'E': 0.45,
-  'F': 0.40,
-  'G': 0.35,
+
+// Cosy 3-rate tariff shares (optimized for heat pump scheduling)
+const COSY_SHARES = {
+  offpeak: 0.65,  // 6+ hours overnight cheap
+  mid: 0.10,      // Midday/afternoon
+  peak: 0.25,     // 4-7pm expensive window
 };
 
-// For 3-rate tariffs (Cosy), peak share is fixed
-const THREE_RATE_PEAK_SHARE = 0.15;
+// 2-rate TOU tariff shares (less off-peak opportunity)
+const TWO_RATE_SHARES = {
+  offpeak: 0.40,
+  peak: 0.60,
+};
+
+// Flat rate: all usage at single rate
+const FLAT_SHARES = {
+  peak: 1.0,
+};
 
 // ============================================
 // COSY RATES (3-rate tariff) - Typical national rates
@@ -57,9 +62,6 @@ export interface TariffOutcome {
  * @param currentHeatingCostAnnual - Current fuel cost in £/year
  * @returns TariffOutcome with all calculated values
  */
-// Gas off-peak share nudge (gas homes have more predictable patterns)
-const GAS_OFFPEAK_SHARE_NUDGE = 0.05;
-const GAS_OFFPEAK_SHARE_MAX = 0.65;
 
 export function calculateTariffOutcome(
   tariff: Tariff,
@@ -68,19 +70,10 @@ export function calculateTariffOutcome(
   currentHeatingCostAnnual: number,
   fuelType?: string
 ): TariffOutcome {
-  const normalizedEpc = (epcBand || 'D').toUpperCase().charAt(0);
-  const validEpc = ['A', 'B', 'C', 'D', 'E', 'F', 'G'].includes(normalizedEpc) ? normalizedEpc : 'D';
-  
   const isCosy = tariff.name.toLowerCase().includes('cosy');
-  let offpeakShare = OFFPEAK_SHARE_BY_EPC[validEpc] || 0.45;
-  
-  // Apply gas off-peak share nudge (gas homes only)
-  // Do NOT apply to oil/LPG
-  if (fuelType === 'gas') {
-    offpeakShare = Math.min(offpeakShare + GAS_OFFPEAK_SHARE_NUDGE, GAS_OFFPEAK_SHARE_MAX);
-  }
   
   let effectiveRateP: number;
+  let offpeakShare: number;
   let peakShare: number;
   let midShare: number | undefined;
   let offpeakRateP: number | undefined;
@@ -89,16 +82,17 @@ export function calculateTariffOutcome(
   
   if (isCosy) {
     // ============================================
-    // COSY: 3-rate tariff - use hardcoded rates
-    // DO NOT MODIFY COSY LOGIC
+    // COSY: 3-rate tariff - fixed shares + modelled rates
     // ============================================
-    peakShare = THREE_RATE_PEAK_SHARE;
-    midShare = 1 - offpeakShare - peakShare;
+    offpeakShare = COSY_SHARES.offpeak;
+    midShare = COSY_SHARES.mid;
+    peakShare = COSY_SHARES.peak;
     
     offpeakRateP = COSY_OFFPEAK_RATE_P;
     midRateP = COSY_MID_RATE_P;
     peakRateP = COSY_PEAK_RATE_P;
     
+    // Weighted average: (0.65 × 12) + (0.10 × 24) + (0.25 × 38) = 19.7p
     effectiveRateP = 
       (offpeakShare * offpeakRateP) +
       (midShare * midRateP) +
@@ -106,10 +100,10 @@ export function calculateTariffOutcome(
       
   } else if (tariff.offpeak_hours_per_day > 0 && tariff.offpeak_rate_p_per_kwh !== null) {
     // ============================================
-    // TWO-RATE TOU TARIFF (has off-peak window)
-    // Use actual database rates
+    // TWO-RATE TOU TARIFF - fixed 40/60 split
     // ============================================
-    peakShare = 1 - offpeakShare;
+    offpeakShare = TWO_RATE_SHARES.offpeak;
+    peakShare = TWO_RATE_SHARES.peak;
     
     offpeakRateP = tariff.offpeak_rate_p_per_kwh;
     peakRateP = tariff.peak_rate_p_per_kwh;
@@ -120,30 +114,30 @@ export function calculateTariffOutcome(
       
   } else {
     // ============================================
-    // FLAT RATE TARIFF (no off-peak window)
-    // Use peak_rate as the flat rate
+    // FLAT RATE TARIFF - all at single rate
     // ============================================
-    peakShare = 1;
+    offpeakShare = 0;
+    peakShare = FLAT_SHARES.peak;
     effectiveRateP = tariff.peak_rate_p_per_kwh;
     peakRateP = tariff.peak_rate_p_per_kwh;
   }
   
-  // Calculate annual costs
+  // Calculate annual heat pump running cost
   const heatPumpCostAnnual = (heatPumpKwhAnnual * effectiveRateP) / 100;
+  
+  // Calculate savings vs current fuel
   const annualSavings = currentHeatingCostAnnual - heatPumpCostAnnual;
   
-  // Dev logging (remove in production by checking for dev mode)
+  // Dev logging
   if (typeof window !== 'undefined' && (window as any).__DEV_TARIFF_DEBUG__) {
     console.log('[Tariff Debug]', {
       tariff: `${tariff.supplier} - ${tariff.name}`,
       effectiveRateP: effectiveRateP.toFixed(2),
       heatPumpCostAnnual: heatPumpCostAnnual.toFixed(0),
       annualSavings: annualSavings.toFixed(0),
-      offpeakShare,
-      peakShare,
-      midShare,
+      shares: { offpeakShare, midShare, peakShare },
       rates: { offpeakRateP, midRateP, peakRateP },
-      inputs: { heatPumpKwhAnnual, currentHeatingCostAnnual, epcBand: validEpc },
+      inputs: { heatPumpKwhAnnual, currentHeatingCostAnnual },
     });
   }
   

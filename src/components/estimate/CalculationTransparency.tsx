@@ -192,7 +192,7 @@ export function CalculationTransparency({ results, currentFuel }: CalculationTra
               </div>
             </div>
             <div className="bg-background rounded-lg p-2 text-xs mt-2">
-              <span className="text-muted-foreground">Usage split for EPC {epcBand}:</span>
+              <span className="text-muted-foreground">Usage split:</span>
               <span className="font-medium text-foreground ml-2">
                 {offpeakSharePercent}% off-peak / {midSharePercent}% mid / {peakSharePercent}% peak
               </span>
