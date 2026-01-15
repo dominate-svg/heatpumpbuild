@@ -10,7 +10,7 @@ import { Loader2 } from 'lucide-react';
 import { StickyEstimatePanel } from '@/components/estimate/StickyEstimatePanel';
 import { EducationSection } from '@/components/estimate/sections/EducationSection';
 import { HomeDataSection } from '@/components/estimate/sections/HomeDataSection';
-import { InitialEstimateSection } from '@/components/estimate/sections/InitialEstimateSection';
+
 import { EfficiencySection } from '@/components/estimate/sections/EfficiencySection';
 import { FineTuneSection } from '@/components/estimate/sections/FineTuneSection';
 import { FinalEstimateSection } from '@/components/estimate/sections/FinalEstimateSection';
@@ -25,8 +25,8 @@ function detectFuelType(mainFuel?: string): string {
   return 'gas';
 }
 
-// 7-step flow: education → home-data → initial-estimate → efficiency → finetune → final-estimate → booking
-const STEPS = ['education', 'home-data', 'initial-estimate', 'efficiency', 'finetune', 'final-estimate', 'booking'];
+// 6-step flow: education → home-data → efficiency → finetune → final-estimate → booking
+const STEPS = ['education', 'home-data', 'efficiency', 'finetune', 'final-estimate', 'booking'];
 
 export default function Estimate() {
   const navigate = useNavigate();
@@ -122,8 +122,8 @@ export default function Estimate() {
     );
   }
 
-  // Show sticky panel after initial estimate (step 3+)
-  const showStickyPanel = currentStep >= 3 && currentStep < STEPS.length - 1;
+  // Show sticky panel from efficiency step onwards (step 2+), but not on booking
+  const showStickyPanel = currentStep >= 2 && currentStep < STEPS.length - 1;
 
   // Calculate heat loss for display
   const heatLossKw = results?.heatLossKw || 8;
@@ -142,8 +142,6 @@ export default function Estimate() {
         return <EducationSection onContinue={goNext} />;
       case 'home-data':
         return <HomeDataSection epcData={epcData} heatLossKw={heatLossKw} currentFuel={currentFuel} onEditFuel={() => {}} onContinue={goNext} onBack={goBack} />;
-      case 'initial-estimate': 
-        return results ? <InitialEstimateSection results={results} currentFuel={currentFuel} onContinue={goNext} onBack={goBack} /> : null;
       case 'efficiency': 
         return assumptions ? <EfficiencySection scop={scop} onScopChange={setScop} results={results} baseResults={baseResults} assumptions={assumptions} onContinue={goNext} onBack={goBack} /> : null;
       case 'finetune': 
