@@ -11,9 +11,11 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, estimateContext } = await req.json();
+    const { messages, estimateContext, stream } = await req.json();
+    const shouldStream = stream !== false;
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    
+
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
@@ -60,8 +62,6 @@ Want me to explain how we worked out any of these numbers?"
 
 If you're not sure about something specific to their home, suggest a survey will confirm the details. Keep it real and helpful!`;
 
-
-
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -70,11 +70,8 @@ If you're not sure about something specific to their home, suggest a survey will
       },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...messages,
-        ],
-        stream: true,
+        messages: [{ role: "system", content: systemPrompt }, ...messages],
+        stream: shouldStream,
       }),
     });
 
@@ -82,31 +79,46 @@ If you're not sure about something specific to their home, suggest a survey will
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
       if (response.status === 402) {
         return new Response(
           JSON.stringify({ error: "Service temporarily unavailable. Please try again later." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
       const errorText = await response.text();
       console.error("AI gateway error:", response.status, errorText);
       return new Response(
         JSON.stringify({ error: "AI service error" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    return new Response(response.body, {
-      headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+    if (shouldStream) {
+      return new Response(response.body, {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "text/event-stream",
+          // Helps some mobile browsers/proxies avoid buffering SSE.
+          "Cache-Control": "no-cache, no-transform",
+        },
+      });
+    }
+
+    // Non-streaming fallback for clients that don't support ReadableStream well (common on mobile).
+    const completion = await response.json().catch(() => ({}));
+    const message = completion?.choices?.[0]?.message?.content ?? "";
+
+    return new Response(JSON.stringify({ message }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error("estimate-chat error:", error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 });
