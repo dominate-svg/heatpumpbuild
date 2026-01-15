@@ -214,14 +214,20 @@ export default function Estimate() {
         ) : null;
       
       case 'tariff':
-        return (
+        return assumptions ? (
           <TariffSection
             selectedTariff={selectedTariff}
             onTariffChange={setSelectedTariff}
             onContinue={goNext}
             onBack={goBack}
+            epcData={epcData}
+            assumptions={assumptions}
+            scop={scop}
+            currentFuel={currentFuel}
+            locationAdder={locationAdder}
+            cylinderOption={cylinderOption}
           />
-        );
+        ) : null;
       
       case 'quote': 
         return results ? (
