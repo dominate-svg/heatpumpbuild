@@ -1,11 +1,12 @@
 import { useState, useMemo } from 'react';
-import { ArrowLeft, Zap, Check, Star, TrendingDown, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Zap, Check, Star, TrendingDown, ChevronDown, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 import { useTariffs, type Tariff } from '@/hooks/useTariffs';
-import { calculateEstimate, type EPCData, type Assumptions } from '@/lib/calculations';
+import { calculateEstimate, type EPCData, type Assumptions, type EstimateResults } from '@/lib/calculations';
 import { calculateAllTariffOutcomes, roundSavingsForDisplay, type TariffOutcome } from '@/lib/tariffCalculations';
+import { CalculationTransparency } from '@/components/estimate/CalculationTransparency';
 import cosyBadge from '@/assets/cosy-badge.png';
 
 interface TariffSectionProps {
@@ -42,7 +43,7 @@ export function TariffSection({
 
   // First, get base estimate values (HP kWh and current heating cost)
   // We need these as inputs for per-tariff calculations
-  const baseEstimate = useMemo(() => {
+  const baseEstimate = useMemo((): { heatPumpKwhAnnual: number; currentHeatingCostAnnual: number; epcBand: string; fullResults: EstimateResults } | null => {
     if (!epcData || !assumptions) return null;
     
     // Calculate once with Cosy to get the common values
@@ -64,6 +65,7 @@ export function TariffSection({
       heatPumpKwhAnnual: result.rawHpElectricKwh,
       currentHeatingCostAnnual: result.rawBaselineCost,
       epcBand: result.epcBand,
+      fullResults: result,
     };
   }, [epcData, assumptions, scop, currentFuel, locationAdder, cylinderOption, cosyTariff]);
 
@@ -86,6 +88,9 @@ export function TariffSection({
   const isCosy = selectedTariff?.name.toLowerCase().includes('cosy');
   const cosyOutcome = cosyTariff ? tariffOutcomes.get(cosyTariff.id) : null;
   const cosySavings = cosyOutcome ? roundSavingsForDisplay(cosyOutcome.annualSavings) : 0;
+  const savingsNegative = cosySavings < 0;
+  const isOilHome = currentFuel.toLowerCase().includes('oil');
+  const isHighSensitivity = baseEstimate?.fullResults?.transparency?.isHighSensitivity ?? false;
 
   return (
     <section className="py-6 sm:py-10 animate-fade-in">
@@ -158,31 +163,44 @@ export function TariffSection({
                 </p>
 
                 {/* Savings highlight */}
-                <div className="flex items-center gap-2 mb-3">
+                <div className="flex items-center gap-2 mb-3 flex-wrap">
                   <span className={cn(
                     'px-3 py-1.5 rounded-lg font-bold text-sm tabular-nums',
-                    cosySavings > 0 ? 'bg-green-100 text-green-700' : 'bg-muted text-muted-foreground'
+                    cosySavings > 0 ? 'bg-green-100 text-green-700' : 
+                    cosySavings < 0 ? 'bg-amber-100 text-amber-700' : 'bg-muted text-muted-foreground'
                   )}>
-                    {cosySavings > 0 ? `Save £${cosySavings}/yr` : 'No savings'}
+                    {cosySavings > 0 ? `Save £${cosySavings}/yr` : 
+                     cosySavings < 0 ? `£${Math.abs(cosySavings)}/yr more` : 'Similar cost'}
                   </span>
-                  <span className="text-xs text-green-600 font-medium">Best savings</span>
+                  {cosySavings > 0 && (
+                    <span className="text-xs text-green-600 font-medium">Best savings</span>
+                  )}
+                  {isHighSensitivity && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-700 bg-amber-100 px-2 py-1 rounded-full">
+                      <AlertTriangle className="w-3 h-3" />
+                      Survey confirms
+                    </span>
+                  )}
                 </div>
 
-                {/* Rate breakdown */}
+                {/* Rate breakdown - MUST MATCH calculations.ts (7p/19p/40p) */}
                 <div className="grid grid-cols-3 gap-2 text-xs">
                   <div className="p-2 rounded-lg bg-green-50 text-center">
                     <p className="text-[10px] text-green-700 uppercase tracking-wide mb-0.5">Off-peak</p>
-                    <p className="font-bold text-green-700">7p/kWh</p>
+                    <p className="font-bold text-green-700">~7p/kWh</p>
                   </div>
                   <div className="p-2 rounded-lg bg-amber-50 text-center">
                     <p className="text-[10px] text-amber-700 uppercase tracking-wide mb-0.5">Mid</p>
-                    <p className="font-bold text-amber-700">19p/kWh</p>
+                    <p className="font-bold text-amber-700">~19p/kWh</p>
                   </div>
                   <div className="p-2 rounded-lg bg-muted text-center">
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Peak</p>
-                    <p className="font-bold text-foreground">40p/kWh</p>
+                    <p className="font-bold text-foreground">~40p/kWh</p>
                   </div>
                 </div>
+                <p className="text-[10px] text-muted-foreground mt-2 text-center italic">
+                  Rates vary by region
+                </p>
               </div>
             </div>
 
@@ -217,8 +235,11 @@ export function TariffSection({
             <h3 className="font-semibold text-amber-800 text-sm mb-1">
               Why we recommend Cosy
             </h3>
-            <p className="text-xs text-amber-700 leading-relaxed">
-              Heat pumps work best overnight when electricity is cheapest. Cosy's 7p/kWh off-peak rate (vs 24p+ on standard tariffs) means <strong>significant savings</strong>. Most customers save £200-400/year compared to standard rates.
+            <p className="text-xs text-amber-700 leading-relaxed mb-2">
+              Heat pumps work best overnight when electricity is cheapest. Cosy's ~7p/kWh off-peak rate (vs 24p+ on standard tariffs) means <strong>lower running costs</strong>.
+            </p>
+            <p className="text-[10px] text-amber-600 italic">
+              We model Cosy using a blended rate based on when heat pumps typically run (cheap hours + some peak use).
             </p>
           </div>
         </div>
@@ -307,6 +328,23 @@ export function TariffSection({
             <strong>Note:</strong> Your selected tariff may result in higher running costs. We recommend switching to Octopus Cosy after installation for maximum savings.
           </p>
         </div>
+      )}
+
+      {/* Negative savings messaging for oil homes */}
+      {savingsNegative && isOilHome && (
+        <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 mb-4 mt-4 animate-fade-in">
+          <p className="text-xs text-blue-800 leading-relaxed">
+            <strong>Why consider switching anyway?</strong> Many homes choose heat pumps for comfort, future-proofing, and environmental benefits. A survey can often reveal design improvements that reduce running costs.
+          </p>
+        </div>
+      )}
+
+      {/* How we calculated this - Transparency */}
+      {baseEstimate?.fullResults && (
+        <CalculationTransparency 
+          results={baseEstimate.fullResults} 
+          currentFuel={currentFuel} 
+        />
       )}
 
       {/* CTA */}
