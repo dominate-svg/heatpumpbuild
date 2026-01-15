@@ -1,5 +1,5 @@
 import type { Tariff } from '@/hooks/useTariffs';
-import { getTariffConfig, calculateTariffCost, type TariffCostResult, type TariffConfig } from './tariffConfig';
+import { type TariffCostResult, type TariffConfig } from './tariffConfig';
 
 export interface Assumptions {
   gas_rate: number;
@@ -511,52 +511,66 @@ export function calculateEstimate(
   const heatDemandSource: 'national_average' | 'epc' = 'national_average';
   
   // ============================================
-  // 2. Check if we need to use a different tariff
+  // 2. Calculate tariff-specific costs using ACTUAL database rates
   // ============================================
   let hpCost = cosySavings.hpCost;
   let estimatedSavings = cosySavings.estimatedSavings;
   let rawSavings = cosySavings.rawSavings;
   let transparency = { ...cosySavings.transparency };
   
-  // Try to find matching tariff config
-  const tariffName = inputs.tariff?.name || '';
-  const tariffConfig = getTariffConfig(tariffName);
+  // Check if we have a non-Cosy tariff selected
+  const isCosy = inputs.tariff?.name?.toLowerCase().includes('cosy') ?? true;
   
-  // Check if this is NOT Cosy
-  const isCosy = tariffConfig?.isCosy ?? tariffName.toLowerCase().includes('cosy');
-  
-  if (tariffConfig && !isCosy) {
-    // Calculate using the selected tariff
-    const tariffResult = calculateTariffCost(cosySavings.hpKwh, epcBand, tariffConfig);
+  if (inputs.tariff && !isCosy) {
+    // ============================================
+    // Use ACTUAL database tariff rates directly
+    // This ensures different tariffs produce different results
+    // ============================================
+    const tariff = inputs.tariff;
+    const hasOffpeak = tariff.offpeak_hours_per_day > 0 && tariff.offpeak_rate_p_per_kwh !== null;
     
-    if (tariffResult) {
-      hpCost = tariffResult.annualCost;
-      const newRawSavings = cosySavings.currentCost - hpCost;
-      
-      // Apply clamp for oil homes
-      let finalSavings = newRawSavings;
-      let savingsWasClamped = false;
-      if (fuelType === 'oil') {
-        const clampRange = OIL_SAVINGS_CLAMP[epcBand] || { min: -600, max: 900 };
-        const clampedValue = clamp(newRawSavings, clampRange.min, clampRange.max);
-        savingsWasClamped = clampedValue !== newRawSavings;
-        finalSavings = clampedValue;
-      }
-      
-      estimatedSavings = roundToNearest10(finalSavings);
-      rawSavings = newRawSavings;
-      
-      // Update transparency with non-Cosy tariff info
-      transparency = {
-        ...cosySavings.transparency,
-        isCosy: false,
-        blendedRate: tariffResult.blendedRateP,
-        tariffCostResult: tariffResult,
-        rawSavingsBeforeClamp: newRawSavings,
-        savingsWasClamped,
-        isHighSensitivity: fuelType === 'oil' && finalSavings > 800,
-      };
+    // Get EPC-sensitive off-peak share
+    const offpeakShare = COSY_CHEAP_SHARE_BY_EPC[epcBand] || 0.45;
+    const peakShare = 1 - offpeakShare;
+    
+    let blendedRateP: number;
+    
+    if (hasOffpeak) {
+      // Two-rate TOU tariff: blend off-peak and peak rates
+      const offpeakRateP = tariff.offpeak_rate_p_per_kwh!;
+      const peakRateP = tariff.peak_rate_p_per_kwh;
+      blendedRateP = (offpeakShare * offpeakRateP) + (peakShare * peakRateP);
+    } else {
+      // Flat rate tariff: use peak_rate as flat rate
+      blendedRateP = tariff.peak_rate_p_per_kwh;
     }
+    
+    // Calculate HP cost with this tariff's blended rate
+    hpCost = (cosySavings.hpKwh * blendedRateP) / 100;
+    const newRawSavings = cosySavings.currentCost - hpCost;
+    
+    // Apply clamp for oil homes
+    let finalSavings = newRawSavings;
+    let savingsWasClamped = false;
+    if (fuelType === 'oil') {
+      const clampRange = OIL_SAVINGS_CLAMP[epcBand] || { min: -600, max: 900 };
+      const clampedValue = clamp(newRawSavings, clampRange.min, clampRange.max);
+      savingsWasClamped = clampedValue !== newRawSavings;
+      finalSavings = clampedValue;
+    }
+    
+    estimatedSavings = roundToNearest10(finalSavings);
+    rawSavings = newRawSavings;
+    
+    // Update transparency with actual tariff info
+    transparency = {
+      ...cosySavings.transparency,
+      isCosy: false,
+      blendedRate: blendedRateP,
+      rawSavingsBeforeClamp: newRawSavings,
+      savingsWasClamped,
+      isHighSensitivity: fuelType === 'oil' && finalSavings > 800,
+    };
   }
 
   // ============================================

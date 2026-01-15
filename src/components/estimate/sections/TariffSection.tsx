@@ -5,6 +5,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { cn } from '@/lib/utils';
 import { useTariffs, type Tariff } from '@/hooks/useTariffs';
 import { calculateEstimate, type EPCData, type Assumptions } from '@/lib/calculations';
+import { calculateAllTariffOutcomes, roundSavingsForDisplay, type TariffOutcome } from '@/lib/tariffCalculations';
 import cosyBadge from '@/assets/cosy-badge.png';
 
 interface TariffSectionProps {
@@ -39,39 +40,52 @@ export function TariffSection({
   const cosyTariff = tariffs?.find(t => t.name.toLowerCase().includes('cosy'));
   const otherTariffs = tariffs?.filter(t => !t.name.toLowerCase().includes('cosy')) || [];
 
-  // Calculate savings for each tariff
-  const tariffSavings = useMemo(() => {
-    if (!tariffs || !epcData || !assumptions) return new Map<string, number>();
+  // First, get base estimate values (HP kWh and current heating cost)
+  // We need these as inputs for per-tariff calculations
+  const baseEstimate = useMemo(() => {
+    if (!epcData || !assumptions) return null;
     
-    const savings = new Map<string, number>();
+    // Calculate once with Cosy to get the common values
+    const result = calculateEstimate({
+      floorArea: epcData.totalFloorArea || 100,
+      heatingCostCurrent: epcData.heatingCostCurrent,
+      spaceHeatingDemand: epcData.spaceHeatingDemand,
+      currentFuel,
+      propertyType: epcData.propertyType,
+      region: epcData.region || 'England',
+      epcBand: epcData.epcBand,
+      scop,
+      tariff: cosyTariff || null,
+      locationAdder,
+      cylinderOption,
+    }, assumptions);
     
-    tariffs.forEach(tariff => {
-      const result = calculateEstimate({
-        floorArea: epcData.totalFloorArea || 100,
-        heatingCostCurrent: epcData.heatingCostCurrent,
-        spaceHeatingDemand: epcData.spaceHeatingDemand,
-        currentFuel,
-        propertyType: epcData.propertyType,
-        region: epcData.region || 'England',
-        epcBand: epcData.epcBand,
-        scop,
-        tariff,
-        locationAdder,
-        cylinderOption,
-      }, assumptions);
-      
-      savings.set(tariff.id, result.estimatedSavings);
-    });
+    return {
+      heatPumpKwhAnnual: result.hpElectricKwh,
+      currentHeatingCostAnnual: result.baselineCost,
+      epcBand: result.epcBand,
+    };
+  }, [epcData, assumptions, scop, currentFuel, locationAdder, cylinderOption, cosyTariff]);
+
+  // Calculate per-tariff savings using the new direct calculation
+  const tariffOutcomes = useMemo(() => {
+    if (!tariffs || !baseEstimate) return new Map<string, TariffOutcome>();
     
-    return savings;
-  }, [tariffs, epcData, assumptions, scop, currentFuel, locationAdder, cylinderOption]);
+    return calculateAllTariffOutcomes(
+      tariffs,
+      baseEstimate.epcBand,
+      baseEstimate.heatPumpKwhAnnual,
+      baseEstimate.currentHeatingCostAnnual
+    );
+  }, [tariffs, baseEstimate]);
 
   const handleSelectTariff = (tariff: Tariff) => {
     onTariffChange(tariff);
   };
 
   const isCosy = selectedTariff?.name.toLowerCase().includes('cosy');
-  const cosySavings = cosyTariff ? tariffSavings.get(cosyTariff.id) || 0 : 0;
+  const cosyOutcome = cosyTariff ? tariffOutcomes.get(cosyTariff.id) : null;
+  const cosySavings = cosyOutcome ? roundSavingsForDisplay(cosyOutcome.annualSavings) : 0;
 
   return (
     <section className="py-6 sm:py-10 animate-fade-in">
@@ -225,8 +239,9 @@ export function TariffSection({
           <CollapsibleContent className="space-y-2">
             {otherTariffs.map((tariff) => {
               const isSelected = selectedTariff?.id === tariff.id;
-              const hasOffpeak = tariff.offpeak_rate_p_per_kwh !== null;
-              const savings = tariffSavings.get(tariff.id) || 0;
+              const hasOffpeak = tariff.offpeak_rate_p_per_kwh !== null && tariff.offpeak_hours_per_day > 0;
+              const outcome = tariffOutcomes.get(tariff.id);
+              const savings = outcome ? roundSavingsForDisplay(outcome.annualSavings) : 0;
               const savingsDiff = cosySavings - savings;
               
               return (
