@@ -159,7 +159,7 @@ export function SavingsCard({
               {/* Tariff info */}
               <div className="w-full space-y-2">
                 {transparency.isCosy ? (
-                  /* COSY TARIFF DISPLAY - DO NOT CHANGE */
+                  /* COSY TARIFF DISPLAY - Typical national rates */
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -168,7 +168,7 @@ export function SavingsCard({
                           <br />
                           Typical effective rate: ~{transparency.blendedRate.toFixed(1)}p/kWh
                           <br />
-                          <span className="text-[10px]">Tariff bands: ~{transparency.cosyOffpeakRate}p / ~{transparency.cosyMidRate}p / ~{transparency.cosyPeakRate}p (varies by region)</span>
+                          <span className="text-[10px]">Tariff bands: ~{Math.round(transparency.cosyOffpeakRate)}p / ~{Math.round(transparency.cosyMidRate)}p / ~{Math.round(transparency.cosyPeakRate)}p (varies by region)</span>
                         </div>
                       </TooltipTrigger>
                       <TooltipContent className="max-w-xs">

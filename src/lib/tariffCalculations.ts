@@ -24,12 +24,12 @@ const OFFPEAK_SHARE_BY_EPC: Record<string, number> = {
 const THREE_RATE_PEAK_SHARE = 0.15;
 
 // ============================================
-// COSY RATES (3-rate tariff) - MUST MATCH UI (7p / 19p / 40p)
-// These are used for Cosy calculations only
+// COSY RATES (3-rate tariff) - Typical national rates
+// These must match calculations.ts
 // ============================================
-const COSY_OFFPEAK_RATE_P = 7;   // p/kWh (overnight)
-const COSY_MID_RATE_P = 19;      // p/kWh (midday)
-const COSY_PEAK_RATE_P = 40;     // p/kWh (4-7pm)
+const COSY_OFFPEAK_RATE_P = 12;  // p/kWh (overnight)
+const COSY_MID_RATE_P = 24;      // p/kWh (midday)
+const COSY_PEAK_RATE_P = 38;     // p/kWh (4-7pm)
 
 export interface TariffOutcome {
   tariffId: string;
