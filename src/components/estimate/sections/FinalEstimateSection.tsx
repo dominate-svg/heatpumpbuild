@@ -304,7 +304,7 @@ export function FinalEstimateSection({
       <Button 
         onClick={onContinue}
         size="lg"
-        className="w-full h-12 sm:h-14 text-base sm:text-lg font-semibold rounded-xl active:scale-[0.98] transition-transform"
+        className="w-full h-12 sm:h-14 text-base sm:text-lg font-semibold rounded-xl active:scale-[0.98] transition-all cta-hover-lift"
       >
         <Calendar className="w-4 h-4 mr-2" />
         Book my design call
