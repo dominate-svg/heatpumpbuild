@@ -1,185 +1,273 @@
-import { MapPin, Users, Home, ArrowRight } from 'lucide-react';
+import { useState } from 'react';
+import { Check, ArrowRight, Users, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import type { Assumptions } from '@/lib/calculations';
 
 interface FineTuneSectionProps {
-  selectedLocation: 'included' | '6m' | '9m';
-  selectedPeople: '1-2' | '3-4' | '5+';
-  onSelectLocation: (value: 'included' | '6m' | '9m') => void;
-  onSelectPeople: (value: '1-2' | '3-4' | '5+') => void;
+  locationAdder: 'included' | '6m' | '9m';
+  cylinderOption: 'existing' | '150l' | '210l';
+  onLocationChange: (value: 'included' | '6m' | '9m') => void;
+  onCylinderChange: (value: 'existing' | '150l' | '210l') => void;
   onContinue: () => void;
-}
-
-const LOCATION_OPTIONS = [
-  { value: 'included' as const, label: 'Within 3m', icon: '🏠', description: 'Closest to boiler' },
-  { value: '6m' as const, label: '3–6m away', icon: '📍', description: 'Some extra piping' },
-  { value: '9m' as const, label: 'Further', icon: '🗺️', description: 'Longest run' },
-];
-
-const PEOPLE_OPTIONS = [
-  { value: '1-2' as const, label: '1–2', icon: '👤', description: 'Compact cylinder' },
-  { value: '3-4' as const, label: '3–4', icon: '👥', description: 'Standard cylinder' },
-  { value: '5+' as const, label: '5+', icon: '👨‍👩‍👧‍👦', description: 'Large cylinder' },
-];
-
-interface OptionButtonProps {
-  selected: boolean;
-  onClick: () => void;
-  icon: string;
-  label: string;
-  description: string;
-}
-
-function OptionButton({ selected, onClick, icon, label, description }: OptionButtonProps) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        'flex-1 p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 text-center transition-all active:scale-[0.97] min-w-0',
-        selected 
-          ? 'border-primary bg-primary/5 shadow-sm' 
-          : 'border-border bg-card hover:border-primary/30'
-      )}
-    >
-      <div className="text-xl sm:text-2xl mb-1 sm:mb-2">{icon}</div>
-      <p className="font-semibold text-foreground text-xs sm:text-sm">{label}</p>
-      <p className="text-[10px] sm:text-xs text-muted-foreground leading-tight">{description}</p>
-    </button>
-  );
+  assumptions: Assumptions;
 }
 
 export function FineTuneSection({ 
-  selectedLocation,
-  selectedPeople,
-  onSelectLocation,
-  onSelectPeople,
-  onContinue 
+  locationAdder,
+  cylinderOption,
+  onLocationChange,
+  onCylinderChange,
+  onContinue,
+  assumptions,
 }: FineTuneSectionProps) {
-  return (
-    <section className="py-8 sm:py-12 animate-fade-in">
-      {/* Header */}
-      <div className="text-center mb-8 sm:mb-10">
-        <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2">
-          A few quick details
-        </h2>
-        <p className="text-sm sm:text-base text-muted-foreground">
-          These help us be more accurate — they only take a second
+  const [step, setStep] = useState<'location' | 'cylinder'>('location');
+
+  const locationOptions = [
+    { 
+      value: 'included' as const, 
+      label: 'Within 3m', 
+      description: 'Close to existing boiler',
+      price: 0,
+    },
+    { 
+      value: '6m' as const, 
+      label: '3–6m away', 
+      description: 'Moderate pipe run',
+      price: assumptions.adder_location_6m,
+    },
+    { 
+      value: '9m' as const, 
+      label: '6–9m away', 
+      description: 'Longer pipe run',
+      price: assumptions.adder_location_9m,
+    },
+  ];
+
+  const cylinderOptions = [
+    { 
+      value: 'existing' as const, 
+      label: '1–2 people', 
+      description: 'Keep existing cylinder',
+      price: 0,
+    },
+    { 
+      value: '150l' as const, 
+      label: '3–4 people', 
+      description: '150L cylinder',
+      price: assumptions.adder_cylinder_150l,
+    },
+    { 
+      value: '210l' as const, 
+      label: '5+ people', 
+      description: '210L cylinder',
+      price: assumptions.adder_cylinder_210l,
+    },
+  ];
+
+  if (step === 'location') {
+    return (
+      <section className="py-6 sm:py-10 animate-fade-in">
+        {/* Icon */}
+        <div className="flex justify-center mb-4">
+          <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <MapPin className="w-7 h-7 text-primary" />
+          </div>
+        </div>
+
+        {/* Title */}
+        <div className="text-center mb-2">
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground">
+            Where can the heat pump go?
+          </h2>
+        </div>
+
+        {/* Explanation */}
+        <p className="text-center text-sm text-muted-foreground mb-6 max-w-xs mx-auto">
+          The heat pump sits outside. Longer pipes to your boiler location cost a bit more.
         </p>
-      </div>
 
-      {/* Location question */}
-      <div className="mb-8 sm:mb-10">
-        <div className="flex items-center gap-2.5 sm:gap-3 mb-3 sm:mb-4">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-primary/10 flex items-center justify-center">
-            <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-foreground text-sm sm:text-base">Where can the heat pump go?</h3>
-            <p className="text-xs sm:text-sm text-muted-foreground">Distance from your boiler</p>
-          </div>
-        </div>
-        
         {/* Visual diagram */}
-        <div className="relative mb-3 sm:mb-4 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-muted/30 border border-border">
-          <div className="flex items-center justify-between">
+        <div className="p-4 rounded-xl bg-muted/30 mb-6">
+          <div className="flex items-center justify-between max-w-xs mx-auto">
             <div className="text-center">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-card border border-border flex items-center justify-center mx-auto mb-1">
-                <span className="text-base sm:text-lg">🔥</span>
-              </div>
-              <p className="text-[10px] sm:text-xs text-muted-foreground">Boiler</p>
+              <div className="w-10 h-12 rounded bg-muted border border-border mx-auto mb-1" />
+              <p className="text-[10px] text-muted-foreground">Boiler</p>
             </div>
-            <div className="flex-1 flex items-center justify-center">
-              <div className="flex items-center gap-0.5 sm:gap-1">
-                <div className="h-0.5 w-4 sm:w-8 bg-border rounded" />
-                <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
-                <div className="h-0.5 w-4 sm:w-8 bg-border rounded" />
-              </div>
+            
+            <div className="flex-1 flex items-center justify-center px-2">
+              <div className="h-0.5 flex-1 bg-border rounded" />
+              <span className="px-2 text-xs text-muted-foreground">pipes</span>
+              <div className="h-0.5 flex-1 bg-border rounded" />
             </div>
+            
             <div className="text-center">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-1">
-                <span className="text-base sm:text-lg">❄️</span>
+              <div className="w-10 h-12 rounded bg-primary/20 border border-primary/30 mx-auto mb-1 flex items-center justify-center">
+                <span className="text-xs">❄️</span>
               </div>
-              <p className="text-[10px] sm:text-xs text-muted-foreground">Heat pump</p>
+              <p className="text-[10px] text-muted-foreground">Heat pump</p>
             </div>
           </div>
-          <p className="text-[10px] sm:text-xs text-muted-foreground text-center mt-2 sm:mt-3">
-            Longer distance = slightly higher install cost
-          </p>
         </div>
-        
-        <div className="flex gap-2 sm:gap-3">
-          {LOCATION_OPTIONS.map((opt) => (
-            <OptionButton
-              key={opt.value}
-              selected={selectedLocation === opt.value}
-              onClick={() => onSelectLocation(opt.value)}
-              icon={opt.icon}
-              label={opt.label}
-              description={opt.description}
-            />
+
+        {/* Options */}
+        <div className="space-y-2 mb-6">
+          {locationOptions.map((option) => {
+            const isSelected = locationAdder === option.value;
+            
+            return (
+              <button
+                key={option.value}
+                onClick={() => onLocationChange(option.value)}
+                className={cn(
+                  'w-full p-4 rounded-xl border-2 text-left transition-all duration-150 active:scale-[0.99]',
+                  'bg-white',
+                  isSelected 
+                    ? 'border-primary shadow-md' 
+                    : 'border-border hover:border-muted-foreground/30'
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
+                      'w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors',
+                      isSelected 
+                        ? 'border-primary bg-primary' 
+                        : 'border-muted-foreground/30'
+                    )}>
+                      {isSelected && <Check className="w-3 h-3 text-primary-foreground" />}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground text-sm">{option.label}</h3>
+                      <p className="text-xs text-muted-foreground">{option.description}</p>
+                    </div>
+                  </div>
+                  
+                  <span className={cn(
+                    'px-2.5 py-1 rounded-lg text-xs font-semibold',
+                    option.price === 0 
+                      ? 'bg-muted text-muted-foreground' 
+                      : 'bg-amber-50 text-amber-700'
+                  )}>
+                    {option.price === 0 ? 'Included' : `+£${option.price}`}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* CTA */}
+        <Button 
+          onClick={() => setStep('cylinder')}
+          size="lg"
+          className="w-full h-12 sm:h-14 text-base sm:text-lg font-semibold rounded-xl active:scale-[0.98] transition-transform"
+        >
+          Continue
+          <ArrowRight className="w-4 h-4 ml-2" />
+        </Button>
+      </section>
+    );
+  }
+
+  return (
+    <section className="py-6 sm:py-10 animate-fade-in">
+      {/* Icon */}
+      <div className="flex justify-center mb-4">
+        <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+          <Users className="w-7 h-7 text-primary" />
+        </div>
+      </div>
+
+      {/* Title */}
+      <div className="text-center mb-2">
+        <h2 className="text-xl sm:text-2xl font-bold text-foreground">
+          How many people live here?
+        </h2>
+      </div>
+
+      {/* Explanation */}
+      <p className="text-center text-sm text-muted-foreground mb-6 max-w-xs mx-auto">
+        This sizes your hot water cylinder. More people need more stored hot water.
+      </p>
+
+      {/* Cylinder visual */}
+      <div className="p-4 rounded-xl bg-muted/30 mb-6">
+        <div className="flex items-end justify-center gap-4">
+          {[
+            { size: 'S', height: 28, label: '1-2', value: 'existing' },
+            { size: 'M', height: 40, label: '3-4', value: '150l' },
+            { size: 'L', height: 52, label: '5+', value: '210l' },
+          ].map((cyl) => (
+            <div key={cyl.size} className="text-center">
+              <div 
+                className={cn(
+                  'w-8 rounded-t-xl mx-auto transition-all',
+                  cylinderOption === cyl.value ? 'bg-primary' : 'bg-muted'
+                )}
+                style={{ height: cyl.height }}
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">{cyl.label}</p>
+            </div>
           ))}
         </div>
       </div>
 
-      {/* People question */}
-      <div className="mb-8 sm:mb-10">
-        <div className="flex items-center gap-2.5 sm:gap-3 mb-3 sm:mb-4">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-primary/10 flex items-center justify-center">
-            <Users className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-foreground text-sm sm:text-base">How many people live here?</h3>
-            <p className="text-xs sm:text-sm text-muted-foreground">This sizes your hot water</p>
-          </div>
-        </div>
-        
-        {/* Visual indicator */}
-        <div className="relative mb-3 sm:mb-4 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-muted/30 border border-border">
-          <div className="flex items-end justify-center gap-1.5 sm:gap-2 h-10 sm:h-12">
-            {[1, 2, 3, 4, 5].map((n) => (
-              <div 
-                key={n}
-                className={cn(
-                  'w-6 sm:w-8 rounded-t-full transition-all',
-                  selectedPeople === '1-2' && n <= 2 && 'bg-primary',
-                  selectedPeople === '3-4' && n <= 4 && 'bg-primary',
-                  selectedPeople === '5+' && 'bg-primary',
-                  !(
-                    (selectedPeople === '1-2' && n <= 2) ||
-                    (selectedPeople === '3-4' && n <= 4) ||
-                    selectedPeople === '5+'
-                  ) && 'bg-muted'
-                )}
-                style={{ height: `${16 + n * 6}px` }}
-              />
-            ))}
-          </div>
-          <p className="text-[10px] sm:text-xs text-muted-foreground text-center mt-2 sm:mt-3">
-            More people = larger hot water cylinder
-          </p>
-        </div>
-        
-        <div className="flex gap-2 sm:gap-3">
-          {PEOPLE_OPTIONS.map((opt) => (
-            <OptionButton
-              key={opt.value}
-              selected={selectedPeople === opt.value}
-              onClick={() => onSelectPeople(opt.value)}
-              icon={opt.icon}
-              label={opt.label}
-              description={opt.description}
-            />
-          ))}
-        </div>
+      {/* Options */}
+      <div className="space-y-2 mb-6">
+        {cylinderOptions.map((option) => {
+          const isSelected = cylinderOption === option.value;
+          
+          return (
+            <button
+              key={option.value}
+              onClick={() => onCylinderChange(option.value)}
+              className={cn(
+                'w-full p-4 rounded-xl border-2 text-left transition-all duration-150 active:scale-[0.99]',
+                'bg-white',
+                isSelected 
+                  ? 'border-primary shadow-md' 
+                  : 'border-border hover:border-muted-foreground/30'
+              )}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={cn(
+                    'w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors',
+                    isSelected 
+                      ? 'border-primary bg-primary' 
+                      : 'border-muted-foreground/30'
+                  )}>
+                    {isSelected && <Check className="w-3 h-3 text-primary-foreground" />}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground text-sm">{option.label}</h3>
+                    <p className="text-xs text-muted-foreground">{option.description}</p>
+                  </div>
+                </div>
+                
+                <span className={cn(
+                  'px-2.5 py-1 rounded-lg text-xs font-semibold',
+                  option.price === 0 
+                    ? 'bg-muted text-muted-foreground' 
+                    : 'bg-amber-50 text-amber-700'
+                )}>
+                  {option.price === 0 ? 'Included' : `+£${option.price.toLocaleString()}`}
+                </span>
+              </div>
+            </button>
+          );
+        })}
       </div>
 
       {/* CTA */}
       <Button 
         onClick={onContinue}
         size="lg"
-        className="w-full h-12 sm:h-14 text-base sm:text-lg font-semibold active:scale-[0.98] transition-transform"
+        className="w-full h-12 sm:h-14 text-base sm:text-lg font-semibold rounded-xl active:scale-[0.98] transition-transform"
       >
-        Continue →
+        See my updated estimate
+        <ArrowRight className="w-4 h-4 ml-2" />
       </Button>
     </section>
   );

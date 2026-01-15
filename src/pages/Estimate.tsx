@@ -6,18 +6,14 @@ import { calculateEstimate } from '@/lib/calculations';
 import type { EPCData } from '@/lib/calculations';
 import { Loader2 } from 'lucide-react';
 
-// New section components
+// Section components
 import { StickyEstimatePanel } from '@/components/estimate/StickyEstimatePanel';
-import { WelcomeSection } from '@/components/estimate/sections/WelcomeSection';
-import { ConfirmHomeSection } from '@/components/estimate/sections/ConfirmHomeSection';
-import { PrioritySection } from '@/components/estimate/sections/PrioritySection';
-import { LocationSection } from '@/components/estimate/sections/LocationSection';
-import { HotWaterSection } from '@/components/estimate/sections/HotWaterSection';
+import { EducationSection } from '@/components/estimate/sections/EducationSection';
+import { InitialEstimateSection } from '@/components/estimate/sections/InitialEstimateSection';
 import { EfficiencySection } from '@/components/estimate/sections/EfficiencySection';
-import { ReviewSection } from '@/components/estimate/sections/ReviewSection';
-import { AssistantSection } from '@/components/estimate/sections/AssistantSection';
+import { FineTuneSection } from '@/components/estimate/sections/FineTuneSection';
+import { FinalEstimateSection } from '@/components/estimate/sections/FinalEstimateSection';
 import { ContactStep } from '@/components/wizard/steps/ContactStep';
-import { HeatingTypeStep } from '@/components/wizard/steps/HeatingTypeStep';
 
 function detectFuelType(mainFuel?: string): string {
   if (!mainFuel) return 'gas';
@@ -28,16 +24,8 @@ function detectFuelType(mainFuel?: string): string {
   return 'gas';
 }
 
-function peopleToCylinder(people: '1-2' | '3-4' | '5+'): 'existing' | '150l' | '210l' {
-  switch (people) {
-    case '1-2': return 'existing';
-    case '3-4': return '150l';
-    case '5+': return '210l';
-  }
-}
-
-// Steps: welcome, confirm-home, priority, location, hot-water, efficiency, review, assistant, booking
-const STEPS = ['welcome', 'confirm-home', 'priority', 'location', 'hot-water', 'efficiency', 'review', 'assistant', 'booking'];
+// Simplified 6-step flow: education → initial-estimate → efficiency → finetune → final-estimate → booking
+const STEPS = ['education', 'initial-estimate', 'efficiency', 'finetune', 'final-estimate', 'booking'];
 
 export default function Estimate() {
   const navigate = useNavigate();
@@ -47,18 +35,13 @@ export default function Estimate() {
   
   const [epcData, setEpcData] = useState<EPCData | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
-  const [editingFuel, setEditingFuel] = useState(false);
   
-  // Config state
-  const [priority, setPriority] = useState<'upfront' | 'running' | 'future'>('running');
+  // Config state - start with lowest cost defaults
   const [selectedTariff, setSelectedTariff] = useState<Tariff | null>(null);
   const [locationAdder, setLocationAdder] = useState<'included' | '6m' | '9m'>('included');
   const [cylinderOption, setCylinderOption] = useState<'existing' | '150l' | '210l'>('existing');
   const [currentFuel, setCurrentFuel] = useState<string>('gas');
   const [scop, setScop] = useState(3.4);
-
-  // Base SCOP for comparison
-  const baseScop = 3.7;
 
   useEffect(() => {
     const stored = sessionStorage.getItem('epcData');
@@ -96,7 +79,6 @@ export default function Estimate() {
     }, assumptions);
   }, [epcData, assumptions, scop, selectedTariff, locationAdder, cylinderOption, currentFuel]);
 
-  // Base results for comparison in efficiency section
   const baseResults = useMemo(() => {
     if (!epcData || !assumptions) return null;
     return calculateEstimate({
@@ -107,12 +89,12 @@ export default function Estimate() {
       propertyType: epcData.propertyType,
       region: epcData.region || 'England',
       epcBand: epcData.epcBand,
-      scop: baseScop,
+      scop: 3.4,
       tariff: selectedTariff,
       locationAdder,
       cylinderOption,
     }, assumptions);
-  }, [epcData, assumptions, baseScop, selectedTariff, locationAdder, cylinderOption, currentFuel]);
+  }, [epcData, assumptions, selectedTariff, locationAdder, cylinderOption, currentFuel]);
 
   const goNext = useCallback(() => {
     setCurrentStep(s => Math.min(s + 1, STEPS.length - 1));
@@ -120,18 +102,11 @@ export default function Estimate() {
   }, []);
 
   const goBack = useCallback(() => {
-    if (editingFuel) {
-      setEditingFuel(false);
-    } else if (currentStep > 0) {
+    if (currentStep > 0) {
       setCurrentStep(s => s - 1);
       contentRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  }, [currentStep, editingFuel]);
-
-  const goToStep = useCallback((step: number) => {
-    setCurrentStep(step);
-    contentRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
+  }, [currentStep]);
 
   const isLoading = assumptionsLoading || tariffsLoading;
 
@@ -146,26 +121,7 @@ export default function Estimate() {
     );
   }
 
-  const heatLossKw = results?.heatLossKw || 8;
-
-  // Fuel editing mode
-  if (editingFuel) {
-    return (
-      <div className="min-h-screen bg-background px-4 py-6">
-        <div className="max-w-lg mx-auto">
-          <HeatingTypeStep
-            detectedFuel={detectFuelType(epcData.mainFuel)}
-            selectedFuel={currentFuel}
-            onSelect={(fuel) => { setCurrentFuel(fuel); setEditingFuel(false); }}
-            onContinue={() => setEditingFuel(false)}
-            onBack={() => setEditingFuel(false)}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  // Show sticky panel after step 1
+  // Show sticky panel after initial estimate (step 2+)
   const showStickyPanel = currentStep >= 2 && currentStep < STEPS.length - 1;
 
   const guideContext = { 
@@ -178,22 +134,16 @@ export default function Estimate() {
 
   const renderSection = () => {
     switch (STEPS[currentStep]) {
-      case 'welcome': 
-        return <WelcomeSection onStart={goNext} />;
-      case 'confirm-home': 
-        return <ConfirmHomeSection epcData={epcData} heatLossKw={heatLossKw} currentFuel={currentFuel} onEditFuel={() => setEditingFuel(true)} onContinue={goNext} />;
-      case 'priority': 
-        return <PrioritySection selectedPriority={priority} onSelect={setPriority} onContinue={goNext} />;
-      case 'location': 
-        return assumptions ? <LocationSection selectedLocation={locationAdder} onSelect={setLocationAdder} onContinue={goNext} assumptions={assumptions} /> : null;
-      case 'hot-water': 
-        return assumptions ? <HotWaterSection selectedCylinder={cylinderOption} onSelect={setCylinderOption} onContinue={goNext} assumptions={assumptions} /> : null;
+      case 'education': 
+        return <EducationSection onContinue={goNext} />;
+      case 'initial-estimate': 
+        return results ? <InitialEstimateSection results={results} currentFuel={currentFuel} onContinue={goNext} /> : null;
       case 'efficiency': 
         return assumptions ? <EfficiencySection scop={scop} onScopChange={setScop} results={results} baseResults={baseResults} assumptions={assumptions} onContinue={goNext} /> : null;
-      case 'review': 
-        return results ? <ReviewSection results={results} currentFuel={currentFuel} onAskQuestions={() => goToStep(7)} onContinue={goNext} /> : null;
-      case 'assistant': 
-        return <AssistantSection context={guideContext} onBack={() => goToStep(6)} onContinue={goNext} />;
+      case 'finetune': 
+        return assumptions ? <FineTuneSection locationAdder={locationAdder} cylinderOption={cylinderOption} onLocationChange={setLocationAdder} onCylinderChange={setCylinderOption} onContinue={goNext} assumptions={assumptions} /> : null;
+      case 'final-estimate': 
+        return results ? <FinalEstimateSection results={results} currentFuel={currentFuel} context={guideContext} onContinue={goNext} /> : null;
       case 'booking': 
         return results && assumptions ? <ContactStep epcData={epcData} results={results} assumptions={assumptions} scop={scop} selectedTariff={selectedTariff} currentFuel={currentFuel} locationAdder={locationAdder} cylinderOption={cylinderOption} onBack={goBack} /> : null;
       default: 
@@ -203,14 +153,12 @@ export default function Estimate() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Main content */}
       <div className="overflow-y-auto min-h-screen" ref={contentRef}>
         <div className="max-w-lg mx-auto px-4 sm:px-6 pb-32 lg:pb-6">
           {renderSection()}
         </div>
       </div>
 
-      {/* Sticky estimate panel */}
       {showStickyPanel && results && (
         <StickyEstimatePanel results={results} currentFuel={currentFuel} />
       )}

@@ -1,14 +1,29 @@
-import { PoundSterling, Gift, TrendingDown, Zap, Check, Calendar, Phone, Shield } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Gift, TrendingDown, Check, Calendar, Sparkles, Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useCountUp } from '@/hooks/useCountUp';
-import type { EstimateResults } from '@/lib/calculations';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import type { EstimateResults } from '@/lib/calculations';
+import { supabase } from '@/integrations/supabase/client';
+import ReactMarkdown from 'react-markdown';
 import octopusPartnerLogo from '@/assets/octopus-partner.png';
 
 interface FinalEstimateSectionProps {
   results: EstimateResults;
   currentFuel: string;
-  onBook: () => void;
+  context: {
+    epcBand?: string;
+    floorArea?: number;
+    currentFuel?: string;
+    installCost?: number;
+    savings?: number;
+  };
+  onContinue: () => void;
+}
+
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
 }
 
 const FUEL_LABELS: Record<string, string> = {
@@ -19,154 +34,275 @@ const FUEL_LABELS: Record<string, string> = {
 };
 
 const WHATS_INCLUDED = [
-  'Full heat pump system',
+  'Heat pump unit',
   'Hot water cylinder',
-  'Professional installation',
-  'All controls & wiring',
-  '£7,500 BUS grant applied',
+  'Full installation',
+  'Controls & wiring',
+  '£7,500 grant',
   '5-year warranty',
 ];
 
-const NEXT_STEPS = [
-  { step: 1, title: 'Book a design call', description: 'Quick chat to confirm details' },
-  { step: 2, title: 'Home survey', description: 'Engineer visits to measure' },
-  { step: 3, title: 'Fixed quote', description: 'No surprises — what we quote is what you pay' },
+const STARTER_QUESTIONS = [
+  "Will this work with my radiators?",
+  "Will it be noisy?",
+  "Is my home suitable?",
+  "Can I change tariffs later?",
 ];
 
 export function FinalEstimateSection({ 
   results, 
-  currentFuel, 
-  onBook 
+  currentFuel,
+  context,
+  onContinue,
 }: FinalEstimateSectionProps) {
-  const { value: installCost } = useCountUp(results.grossInstallPrice, { duration: 1200 });
-  const { value: grant } = useCountUp(results.grantApplied, { duration: 1200, delay: 200 });
-  const { value: netCost } = useCountUp(results.customerContribution, { duration: 1200, delay: 400 });
-  const { value: savings } = useCountUp(Math.abs(results.estimatedSavings), { duration: 1200, delay: 600 });
-  
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
   const savingsPositive = results.estimatedSavings > 0;
   const fuelLabel = FUEL_LABELS[currentFuel] || 'current';
 
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  const handleSend = async (question: string) => {
+    if (!question.trim() || isLoading) return;
+
+    setShowChat(true);
+    const userMessage: Message = { role: 'user', content: question.trim() };
+    setMessages(prev => [...prev, userMessage]);
+    setInput('');
+    setIsLoading(true);
+
+    try {
+      const response = await supabase.functions.invoke('estimate-chat', {
+        body: {
+          messages: [...messages, userMessage].map(m => ({
+            role: m.role,
+            content: m.content,
+          })),
+          context: {
+            ...context,
+            currentSection: 'final-estimate',
+          },
+        },
+      });
+
+      if (response.error) throw response.error;
+
+      if (response.data?.message) {
+        setMessages(prev => [...prev, { role: 'assistant', content: response.data.message }]);
+      }
+    } catch (error) {
+      console.error('Chat error:', error);
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: "I'm having trouble answering right now. Feel free to book a call and we can discuss in person." 
+      }]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSend(input);
+  };
+
   return (
-    <section className="py-8 sm:py-12 animate-fade-in">
-      {/* Header */}
-      <div className="text-center mb-6 sm:mb-8">
-        <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-primary/10 text-primary text-xs sm:text-sm font-medium mb-3 sm:mb-4">
+    <section className="py-6 sm:py-10 animate-fade-in">
+      {/* Badge */}
+      <div className="flex justify-center mb-4">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
           ✨ Your personalised estimate
         </div>
-        <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2">
-          Here's your heat pump quote
+      </div>
+
+      {/* Title */}
+      <div className="text-center mb-6">
+        <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
+          Here's your quote
         </h2>
-        <p className="text-sm sm:text-base text-muted-foreground">
-          Tailored to your home and preferences
-        </p>
       </div>
 
       {/* Main cost card */}
-      <div className="p-5 sm:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground mb-4 sm:mb-6 animate-scale-in">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3 sm:mb-4">
-          <span className="text-xs sm:text-sm opacity-90">Your cost after grant</span>
-          <div className="flex items-center gap-1.5 sm:gap-2 bg-white/20 rounded-full px-2.5 py-1 sm:px-3 self-start sm:self-auto">
-            <Gift className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span className="text-xs sm:text-sm">£{grant.toLocaleString()} grant</span>
-          </div>
+      <div className="p-5 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground mb-4 shadow-lg">
+        <div className="flex items-center gap-2 mb-3">
+          <Gift className="w-4 h-4" />
+          <span className="text-sm opacity-90">£{results.grantApplied.toLocaleString()} grant applied</span>
         </div>
-        <p className="text-4xl sm:text-5xl font-bold mb-1 sm:mb-2">£{netCost.toLocaleString()}</p>
-        <p className="text-xs sm:text-sm opacity-75">
-          Full install: £{installCost.toLocaleString()} − £{grant.toLocaleString()} grant
+        <p className="text-xs opacity-75 mb-1">You pay</p>
+        <p className="text-4xl sm:text-5xl font-bold mb-1">
+          £{results.customerContribution.toLocaleString()}
+        </p>
+        <p className="text-xs opacity-75">
+          Full install: £{results.grossInstallPrice.toLocaleString()}
         </p>
       </div>
 
-      {/* Savings card */}
+      {/* Savings row */}
       <div className={cn(
-        'p-4 sm:p-5 rounded-xl sm:rounded-2xl border mb-4 sm:mb-6 animate-scale-in',
-        savingsPositive 
-          ? 'bg-green-50 border-green-200' 
-          : 'bg-card border-border'
-      )} style={{ animationDelay: '200ms' }}>
+        'p-4 rounded-xl border mb-4',
+        savingsPositive ? 'bg-green-50 border-green-200' : 'bg-white border-border'
+      )}>
         <div className="flex items-center gap-3">
           <div className={cn(
-            'w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0',
+            'w-10 h-10 rounded-lg flex items-center justify-center',
             savingsPositive ? 'bg-green-100' : 'bg-muted'
           )}>
             <TrendingDown className={cn(
-              'w-5 h-5 sm:w-6 sm:h-6',
+              'w-5 h-5',
               savingsPositive ? 'text-green-600' : 'text-muted-foreground'
             )} />
           </div>
           <div>
-            <p className="text-xs sm:text-sm text-muted-foreground">Estimated annual savings</p>
             <p className={cn(
-              'text-xl sm:text-2xl font-bold',
+              'text-xl font-bold',
               savingsPositive ? 'text-green-600' : 'text-foreground'
             )}>
-              {savingsPositive ? '£' : '-£'}{savings.toLocaleString()}/year
+              {savingsPositive ? '£' : '-£'}{Math.abs(results.estimatedSavings).toLocaleString()}/year
             </p>
-            <p className="text-xs sm:text-sm text-muted-foreground">
-              Compared to your {fuelLabel} heating
+            <p className="text-xs text-muted-foreground">
+              {savingsPositive ? 'savings' : 'extra'} vs your {fuelLabel}
             </p>
           </div>
         </div>
       </div>
 
       {/* What's included */}
-      <div className="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-card border border-border mb-4 sm:mb-6">
-        <h3 className="font-semibold text-foreground text-sm sm:text-base mb-3 sm:mb-4">What's included</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
+      <div className="p-4 rounded-xl bg-white border border-border mb-6">
+        <h3 className="font-semibold text-foreground text-sm mb-3">What's included</h3>
+        <div className="grid grid-cols-2 gap-2">
           {WHATS_INCLUDED.map((item) => (
             <div key={item} className="flex items-center gap-2">
-              <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary flex-shrink-0" />
-              <span className="text-xs sm:text-sm text-muted-foreground">{item}</span>
+              <Check className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+              <span className="text-xs text-muted-foreground">{item}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* What happens next */}
-      <div className="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-muted/30 border border-border mb-6 sm:mb-8">
-        <h3 className="font-semibold text-foreground text-sm sm:text-base mb-3 sm:mb-4">What happens next?</h3>
-        <div className="space-y-3 sm:space-y-4">
-          {NEXT_STEPS.map((step) => (
-            <div key={step.step} className="flex items-start gap-2.5 sm:gap-3">
-              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <span className="text-xs sm:text-sm font-medium text-primary">{step.step}</span>
-              </div>
-              <div>
-                <p className="font-medium text-foreground text-xs sm:text-sm">{step.title}</p>
-                <p className="text-[10px] sm:text-xs text-muted-foreground">{step.description}</p>
+      {/* AI Assistant section */}
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-3">
+          <Sparkles className="w-4 h-4 text-primary" />
+          <h3 className="font-semibold text-foreground text-sm">Have questions?</h3>
+        </div>
+
+        <div className="bg-white rounded-xl border border-border overflow-hidden">
+          {!showChat ? (
+            <div className="p-4">
+              <div className="flex flex-wrap gap-2">
+                {STARTER_QUESTIONS.map((q) => (
+                  <button
+                    key={q}
+                    onClick={() => handleSend(q)}
+                    className="text-left px-3 py-2 rounded-lg bg-muted/50 hover:bg-muted active:bg-muted text-sm text-foreground transition-colors"
+                  >
+                    {q}
+                  </button>
+                ))}
               </div>
             </div>
-          ))}
+          ) : (
+            <>
+              <div 
+                ref={scrollRef}
+                className="max-h-[200px] overflow-y-auto p-4"
+              >
+                <div className="space-y-3">
+                  {messages.map((msg, i) => (
+                    <div
+                      key={i}
+                      className={cn(
+                        'flex',
+                        msg.role === 'user' ? 'justify-end' : 'justify-start'
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          'max-w-[85%] rounded-xl px-3 py-2',
+                          msg.role === 'user'
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted/50'
+                        )}
+                      >
+                        {msg.role === 'assistant' ? (
+                          <div className="prose prose-sm max-w-none text-foreground">
+                            <ReactMarkdown>{msg.content}</ReactMarkdown>
+                          </div>
+                        ) : (
+                          <p className="text-sm">{msg.content}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {isLoading && (
+                    <div className="flex justify-start">
+                      <div className="rounded-xl px-3 py-2 bg-muted/50">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span className="text-sm">Thinking...</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-3 border-t border-border">
+                <form onSubmit={handleSubmit} className="flex gap-2">
+                  <Input
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Ask anything..."
+                    className="flex-1 bg-muted/30 border-0 focus-visible:ring-1"
+                    disabled={isLoading}
+                  />
+                  <Button 
+                    type="submit" 
+                    size="icon"
+                    className="rounded-lg"
+                    disabled={isLoading || !input.trim()}
+                  >
+                    <Send className="w-4 h-4" />
+                  </Button>
+                </form>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
-      {/* Trust badges */}
-      <div className="flex items-center justify-center gap-4 mb-4 sm:mb-6">
+      {/* Trust badge */}
+      <div className="flex justify-center mb-6">
         <img 
           src={octopusPartnerLogo} 
           alt="Octopus Trusted Partner" 
-          className="h-8 sm:h-10 opacity-80"
+          className="h-8 opacity-70"
         />
       </div>
 
       {/* CTA */}
       <Button 
-        onClick={onBook}
+        onClick={onContinue}
         size="lg"
-        className="w-full h-12 sm:h-14 text-base sm:text-lg font-semibold active:scale-[0.98] transition-transform"
+        className="w-full h-12 sm:h-14 text-base sm:text-lg font-semibold rounded-xl active:scale-[0.98] transition-transform"
       >
-        <Calendar className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-        Book a design call
+        <Calendar className="w-4 h-4 mr-2" />
+        Book my design call
       </Button>
 
       {/* Reassurance */}
-      <div className="flex items-center justify-center gap-3 sm:gap-4 mt-3 sm:mt-4 text-xs sm:text-sm text-muted-foreground">
-        <span className="flex items-center gap-1">
-          <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          No obligation
-        </span>
-        <span>•</span>
-        <span>Takes 15 minutes</span>
-      </div>
+      <p className="text-center text-xs text-muted-foreground mt-4">
+        No obligation • Takes 15 minutes • We'll confirm everything
+      </p>
     </section>
   );
 }
