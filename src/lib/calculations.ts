@@ -145,9 +145,10 @@ const COSY_PEAK_RATE = 0.38;     // 38p/kWh
 
 // Cosy usage shares (FIXED - not EPC-dependent)
 // Heat pump scheduling optimizes for cheap hours
+// These must match tariffCalculations.ts
 const COSY_OFFPEAK_SHARE = 0.65;  // 65% in overnight cheap window
-const COSY_MID_SHARE = 0.10;      // 10% during midday
-const COSY_PEAK_SHARE = 0.25;     // 25% during 4-7pm peak
+const COSY_MID_SHARE = 0.20;      // 20% during midday
+const COSY_PEAK_SHARE = 0.15;     // 15% during 4-7pm peak
 
 // Base SCOP mapping
 const BASE_SCOP_MAP: Record<number, number> = {
