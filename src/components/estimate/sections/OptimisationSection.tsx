@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Check, ChevronDown, ArrowLeft, Zap, Info, PiggyBank, TrendingUp } from 'lucide-react';
+import { Check, ChevronDown, ArrowLeft, Zap, Info, PiggyBank, TrendingUp, Thermometer, Wrench, CircleDollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
@@ -24,11 +24,14 @@ type OptLevel = 'simple' | 'balanced' | 'optimised';
 interface OptOption {
   id: OptLevel;
   scop: number;
-  efficiency: number; // percentage (340, 370, 400)
+  efficiency: number;
   label: string;
   tag: string;
   tagType: 'neutral' | 'popular' | 'savings';
   description: string;
+  whatsIncluded: string[];
+  whyEfficiency: string;
+  valueBreakdown: string;
 }
 
 const OPT_OPTIONS: OptOption[] = [
@@ -40,6 +43,14 @@ const OPT_OPTIONS: OptOption[] = [
     tag: 'Lowest upfront',
     tagType: 'neutral',
     description: 'Minimal changes. Lower install cost but higher running bills.',
+    whatsIncluded: [
+      'Heat pump sized for your home',
+      'Basic pipework & connections',
+      'Keep existing radiators',
+      'Standard hot water cylinder',
+    ],
+    whyEfficiency: 'Running at higher water temperatures (55°C) to work with your existing radiators. Less efficient but no radiator changes needed.',
+    valueBreakdown: 'Best if you want to minimise upfront cost and are less concerned about long-term running costs.',
   },
   {
     id: 'balanced',
@@ -49,6 +60,15 @@ const OPT_OPTIONS: OptOption[] = [
     tag: 'Recommended',
     tagType: 'popular',
     description: 'Best value. A few upgrades for noticeably lower bills.',
+    whatsIncluded: [
+      'Heat pump sized for your home',
+      'Optimised pipework & connections',
+      '4-6 key radiator upgrades',
+      'Premium hot water cylinder',
+      'Smart heating controls',
+    ],
+    whyEfficiency: 'Running at medium temperatures (45°C) with upgraded radiators in key rooms. Great balance of efficiency and cost.',
+    valueBreakdown: 'The extra upfront investment typically pays back in 3-5 years through lower bills, then you save every year after.',
   },
   {
     id: 'optimised',
@@ -58,6 +78,16 @@ const OPT_OPTIONS: OptOption[] = [
     tag: 'Lowest bills',
     tagType: 'savings',
     description: 'Maximum efficiency. Higher upfront but lowest bills long-term.',
+    whatsIncluded: [
+      'Heat pump sized for your home',
+      'Premium pipework & connections',
+      'Full radiator upgrade (8-12 rads)',
+      'Premium hot water cylinder',
+      'Smart zoned heating controls',
+      'Weather compensation setup',
+    ],
+    whyEfficiency: 'Running at low temperatures (35°C) with all radiators upgraded for maximum heat transfer. The most efficient setup possible.',
+    valueBreakdown: 'Highest upfront cost but lowest bills forever. Best for those staying long-term or prioritising comfort & sustainability.',
   },
 ];
 
@@ -73,10 +103,10 @@ export function OptimisationSection({
     if (scop >= 3.7) return 'balanced';
     return 'simple';
   });
+  const [expandedOption, setExpandedOption] = useState<OptLevel | null>(null);
   const [explainerOpen, setExplainerOpen] = useState(false);
   const hasInitialized = useRef(false);
 
-  // Calculate exact £ values for each option (derived from the same model as the sticky bar)
   const optionValues = useMemo(() => {
     if (!optionResults) return null;
 
@@ -112,7 +142,6 @@ export function OptimisationSection({
   useEffect(() => {
     if (!hasInitialized.current) {
       hasInitialized.current = true;
-      // Default to 'balanced' on first load
       setSelectedLevel('balanced');
       onScopChange(3.7);
     }
@@ -123,6 +152,11 @@ export function OptimisationSection({
     setSelectedLevel(level);
     const option = OPT_OPTIONS.find(o => o.id === level);
     if (option) onScopChange(option.scop);
+  };
+
+  const toggleExpanded = (e: React.MouseEvent, level: OptLevel) => {
+    e.stopPropagation();
+    setExpandedOption(expandedOption === level ? null : level);
   };
 
   return (
@@ -194,138 +228,204 @@ export function OptimisationSection({
       <div className="space-y-3 mb-5">
         {OPT_OPTIONS.map((option) => {
           const isSelected = selectedLevel === option.id;
+          const isExpanded = expandedOption === option.id;
           const values = optionValues?.[option.id];
-          
-          // Efficiency bar percentage (340-400 mapped to 0-100%)
           const efficiencyPercent = ((option.efficiency - 300) / 120) * 100;
           
           return (
-            <button
+            <div
               key={option.id}
-              onClick={() => handleSelect(option.id)}
               className={cn(
-                'option-card relative w-full p-4 rounded-2xl border-2 text-left transition-all',
-                'bg-card touch-manipulation',
+                'relative w-full rounded-2xl border-2 text-left transition-all',
+                'bg-card',
                 isSelected 
-                  ? 'option-card-selected border-primary ring-2 ring-primary/20' 
+                  ? 'border-primary ring-2 ring-primary/20' 
                   : 'border-border hover:border-muted-foreground/40'
               )}
             >
-              <div className="flex items-start gap-3.5">
-                {/* Selection indicator */}
-                <div className={cn(
-                  'w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all duration-200',
-                  isSelected 
-                    ? 'border-primary bg-primary scale-110' 
-                    : 'border-muted-foreground/30'
-                )}>
-                  {isSelected && <Check className="w-3.5 h-3.5 text-primary-foreground" />}
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <h3 className="font-semibold text-foreground text-base">
-                      {option.label}
-                    </h3>
-                    <span className={cn(
-                      'px-2 py-0.5 text-[11px] font-bold rounded-full',
-                      option.tagType === 'popular' && 'bg-primary/10 text-primary',
-                      option.tagType === 'neutral' && 'bg-blue-50 text-blue-700',
-                      option.tagType === 'savings' && 'bg-green-100 text-green-700'
-                    )}>
-                      {option.tag}
-                    </span>
+              {/* Main clickable area */}
+              <button
+                onClick={() => handleSelect(option.id)}
+                className="w-full p-4 text-left touch-manipulation"
+              >
+                <div className="flex items-start gap-3.5">
+                  {/* Selection indicator */}
+                  <div className={cn(
+                    'w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all duration-200',
+                    isSelected 
+                      ? 'border-primary bg-primary scale-110' 
+                      : 'border-muted-foreground/30'
+                  )}>
+                    {isSelected && <Check className="w-3.5 h-3.5 text-primary-foreground" />}
                   </div>
 
-                  {/* Efficiency indicator - prominent */}
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="flex items-center gap-1.5">
-                      <Zap className={cn(
-                        'w-4 h-4',
-                        option.efficiency >= 400 ? 'text-green-600' :
-                        option.efficiency >= 370 ? 'text-primary' : 'text-blue-600'
-                      )} />
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <h3 className="font-semibold text-foreground text-base">
+                        {option.label}
+                      </h3>
                       <span className={cn(
-                        'text-lg font-bold tabular-nums',
-                        option.efficiency >= 400 ? 'text-green-600' :
-                        option.efficiency >= 370 ? 'text-primary' : 'text-foreground'
+                        'px-2 py-0.5 text-[11px] font-bold rounded-full',
+                        option.tagType === 'popular' && 'bg-primary/10 text-primary',
+                        option.tagType === 'neutral' && 'bg-blue-50 text-blue-700',
+                        option.tagType === 'savings' && 'bg-green-100 text-green-700'
                       )}>
-                        {option.efficiency}%
+                        {option.tag}
                       </span>
-                      <span className="text-xs text-foreground/70">efficiency</span>
                     </div>
-                    {/* Mini efficiency bar */}
-                    <div className="flex-1 h-2 bg-primary/10 rounded-full overflow-hidden max-w-20">
-                      <div 
-                        className={cn(
-                          'h-full rounded-full transition-all duration-300',
-                          option.efficiency >= 400 ? 'bg-green-500' :
-                          option.efficiency >= 370 ? 'bg-primary' : 'bg-blue-500'
-                        )}
-                        style={{ width: `${efficiencyPercent}%` }}
-                      />
-                    </div>
-                  </div>
-                  
-                  <p className="text-sm text-muted-foreground mb-3 leading-relaxed">
-                    {option.description}
-                  </p>
 
-                  {/* Price impact badges - exact numbers */}
-                  {values && (
-                    <div className="flex flex-col gap-2">
-                      {/* Upfront cost badge */}
-                      <div className="flex items-center gap-2.5 text-xs flex-wrap">
+                    {/* Efficiency indicator */}
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-1.5">
+                        <Zap className={cn(
+                          'w-4 h-4',
+                          option.efficiency >= 400 ? 'text-green-600' :
+                          option.efficiency >= 370 ? 'text-primary' : 'text-blue-600'
+                        )} />
                         <span className={cn(
-                          'px-2.5 py-1.5 rounded-lg font-bold tabular-nums',
-                          values.installDiff === 0 
-                            ? 'bg-green-50 text-green-700' 
-                            : 'bg-amber-50 text-amber-700'
+                          'text-lg font-bold tabular-nums',
+                          option.efficiency >= 400 ? 'text-green-600' :
+                          option.efficiency >= 370 ? 'text-primary' : 'text-foreground'
                         )}>
-                          {values.installDiff === 0 ? '+£0 upfront' : `+£${values.installDiff.toLocaleString()} upfront`}
+                          {option.efficiency}%
                         </span>
+                        <span className="text-xs text-foreground/70">efficiency</span>
                       </div>
-                      
-                      {/* Prominent annual savings badge */}
-                      <div className={cn(
-                        'flex items-center gap-2 px-3 py-2 rounded-xl',
-                        values.savings > 0 
-                          ? 'bg-gradient-to-r from-green-100 to-green-50 border border-green-200' 
-                          : 'bg-gradient-to-r from-amber-100 to-amber-50 border border-amber-200'
-                      )}>
-                        <div className={cn(
-                          'w-8 h-8 rounded-lg flex items-center justify-center',
-                          values.savings > 0 ? 'bg-green-200/50' : 'bg-amber-200/50'
-                        )}>
-                          <PiggyBank className={cn(
-                            'w-4 h-4',
-                            values.savings > 0 ? 'text-green-700' : 'text-amber-700'
-                          )} />
-                        </div>
-                        <div className="flex-1">
-                          <p className={cn(
-                            'text-lg font-bold tabular-nums leading-tight',
-                            values.savings > 0 ? 'text-green-700' : 'text-amber-700'
-                          )}>
-                            {values.savings > 0 
-                              ? `Save £${values.savings.toLocaleString()}` 
-                              : `£${Math.abs(values.savings).toLocaleString()} extra`}
-                            <span className="text-sm font-semibold">/year</span>
-                          </p>
-                          <p className={cn(
-                            'text-[10px]',
-                            values.savings > 0 ? 'text-green-600' : 'text-amber-600'
-                          )}>
-                            {values.savings > 0 ? 'on your energy bills' : 'on your energy bills'}
-                          </p>
-                        </div>
+                      <div className="flex-1 h-2 bg-primary/10 rounded-full overflow-hidden max-w-20">
+                        <div 
+                          className={cn(
+                            'h-full rounded-full transition-all duration-300',
+                            option.efficiency >= 400 ? 'bg-green-500' :
+                            option.efficiency >= 370 ? 'bg-primary' : 'bg-blue-500'
+                          )}
+                          style={{ width: `${efficiencyPercent}%` }}
+                        />
                       </div>
                     </div>
-                  )}
+                    
+                    <p className="text-sm text-muted-foreground mb-3 leading-relaxed">
+                      {option.description}
+                    </p>
+
+                    {/* Price badges */}
+                    {values && (
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2.5 text-xs flex-wrap">
+                          <span className={cn(
+                            'px-2.5 py-1.5 rounded-lg font-bold tabular-nums',
+                            values.installDiff === 0 
+                              ? 'bg-green-50 text-green-700' 
+                              : 'bg-amber-50 text-amber-700'
+                          )}>
+                            {values.installDiff === 0 ? '+£0 upfront' : `+£${values.installDiff.toLocaleString()} upfront`}
+                          </span>
+                        </div>
+                        
+                        <div className={cn(
+                          'flex items-center gap-2 px-3 py-2 rounded-xl',
+                          values.savings > 0 
+                            ? 'bg-gradient-to-r from-green-100 to-green-50 border border-green-200' 
+                            : 'bg-gradient-to-r from-amber-100 to-amber-50 border border-amber-200'
+                        )}>
+                          <div className={cn(
+                            'w-8 h-8 rounded-lg flex items-center justify-center',
+                            values.savings > 0 ? 'bg-green-200/50' : 'bg-amber-200/50'
+                          )}>
+                            <PiggyBank className={cn(
+                              'w-4 h-4',
+                              values.savings > 0 ? 'text-green-700' : 'text-amber-700'
+                            )} />
+                          </div>
+                          <div className="flex-1">
+                            <p className={cn(
+                              'text-lg font-bold tabular-nums leading-tight',
+                              values.savings > 0 ? 'text-green-700' : 'text-amber-700'
+                            )}>
+                              {values.savings > 0 
+                                ? `Save £${values.savings.toLocaleString()}` 
+                                : `£${Math.abs(values.savings).toLocaleString()} extra`}
+                              <span className="text-sm font-semibold">/year</span>
+                            </p>
+                            <p className={cn(
+                              'text-[10px]',
+                              values.savings > 0 ? 'text-green-600' : 'text-amber-600'
+                            )}>
+                              on your energy bills
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </button>
+              </button>
+
+              {/* Expandable details trigger */}
+              <button
+                onClick={(e) => toggleExpanded(e, option.id)}
+                className={cn(
+                  'w-full flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium border-t transition-colors',
+                  isExpanded 
+                    ? 'bg-primary/5 text-primary border-primary/20' 
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border-border'
+                )}
+              >
+                <span>{isExpanded ? 'Hide details' : 'What\'s included?'}</span>
+                <ChevronDown className={cn(
+                  'w-3.5 h-3.5 transition-transform duration-200',
+                  isExpanded && 'rotate-180'
+                )} />
+              </button>
+
+              {/* Expandable content */}
+              {isExpanded && (
+                <div className="px-4 pb-4 pt-2 border-t border-border/50 animate-fade-in">
+                  {/* What's included */}
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Wrench className="w-4 h-4 text-primary" />
+                      <h4 className="text-sm font-semibold text-foreground">What's included</h4>
+                    </div>
+                    <ul className="space-y-1.5 ml-6">
+                      {option.whatsIncluded.map((item, i) => (
+                        <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
+                          <Check className="w-3.5 h-3.5 text-green-600 mt-0.5 flex-shrink-0" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Why this efficiency */}
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Thermometer className="w-4 h-4 text-primary" />
+                      <h4 className="text-sm font-semibold text-foreground">Why {option.efficiency}% efficiency?</h4>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed ml-6">
+                      {option.whyEfficiency}
+                    </p>
+                  </div>
+
+                  {/* Value breakdown */}
+                  <div className="bg-gradient-to-r from-primary/5 to-green-50/50 rounded-lg p-3">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <CircleDollarSign className="w-4 h-4 text-green-600" />
+                      <h4 className="text-sm font-semibold text-foreground">Is it worth it?</h4>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {option.valueBreakdown}
+                    </p>
+                    {values && values.savingsDiff > 0 && option.id !== 'simple' && (
+                      <p className="text-xs font-medium text-green-700 mt-2">
+                        You'll save an extra £{values.savingsDiff.toLocaleString()}/year compared to Simple setup.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           );
         })}
       </div>
@@ -340,7 +440,7 @@ export function OptimisationSection({
           )} />
         </CollapsibleTrigger>
         <CollapsibleContent className="mt-4 overflow-hidden data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
-          <div className="bg-muted/50 rounded-xl p-4 text-sm space-y-3">
+          <div className="bg-primary/5 rounded-xl p-4 text-sm space-y-3">
             <div className="flex items-center gap-2 mb-2">
               <Zap className="w-5 h-5 text-primary" />
               <span className="font-semibold text-foreground">What is SCOP/efficiency?</span>
