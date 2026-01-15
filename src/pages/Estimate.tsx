@@ -284,10 +284,10 @@ export default function Estimate() {
       <div className="overflow-y-auto" ref={contentRef}>
         <div className={cn(
           'max-w-lg mx-auto px-4 sm:px-6',
-          // Add bottom padding for sticky bar on mobile
-          showStickyBar ? 'pb-36' : 'pb-6',
-          // Safe area for iOS
-          'pb-[max(2rem,env(safe-area-inset-bottom))]'
+          // Add bottom padding for sticky bar on mobile (smaller bar = less padding needed)
+          showStickyBar ? 'pb-24' : 'pb-6',
+          // Desktop: add right margin for sticky panel
+          showStickyBar && 'lg:mr-72'
         )}>
           {renderSection()}
         </div>
