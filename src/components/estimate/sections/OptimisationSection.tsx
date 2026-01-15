@@ -250,18 +250,13 @@ export function OptimisationSection({
                       )}>
                         {values.installDiff === 0 ? '+£0 install' : `+£${values.installDiff.toLocaleString()} install`}
                       </span>
-                      {values.savingsDiff > 0 ? (
-                        <span className="px-2.5 py-1.5 rounded-lg font-bold bg-green-50 text-green-700 tabular-nums">
-                          +£{values.savingsDiff}/yr savings
-                        </span>
-                      ) : (
-                        <span className={cn(
-                          'px-2.5 py-1.5 rounded-lg font-bold tabular-nums',
-                          values.savings > 0 ? 'bg-green-50 text-green-700' : 'bg-muted text-muted-foreground'
-                        )}>
-                          {values.savings > 0 ? `−£${Math.round(values.savings)}/yr` : 'No savings'}
-                        </span>
-                      )}
+                      {/* Show total savings for all options */}
+                      <span className={cn(
+                        'px-2.5 py-1.5 rounded-lg font-bold tabular-nums',
+                        values.savings > 0 ? 'bg-green-50 text-green-700' : 'bg-muted text-muted-foreground'
+                      )}>
+                        {values.savings > 0 ? `−£${Math.round(values.savings)}/yr` : 'No savings'}
+                      </span>
                     </div>
                   )}
                 </div>
