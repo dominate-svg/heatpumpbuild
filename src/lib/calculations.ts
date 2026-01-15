@@ -101,12 +101,28 @@ const DHW_SHARE_BY_EPC: Record<string, number> = {
 };
 
 // Boiler efficiencies (slightly pessimistic, common stock)
+// Gas updated to 0.85 (typical) - oil/LPG unchanged
 const BOILER_EFFICIENCY: Record<string, number> = {
-  'gas': 0.82,  // DO NOT CHANGE
-  'oil': 0.78,
-  'lpg': 0.82,
+  'gas': 0.85,  // Updated: typical efficiency (was 0.82)
+  'oil': 0.78,  // DO NOT CHANGE
+  'lpg': 0.82,  // DO NOT CHANGE
   'electric': 1.00,
 };
+
+// ============================================
+// GAS OPTIMISM ADJUSTMENTS (gas only)
+// ============================================
+// A/B test flag: set to true to use 0.88 efficiency for gas
+const GAS_BOILER_EFFICIENCY_OPTIMISTIC = 0.88;
+const USE_GAS_OPTIMISTIC_EFFICIENCY = false; // A/B variant B = true
+
+// Gas SCOP uplift (gas homes typically run lower flow temps once optimised)
+const GAS_SCOP_SPACE_UPLIFT = 0.15;
+const GAS_SCOP_DHW_UPLIFT = 0.10;
+
+// Gas off-peak share nudge (gas homes more predictable usage patterns)
+const GAS_OFFPEAK_SHARE_NUDGE = 0.05;
+const GAS_OFFPEAK_SHARE_MAX = 0.65;
 
 // Fuel prices
 // Gas: £/kWh (DO NOT CHANGE)
@@ -217,6 +233,11 @@ export interface SavingsTransparency {
   epcScopMultiplier: number;
   scopSpace: number;
   scopDhw: number;
+  
+  // Gas optimism adjustments (gas only)
+  gasBoilerEfficiency?: number;
+  gasScopUpliftApplied?: boolean;
+  gasOffpeakNudgeApplied?: boolean;
   
   // Electricity breakdown
   hpKwhSpace: number;
@@ -374,7 +395,11 @@ function calculateSavings(
   // ============================================
   // Step 2: Current heating cost
   // ============================================
-  const boilerEfficiency = BOILER_EFFICIENCY[fuelType] || 0.82;
+  // Gas boiler efficiency: use optimistic variant if A/B flag set
+  let boilerEfficiency = BOILER_EFFICIENCY[fuelType] || 0.82;
+  if (fuelType === 'gas' && USE_GAS_OPTIMISTIC_EFFICIENCY) {
+    boilerEfficiency = GAS_BOILER_EFFICIENCY_OPTIMISTIC;
+  }
   
   // Calculate fuel input needed (accounting for boiler efficiency)
   const fuelKwh = totalHeatDemand / boilerEfficiency;
@@ -409,10 +434,21 @@ function calculateSavings(
   
   // Calculate space heating SCOP (with EPC adjustment and clamp)
   let scopSpace = baseScop * epcScopMultiplier;
+  
+  // Apply gas SCOP uplift (gas homes typically run lower flow temps)
+  // Do NOT apply to oil/LPG
+  if (fuelType === 'gas') {
+    scopSpace = scopSpace + GAS_SCOP_SPACE_UPLIFT;
+  }
   scopSpace = clamp(scopSpace, SCOP_SPACE_MIN, SCOP_SPACE_MAX);
   
   // Calculate DHW SCOP (with penalty and clamp)
   let scopDhw = scopSpace * DHW_SCOP_PENALTY;
+  
+  // Apply gas DHW uplift (gas homes only)
+  if (fuelType === 'gas') {
+    scopDhw = scopDhw + GAS_SCOP_DHW_UPLIFT;
+  }
   scopDhw = Math.max(scopDhw, SCOP_DHW_MIN);
 
   // ============================================
@@ -425,7 +461,14 @@ function calculateSavings(
   // ============================================
   // Step 5: Calculate EPC-sensitive Cosy blended rate
   // ============================================
-  const cosyCheapShare = COSY_CHEAP_SHARE_BY_EPC[epcBand] || 0.50;
+  let cosyCheapShare = COSY_CHEAP_SHARE_BY_EPC[epcBand] || 0.50;
+  
+  // Apply gas off-peak share nudge (gas homes more predictable patterns)
+  // Do NOT apply to oil/LPG
+  if (fuelType === 'gas') {
+    cosyCheapShare = Math.min(cosyCheapShare + GAS_OFFPEAK_SHARE_NUDGE, GAS_OFFPEAK_SHARE_MAX);
+  }
+  
   const cosyMidShare = 1 - cosyCheapShare - COSY_PEAK_SHARE;
   
   const blendedRate = 
@@ -485,6 +528,10 @@ function calculateSavings(
       scopDhw,
       hpKwhSpace,
       hpKwhDhw,
+      // Gas optimism transparency (gas only)
+      gasBoilerEfficiency: fuelType === 'gas' ? boilerEfficiency * 100 : undefined,
+      gasScopUpliftApplied: fuelType === 'gas',
+      gasOffpeakNudgeApplied: fuelType === 'gas',
       cosyOffpeakRate: COSY_OFFPEAK_RATE * 100,
       cosyMidRate: COSY_MID_RATE * 100,
       cosyPeakRate: COSY_PEAK_RATE * 100,
@@ -536,7 +583,8 @@ export function calculateEstimate(
       inputs.tariff,
       epcBand,
       cosySavings.hpKwh,
-      cosySavings.currentCost
+      cosySavings.currentCost,
+      fuelType // Pass fuel type for gas off-peak nudge
     );
 
     hpCost = outcome.heatPumpCostAnnual;

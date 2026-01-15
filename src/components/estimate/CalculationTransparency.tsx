@@ -80,6 +80,7 @@ export function CalculationTransparency({ results, currentFuel }: CalculationTra
                 <span className="text-muted-foreground">Boiler efficiency</span>
                 <span className="font-bold text-foreground ml-2">
                   {Math.round(results.boilerEfficiency * 100)}%
+                  {currentFuel === 'gas' && <span className="text-muted-foreground font-normal ml-1">(typical)</span>}
                 </span>
               </div>
               {isOilFuel && transparency.oilPricePerLitre && (
@@ -133,12 +134,18 @@ export function CalculationTransparency({ results, currentFuel }: CalculationTra
                 <span className="text-muted-foreground">Space SCOP</span>
                 <span className="font-bold text-foreground ml-2">
                   {transparency.scopSpace.toFixed(2)}
+                  {transparency.gasScopUpliftApplied && (
+                    <span className="text-green-600 font-normal ml-1">(+0.15)</span>
+                  )}
                 </span>
               </div>
               <div className="bg-background rounded-lg p-2">
                 <span className="text-muted-foreground">Hot water SCOP</span>
                 <span className="font-bold text-foreground ml-2">
-                  {transparency.scopDhw.toFixed(2)} (×0.75 penalty)
+                  {transparency.scopDhw.toFixed(2)}
+                  {transparency.gasScopUpliftApplied && (
+                    <span className="text-green-600 font-normal ml-1">(+0.10)</span>
+                  )}
                 </span>
               </div>
               <div className="bg-background rounded-lg p-2">
@@ -160,6 +167,11 @@ export function CalculationTransparency({ results, currentFuel }: CalculationTra
                 </span>
               </div>
             </div>
+            {transparency.gasScopUpliftApplied && (
+              <div className="text-xs text-green-700 bg-green-50 rounded-lg p-2 mt-2">
+                Gas-home performance adjustment: +0.15 SCOP (balanced estimate based on typical lower flow temperatures)
+              </div>
+            )}
           </div>
           
           {/* Cosy Tariff Section */}
