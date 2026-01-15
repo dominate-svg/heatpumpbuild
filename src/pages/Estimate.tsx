@@ -211,7 +211,7 @@ export default function Estimate() {
       </div>
 
       {/* Sticky estimate panel */}
-      {showStickyPanel && (
+      {showStickyPanel && results && (
         <StickyEstimatePanel results={results} currentFuel={currentFuel} />
       )}
     </div>
