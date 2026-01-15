@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Check, ChevronDown, ArrowLeft, Settings, Info, HelpCircle } from 'lucide-react';
+import { Check, ChevronDown, ArrowLeft, Settings, HelpCircle, PiggyBank } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
@@ -274,7 +274,7 @@ export function EfficiencyPlanSection({
 
                   {/* Exact £ impact badges */}
                   {values && (
-                    <div className="flex items-center gap-2 text-xs flex-wrap">
+                    <div className="flex items-center gap-2.5 text-xs flex-wrap">
                       {/* Install impact */}
                       <span className={cn(
                         'px-2.5 py-1.5 rounded-lg font-bold tabular-nums',
@@ -285,14 +285,17 @@ export function EfficiencyPlanSection({
                         {values.installDiff === 0 ? '+£0 install' : `+£${values.installDiff.toLocaleString()} install`}
                       </span>
                       
-                      {/* Savings */}
+                      {/* Prominent savings badge with icon */}
                       <span className={cn(
-                        'px-2.5 py-1.5 rounded-lg font-bold tabular-nums',
-                        values.savings > 0 ? 'bg-green-50 text-green-700' : 'bg-muted text-muted-foreground'
+                        'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold tabular-nums',
+                        values.savings > 0 
+                          ? 'bg-green-100 text-green-700 ring-1 ring-green-200' 
+                          : 'bg-amber-100 text-amber-700 ring-1 ring-amber-200'
                       )}>
+                        <PiggyBank className="w-3.5 h-3.5" />
                         {values.savings > 0 
                           ? `Save £${Math.round(values.savings)}/yr` 
-                          : `+£${Math.abs(Math.round(values.savings))}/yr more`}
+                          : `£${Math.abs(Math.round(values.savings))}/yr extra`}
                       </span>
                     </div>
                   )}

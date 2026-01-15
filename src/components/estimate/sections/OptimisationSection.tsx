@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Check, ChevronDown, ArrowLeft, Settings, Info } from 'lucide-react';
+import { Check, ChevronDown, ArrowLeft, Settings, Info, PiggyBank } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
@@ -220,7 +220,7 @@ export function OptimisationSection({
 
                   {/* Price impact badges - exact numbers */}
                   {values && (
-                    <div className="flex items-center gap-2 text-xs flex-wrap">
+                    <div className="flex items-center gap-2.5 text-xs flex-wrap">
                       <span className={cn(
                         'px-2.5 py-1.5 rounded-lg font-bold tabular-nums',
                         values.installDiff === 0 
@@ -229,12 +229,17 @@ export function OptimisationSection({
                       )}>
                         {values.installDiff === 0 ? '+£0 install' : `+£${values.installDiff.toLocaleString()} install`}
                       </span>
-                      {/* Show total savings for all options */}
+                      {/* Prominent savings badge with icon */}
                       <span className={cn(
-                        'px-2.5 py-1.5 rounded-lg font-bold tabular-nums',
-                        values.savings > 0 ? 'bg-green-50 text-green-700' : 'bg-muted text-muted-foreground'
+                        'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold tabular-nums',
+                        values.savings > 0 
+                          ? 'bg-green-100 text-green-700 ring-1 ring-green-200' 
+                          : 'bg-amber-100 text-amber-700 ring-1 ring-amber-200'
                       )}>
-                        {values.savings > 0 ? `−£${values.savings.toLocaleString()}/yr` : 'No savings'}
+                        <PiggyBank className="w-3.5 h-3.5" />
+                        {values.savings > 0 
+                          ? `Save £${values.savings.toLocaleString()}/yr` 
+                          : `£${Math.abs(values.savings).toLocaleString()}/yr extra`}
                       </span>
                     </div>
                   )}
