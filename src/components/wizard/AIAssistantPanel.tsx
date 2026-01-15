@@ -99,11 +99,11 @@ export function AIAssistantPanel({
             onClick={() => setIsOpen(false)}
           />
 
-          {/* Panel - full height on mobile, side sheet on desktop */}
-          <div className="fixed inset-x-0 bottom-0 sm:inset-y-0 sm:left-auto sm:right-0 h-[85vh] sm:h-full w-full sm:max-w-md bg-card border-t sm:border-t-0 sm:border-l border-border shadow-elevated z-50 animate-slide-in-right flex flex-col rounded-t-3xl sm:rounded-none">
+          {/* Panel - slide up on mobile, slide in from right on desktop */}
+          <div className="fixed inset-x-0 bottom-0 sm:inset-y-0 sm:left-auto sm:right-0 h-[85vh] sm:h-full w-full sm:max-w-md bg-card border-t sm:border-t-0 sm:border-l border-border shadow-elevated z-50 flex flex-col rounded-t-3xl sm:rounded-none animate-slide-in-up sm:animate-slide-in-right">
             {/* Drag handle - mobile only */}
-            <div className="sm:hidden flex justify-center py-2">
-              <div className="w-10 h-1 bg-muted-foreground/30 rounded-full" />
+            <div className="sm:hidden flex justify-center py-3">
+              <div className="w-12 h-1.5 bg-muted-foreground/30 rounded-full" />
             </div>
 
             {/* Header */}
@@ -181,16 +181,16 @@ export function AIAssistantPanel({
               </div>
             </div>
 
-            {/* Input - larger touch target on mobile */}
+            {/* Input - larger touch target on mobile with safe area */}
             <div className="p-3 sm:p-4 border-t border-border pb-safe">
               <div className="flex gap-2">
                 <input
                   type="text"
                   placeholder="Type a question..."
-                  className="flex-1 h-11 sm:h-11 px-4 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="flex-1 h-12 sm:h-11 px-4 rounded-xl border border-border bg-background text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
-                <Button size="icon" className="h-11 w-11 rounded-xl">
-                  <Send className="w-4 h-4" />
+                <Button size="icon" className="h-12 w-12 sm:h-11 sm:w-11 rounded-xl">
+                  <Send className="w-5 h-5 sm:w-4 sm:h-4" />
                 </Button>
               </div>
             </div>
