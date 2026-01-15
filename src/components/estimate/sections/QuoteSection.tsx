@@ -307,13 +307,14 @@ export function QuoteSection({
               <p className="text-xs text-muted-foreground mb-3">
                 Ask anything about your home, your quote, or heat pumps.
               </p>
-              <div className="flex flex-wrap gap-2">
+              {/* Mobile-optimized touch targets */}
+              <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
                 {STARTER_QUESTIONS.map((q) => (
                   <button
                     key={q}
                     type="button"
                     onClick={() => handleSend(q)}
-                    className="touch-manipulation text-left px-3 py-2.5 rounded-lg bg-muted/50 hover:bg-muted active:bg-muted/80 text-sm text-foreground transition-colors"
+                    className="touch-manipulation text-left px-4 py-3 sm:px-3 sm:py-2.5 rounded-xl sm:rounded-lg bg-muted/50 hover:bg-muted active:bg-muted/80 active:scale-[0.98] text-sm text-foreground transition-all"
                   >
                     {q}
                   </button>
@@ -367,22 +368,23 @@ export function QuoteSection({
                 </div>
               </div>
 
+              {/* Mobile-optimized input with larger touch targets */}
               <div className="p-3 border-t border-border">
                 <form onSubmit={handleSubmit} className="flex gap-2">
                   <Input
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Ask anything..."
-                    className="flex-1 bg-muted/30 border-0 focus-visible:ring-1 h-11"
+                    className="flex-1 bg-muted/30 border-0 focus-visible:ring-1 h-12 sm:h-11 text-base sm:text-sm"
                     disabled={isLoading}
                   />
                   <Button 
                     type="submit" 
                     size="icon"
-                    className="rounded-lg w-11 h-11"
+                    className="rounded-xl w-12 h-12 sm:w-11 sm:h-11"
                     disabled={isLoading || !input.trim()}
                   >
-                    <Send className="w-4 h-4" />
+                    <Send className="w-5 h-5 sm:w-4 sm:h-4" />
                   </Button>
                 </form>
               </div>
