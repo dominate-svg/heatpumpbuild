@@ -53,9 +53,9 @@ export default function Estimate() {
   const [priority, setPriority] = useState<'upfront' | 'running' | 'future'>('running');
   const [selectedTariff, setSelectedTariff] = useState<Tariff | null>(null);
   const [locationAdder, setLocationAdder] = useState<'included' | '6m' | '9m'>('included');
-  const [cylinderOption, setCylinderOption] = useState<'existing' | '150l' | '210l'>('150l');
+  const [cylinderOption, setCylinderOption] = useState<'existing' | '150l' | '210l'>('existing');
   const [currentFuel, setCurrentFuel] = useState<string>('gas');
-  const [scop, setScop] = useState(3.7);
+  const [scop, setScop] = useState(3.4);
 
   // Base SCOP for comparison
   const baseScop = 3.7;
