@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Gift, TrendingDown, Check, Calendar, Sparkles, Send, Loader2, ArrowLeft } from 'lucide-react';
+import { Gift, TrendingDown, TrendingUp, Check, Calendar, Sparkles, Send, Loader2, ArrowLeft, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -7,8 +7,14 @@ import type { EstimateResults } from '@/lib/calculations';
 import { streamOpenAITextFromSSE, extractAssistantMessageFromNonStreamResponse } from '@/lib/sse';
 import ReactMarkdown from 'react-markdown';
 import octopusPartnerLogo from '@/assets/octopus-partner.png';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
-interface FinalEstimateSectionProps {
+interface QuoteSectionProps {
   results: EstimateResults;
   currentFuel: string;
   context: {
@@ -28,10 +34,10 @@ interface Message {
 }
 
 const FUEL_LABELS: Record<string, string> = {
-  gas: 'gas',
-  oil: 'oil',
-  lpg: 'LPG',
-  electric: 'electric',
+  gas: 'gas boiler',
+  oil: 'oil boiler',
+  lpg: 'LPG boiler',
+  electric: 'electric heating',
 };
 
 const WHATS_INCLUDED = [
@@ -39,7 +45,7 @@ const WHATS_INCLUDED = [
   'Hot water cylinder',
   'Full installation',
   'Controls & wiring',
-  '£7,500 grant',
+  '£7,500 grant applied',
   '5-year warranty',
 ];
 
@@ -50,13 +56,13 @@ const STARTER_QUESTIONS = [
   "Can I change tariffs later?",
 ];
 
-export function FinalEstimateSection({ 
+export function QuoteSection({ 
   results, 
   currentFuel,
   context,
   onContinue,
   onBack,
-}: FinalEstimateSectionProps) {
+}: QuoteSectionProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -65,7 +71,7 @@ export function FinalEstimateSection({
   const messagesRef = useRef<Message[]>([]);
 
   const savingsPositive = results.estimatedSavings > 0;
-  const fuelLabel = FUEL_LABELS[currentFuel] || 'current';
+  const fuelLabel = FUEL_LABELS[currentFuel] || 'current heating';
 
   useEffect(() => {
     messagesRef.current = messages;
@@ -95,16 +101,11 @@ export function FinalEstimateSection({
 
     const userMessage: Message = { role: 'user', content: trimmed };
     const conversation = [...messagesRef.current, userMessage];
-
-    // Keep a synced ref so fast-taps on mobile don't lose context.
     messagesRef.current = conversation;
-
-    // Show the user message immediately.
     setMessages(conversation);
     setInput('');
     setIsLoading(true);
 
-    // Add an assistant placeholder we can stream into.
     setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
 
     const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/estimate-chat`;
@@ -155,10 +156,8 @@ export function FinalEstimateSection({
     };
 
     try {
-      // Try streaming first.
       let resp = await request(true);
 
-      // Some mobile browsers/proxies strip streaming bodies. Retry non-streaming.
       if (resp.ok && (!resp.body || typeof resp.body.getReader !== 'function')) {
         resp = await request(false);
       }
@@ -173,12 +172,12 @@ export function FinalEstimateSection({
       if (contentType.includes('text/event-stream') && resp.body) {
         await streamOpenAITextFromSSE(resp, pushDelta);
         if (!assistantContent.trim()) {
-          updateLastAssistantMessage("I didn’t receive any text back — please try again.");
+          updateLastAssistantMessage("I didn't receive any text back — please try again.");
         }
       } else {
         const data = await resp.json().catch(() => null);
         const text = extractAssistantMessageFromNonStreamResponse(data) ?? '';
-        updateLastAssistantMessage(text || "I didn’t receive any text back — please try again.");
+        updateLastAssistantMessage(text || "I didn't receive any text back — please try again.");
       }
     } catch (error) {
       console.error('Chat error:', error);
@@ -208,92 +207,113 @@ export function FinalEstimateSection({
 
       {/* Badge */}
       <div className="flex justify-center mb-4">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
-          ✨ Your personalised estimate
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold">
+          ✨ Your personalised quote
         </div>
       </div>
 
       {/* Title */}
       <div className="text-center mb-6">
         <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-          Here's your quote
+          Here's your estimate
         </h2>
       </div>
 
       {/* Main cost card */}
-      <div className="p-5 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground mb-4 shadow-lg">
+      <div className="p-5 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground mb-4 shadow-xl">
         <div className="flex items-center gap-2 mb-3">
           <Gift className="w-4 h-4" />
-          <span className="text-sm opacity-90">£{results.grantApplied.toLocaleString()} grant applied</span>
+          <span className="text-sm font-medium opacity-90">£{results.grantApplied.toLocaleString()} government grant applied</span>
         </div>
-        <p className="text-xs opacity-75 mb-1">You pay</p>
-        <p className="text-4xl sm:text-5xl font-bold mb-1">
+        <p className="text-xs opacity-75 mb-1 uppercase tracking-wide">You pay</p>
+        <p className="text-4xl sm:text-5xl font-bold mb-2 tabular-nums">
           £{results.customerContribution.toLocaleString()}
         </p>
         <p className="text-xs opacity-75">
-          Full install: £{results.grossInstallPrice.toLocaleString()}
+          Full installation price: £{results.grossInstallPrice.toLocaleString()}
         </p>
       </div>
 
       {/* Savings row */}
       <div className={cn(
-        'p-4 rounded-xl border mb-4',
-        savingsPositive ? 'bg-green-50 border-green-200' : 'bg-white border-border'
+        'p-4 rounded-xl border-2 mb-4 transition-all',
+        savingsPositive 
+          ? 'bg-green-50 border-green-200' 
+          : 'bg-amber-50 border-amber-200'
       )}>
         <div className="flex items-center gap-3">
           <div className={cn(
-            'w-10 h-10 rounded-lg flex items-center justify-center',
-            savingsPositive ? 'bg-green-100' : 'bg-muted'
+            'w-11 h-11 rounded-xl flex items-center justify-center',
+            savingsPositive ? 'bg-green-100' : 'bg-amber-100'
           )}>
-            <TrendingDown className={cn(
-              'w-5 h-5',
-              savingsPositive ? 'text-green-600' : 'text-muted-foreground'
-            )} />
+            {savingsPositive ? (
+              <TrendingDown className="w-5 h-5 text-green-600" />
+            ) : (
+              <TrendingUp className="w-5 h-5 text-amber-600" />
+            )}
           </div>
-          <div>
+          <div className="flex-1">
             <p className={cn(
-              'text-xl font-bold',
-              savingsPositive ? 'text-green-600' : 'text-foreground'
+              'text-xl font-bold tabular-nums',
+              savingsPositive ? 'text-green-700' : 'text-amber-700'
             )}>
-              {savingsPositive ? '£' : '-£'}{Math.abs(results.estimatedSavings).toLocaleString()}/year
+              {savingsPositive ? '−' : '+'}£{Math.abs(results.estimatedSavings).toLocaleString()}/year
             </p>
             <p className="text-xs text-muted-foreground">
-              {savingsPositive ? 'savings' : 'extra'} vs your {fuelLabel}
+              {savingsPositive ? 'savings' : 'extra'} compared to your {fuelLabel}
             </p>
           </div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button className="text-muted-foreground/50 hover:text-muted-foreground">
+                  <Info className="w-4 h-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <p className="text-xs">
+                  Based on your EPC data, home size, and the Octopus Cosy tariff. 
+                  Actual savings depend on your usage and tariff.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
 
       {/* What's included */}
-      <div className="p-4 rounded-xl bg-white border border-border mb-6">
-        <h3 className="font-semibold text-foreground text-sm mb-3">What's included</h3>
+      <div className="p-4 rounded-xl bg-card border border-border mb-6">
+        <h3 className="font-bold text-foreground text-sm mb-3">What's included</h3>
         <div className="grid grid-cols-2 gap-2">
           {WHATS_INCLUDED.map((item) => (
             <div key={item} className="flex items-center gap-2">
-              <Check className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+              <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
               <span className="text-xs text-muted-foreground">{item}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* AI Assistant section - neat and compact, not floating */}
+      {/* AI Assistant - inline before booking */}
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-3">
           <Sparkles className="w-4 h-4 text-primary" />
-          <h3 className="font-semibold text-foreground text-sm">Questions? Ask our assistant</h3>
+          <h3 className="font-bold text-foreground text-sm">Have questions before you book?</h3>
         </div>
 
-        <div className="bg-white rounded-xl border border-border overflow-hidden">
+        <div className="bg-card rounded-xl border border-border overflow-hidden">
           {!showChat ? (
             <div className="p-4">
+              <p className="text-xs text-muted-foreground mb-3">
+                Ask anything about your home, your quote, or heat pumps.
+              </p>
               <div className="flex flex-wrap gap-2">
                 {STARTER_QUESTIONS.map((q) => (
                   <button
                     key={q}
                     type="button"
                     onClick={() => handleSend(q)}
-                    className="touch-manipulation text-left px-3 py-2 rounded-lg bg-muted/50 hover:bg-muted active:bg-muted text-sm text-foreground transition-colors"
+                    className="touch-manipulation text-left px-3 py-2.5 rounded-lg bg-muted/50 hover:bg-muted active:bg-muted/80 text-sm text-foreground transition-colors"
                   >
                     {q}
                   </button>
@@ -304,7 +324,7 @@ export function FinalEstimateSection({
             <>
               <div 
                 ref={scrollRef}
-                className="max-h-[300px] sm:max-h-[250px] overflow-y-auto p-4"
+                className="max-h-[280px] sm:max-h-[300px] overflow-y-auto p-4"
               >
                 <div className="space-y-3">
                   {messages.map((msg, i) => (
@@ -352,14 +372,14 @@ export function FinalEstimateSection({
                   <Input
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    placeholder="Ask anything about heat pumps or your quote…"
-                    className="flex-1 bg-muted/30 border-0 focus-visible:ring-1"
+                    placeholder="Ask anything..."
+                    className="flex-1 bg-muted/30 border-0 focus-visible:ring-1 h-11"
                     disabled={isLoading}
                   />
                   <Button 
                     type="submit" 
                     size="icon"
-                    className="rounded-lg"
+                    className="rounded-lg w-11 h-11"
                     disabled={isLoading || !input.trim()}
                   >
                     <Send className="w-4 h-4" />
@@ -384,9 +404,9 @@ export function FinalEstimateSection({
       <Button 
         onClick={onContinue}
         size="lg"
-        className="w-full h-12 sm:h-14 text-base sm:text-lg font-semibold rounded-xl active:scale-[0.98] transition-all cta-hover-lift"
+        className="w-full h-14 text-base sm:text-lg font-bold rounded-xl active:scale-[0.98] transition-all cta-hover-lift"
       >
-        <Calendar className="w-4 h-4 mr-2" />
+        <Calendar className="w-5 h-5 mr-2" />
         Book my design call
       </Button>
 

@@ -5,15 +5,17 @@ import { useTariffs, type Tariff } from '@/hooks/useTariffs';
 import { calculateEstimate } from '@/lib/calculations';
 import type { EPCData } from '@/lib/calculations';
 import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 // Section components
-import { StickyEstimatePanel } from '@/components/estimate/StickyEstimatePanel';
+import { StickyEstimateBar } from '@/components/estimate/StickyEstimateBar';
 import { EducationSection } from '@/components/estimate/sections/EducationSection';
 import { HomeDataSection } from '@/components/estimate/sections/HomeDataSection';
-
-import { EfficiencySection } from '@/components/estimate/sections/EfficiencySection';
-import { FineTuneSection } from '@/components/estimate/sections/FineTuneSection';
-import { FinalEstimateSection } from '@/components/estimate/sections/FinalEstimateSection';
+import { OptimisationSection } from '@/components/estimate/sections/OptimisationSection';
+import { LocationSection2 } from '@/components/estimate/sections/LocationSection2';
+import { CylinderSection } from '@/components/estimate/sections/CylinderSection';
+import { TariffSection } from '@/components/estimate/sections/TariffSection';
+import { QuoteSection } from '@/components/estimate/sections/QuoteSection';
 import { ContactStep } from '@/components/wizard/steps/ContactStep';
 
 function detectFuelType(mainFuel?: string): string {
@@ -25,8 +27,25 @@ function detectFuelType(mainFuel?: string): string {
   return 'gas';
 }
 
-// 6-step flow: education → home-data → efficiency → finetune → final-estimate → booking
-const STEPS = ['education', 'home-data', 'efficiency', 'finetune', 'final-estimate', 'booking'];
+// 8-step flow:
+// 1. education - How a heat pump works
+// 2. home-data - We found this about your home
+// 3. optimisation - How optimised should your system be
+// 4. location - Where can the heat pump go
+// 5. cylinder - Hot water cylinder
+// 6. tariff - Electricity tariff
+// 7. quote - Your personalised quote (full breakdown + AI)
+// 8. booking - Contact form
+const STEPS = [
+  'education',
+  'home-data', 
+  'optimisation',
+  'location',
+  'cylinder',
+  'tariff',
+  'quote',
+  'booking',
+];
 
 export default function Estimate() {
   const navigate = useNavigate();
@@ -37,12 +56,12 @@ export default function Estimate() {
   const [epcData, setEpcData] = useState<EPCData | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   
-  // Config state - start with lowest cost defaults
+  // Config state
   const [selectedTariff, setSelectedTariff] = useState<Tariff | null>(null);
   const [locationAdder, setLocationAdder] = useState<'included' | '6m' | '9m'>('included');
   const [cylinderOption, setCylinderOption] = useState<'existing' | '150l' | '210l'>('existing');
   const [currentFuel, setCurrentFuel] = useState<string>('gas');
-  const [scop, setScop] = useState(3.4);
+  const [scop, setScop] = useState(3.7); // Default to balanced
 
   useEffect(() => {
     const stored = sessionStorage.getItem('epcData');
@@ -59,10 +78,12 @@ export default function Estimate() {
 
   useEffect(() => {
     if (tariffs && tariffs.length > 0 && !selectedTariff) {
+      // Default to Cosy tariff if available
       setSelectedTariff(tariffs.find(t => t.name.toLowerCase().includes('cosy')) || tariffs[0]);
     }
   }, [tariffs, selectedTariff]);
 
+  // Current results with all selections
   const results = useMemo(() => {
     if (!epcData || !assumptions) return null;
     return calculateEstimate({
@@ -80,6 +101,7 @@ export default function Estimate() {
     }, assumptions);
   }, [epcData, assumptions, scop, selectedTariff, locationAdder, cylinderOption, currentFuel]);
 
+  // Base results for comparison (simple SCOP 3.4)
   const baseResults = useMemo(() => {
     if (!epcData || !assumptions) return null;
     return calculateEstimate({
@@ -92,20 +114,21 @@ export default function Estimate() {
       epcBand: epcData.epcBand,
       scop: 3.4,
       tariff: selectedTariff,
-      locationAdder,
-      cylinderOption,
+      locationAdder: 'included',
+      cylinderOption: 'existing',
     }, assumptions);
-  }, [epcData, assumptions, selectedTariff, locationAdder, cylinderOption, currentFuel]);
+  }, [epcData, assumptions, selectedTariff, currentFuel]);
 
   const goNext = useCallback(() => {
     setCurrentStep(s => Math.min(s + 1, STEPS.length - 1));
-    contentRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+    // Scroll to top smoothly
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
   const goBack = useCallback(() => {
     if (currentStep > 0) {
       setCurrentStep(s => s - 1);
-      contentRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [currentStep]);
 
@@ -122,8 +145,9 @@ export default function Estimate() {
     );
   }
 
-  // Show sticky panel from efficiency step onwards (step 2+), but not on booking
-  const showStickyPanel = currentStep >= 2 && currentStep < STEPS.length - 1;
+  // Show sticky panel from optimisation step (step 2) until quote (step 6)
+  // Not shown on education, home-data, quote, or booking
+  const showStickyBar = currentStep >= 2 && currentStep <= 5;
 
   // Calculate heat loss for display
   const heatLossKw = results?.heatLossKw || 8;
@@ -140,16 +164,90 @@ export default function Estimate() {
     switch (STEPS[currentStep]) {
       case 'education': 
         return <EducationSection onContinue={goNext} />;
+      
       case 'home-data':
-        return <HomeDataSection epcData={epcData} heatLossKw={heatLossKw} currentFuel={currentFuel} onEditFuel={() => {}} onContinue={goNext} onBack={goBack} />;
-      case 'efficiency': 
-        return assumptions ? <EfficiencySection scop={scop} onScopChange={setScop} results={results} baseResults={baseResults} assumptions={assumptions} onContinue={goNext} onBack={goBack} /> : null;
-      case 'finetune': 
-        return assumptions ? <FineTuneSection locationAdder={locationAdder} cylinderOption={cylinderOption} onLocationChange={setLocationAdder} onCylinderChange={setCylinderOption} onContinue={goNext} onBack={goBack} assumptions={assumptions} /> : null;
-      case 'final-estimate': 
-        return results ? <FinalEstimateSection results={results} currentFuel={currentFuel} context={guideContext} onContinue={goNext} onBack={goBack} /> : null;
+        return (
+          <HomeDataSection 
+            epcData={epcData} 
+            heatLossKw={heatLossKw} 
+            currentFuel={currentFuel} 
+            onEditFuel={() => {}} 
+            onContinue={goNext} 
+            onBack={goBack} 
+          />
+        );
+      
+      case 'optimisation': 
+        return assumptions ? (
+          <OptimisationSection 
+            scop={scop} 
+            onScopChange={setScop} 
+            results={results} 
+            baseResults={baseResults} 
+            assumptions={assumptions} 
+            onContinue={goNext} 
+            onBack={goBack} 
+          />
+        ) : null;
+      
+      case 'location': 
+        return assumptions ? (
+          <LocationSection2 
+            locationAdder={locationAdder} 
+            onLocationChange={setLocationAdder} 
+            onContinue={goNext} 
+            onBack={goBack} 
+            assumptions={assumptions} 
+          />
+        ) : null;
+      
+      case 'cylinder': 
+        return assumptions ? (
+          <CylinderSection 
+            cylinderOption={cylinderOption} 
+            onCylinderChange={setCylinderOption} 
+            onContinue={goNext} 
+            onBack={goBack} 
+            assumptions={assumptions} 
+          />
+        ) : null;
+      
+      case 'tariff':
+        return (
+          <TariffSection
+            selectedTariff={selectedTariff}
+            onTariffChange={setSelectedTariff}
+            onContinue={goNext}
+            onBack={goBack}
+          />
+        );
+      
+      case 'quote': 
+        return results ? (
+          <QuoteSection 
+            results={results} 
+            currentFuel={currentFuel} 
+            context={guideContext} 
+            onContinue={goNext} 
+            onBack={goBack} 
+          />
+        ) : null;
+      
       case 'booking': 
-        return results && assumptions ? <ContactStep epcData={epcData} results={results} assumptions={assumptions} scop={scop} selectedTariff={selectedTariff} currentFuel={currentFuel} locationAdder={locationAdder} cylinderOption={cylinderOption} onBack={goBack} /> : null;
+        return results && assumptions ? (
+          <ContactStep 
+            epcData={epcData} 
+            results={results} 
+            assumptions={assumptions} 
+            scop={scop} 
+            selectedTariff={selectedTariff} 
+            currentFuel={currentFuel} 
+            locationAdder={locationAdder} 
+            cylinderOption={cylinderOption} 
+            onBack={goBack} 
+          />
+        ) : null;
+      
       default: 
         return null;
     }
@@ -157,14 +255,22 @@ export default function Estimate() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Main content area */}
       <div className="overflow-y-auto min-h-screen" ref={contentRef}>
-        <div className="max-w-lg mx-auto px-4 sm:px-6 pb-[calc(8rem+env(safe-area-inset-bottom,0px))] lg:pb-6">
+        <div className={cn(
+          'max-w-lg mx-auto px-4 sm:px-6',
+          // Add bottom padding for sticky bar on mobile
+          showStickyBar ? 'pb-32' : 'pb-6',
+          // Safe area for iOS
+          'pb-[max(2rem,env(safe-area-inset-bottom))]'
+        )}>
           {renderSection()}
         </div>
       </div>
 
-      {showStickyPanel && results && (
-        <StickyEstimatePanel results={results} currentFuel={currentFuel} />
+      {/* Sticky estimate bar - mobile bottom / desktop right side */}
+      {showStickyBar && results && (
+        <StickyEstimateBar results={results} currentFuel={currentFuel} />
       )}
     </div>
   );
