@@ -74,8 +74,8 @@ const HEAT_PUMP_TARIFF_SPLIT_BY_EPC: Record<string, { offpeak: number; peak: num
 // ============================================
 export const TARIFF_CONFIGS: TariffConfig[] = [
   // ============================================
-  // COSY - DO NOT MODIFY (handled separately in calculations)
-  // Rates: 7p off-peak / 19p mid / 40p peak (must match calculations.ts)
+  // COSY - Typical national rates (source: "typical" mode)
+  // Rates: 12p off-peak / 24p mid / 38p peak (must match calculations.ts)
   // ============================================
   {
     id: 'cosy',
@@ -83,10 +83,10 @@ export const TARIFF_CONFIGS: TariffConfig[] = [
     supplier: 'Octopus Energy',
     type: 'TOU_3_RATE',
     tou3: {
-      offpeakP: 7,
-      shoulderP: 19,
-      peakP: 40,
-      label: '~7p / ~19p / ~40p (varies by region)',
+      offpeakP: 12,
+      shoulderP: 24,
+      peakP: 38,
+      label: '~12p / ~24p / ~38p (varies by region)',
     },
     standingChargePPerDay: DEFAULT_STANDING_CHARGE_P_PER_DAY,
     source: 'TYPICAL',

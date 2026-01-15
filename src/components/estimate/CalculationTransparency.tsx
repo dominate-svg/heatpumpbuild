@@ -176,18 +176,18 @@ export function CalculationTransparency({ results, currentFuel }: CalculationTra
           
           {/* Cosy Tariff Section */}
           <div className="space-y-2 pt-2 border-t border-border">
-            <h4 className="font-semibold text-foreground">Octopus Cosy tariff</h4>
+            <h4 className="font-semibold text-foreground">Octopus Cosy tariff (typical rates)</h4>
             <div className="grid grid-cols-3 gap-2 text-xs">
               <div className="bg-green-50 rounded-lg p-2 text-center">
-                <span className="text-green-700 font-bold block">{transparency.cosyOffpeakRate}p</span>
+                <span className="text-green-700 font-bold block">{Math.round(transparency.cosyOffpeakRate)}p</span>
                 <span className="text-green-600 text-[10px]">Off-peak</span>
               </div>
               <div className="bg-amber-50 rounded-lg p-2 text-center">
-                <span className="text-amber-700 font-bold block">{transparency.cosyMidRate}p</span>
+                <span className="text-amber-700 font-bold block">{Math.round(transparency.cosyMidRate)}p</span>
                 <span className="text-amber-600 text-[10px]">Mid</span>
               </div>
               <div className="bg-muted rounded-lg p-2 text-center">
-                <span className="text-foreground font-bold block">{transparency.cosyPeakRate}p</span>
+                <span className="text-foreground font-bold block">{Math.round(transparency.cosyPeakRate)}p</span>
                 <span className="text-muted-foreground text-[10px]">Peak</span>
               </div>
             </div>
@@ -208,6 +208,9 @@ export function CalculationTransparency({ results, currentFuel }: CalculationTra
               <span className="font-bold text-foreground ml-2">
                 £{Math.round(results.hpCost).toLocaleString()}/yr
               </span>
+            </div>
+            <div className="text-xs text-muted-foreground italic mt-1">
+              Rates shown are typical national values — actual rates vary by region.
             </div>
           </div>
           

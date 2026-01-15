@@ -138,13 +138,14 @@ const OIL_PENCE_PER_LITRE = 65;
 const OIL_KWH_PER_LITRE = 10.35;
 
 // Cosy tariff structure (3-rate tariff)
-// Cheap windows: 7p/kWh
-// Mid/Standard: 19p/kWh
-// Peak: 40p/kWh (4–7pm)
+// Typical national rates (source: "typical" mode)
+// Off-peak: 12p/kWh (overnight cheap windows)
+// Mid/Standard: 24p/kWh (daytime)
+// Peak: 38p/kWh (4–7pm)
 // NOTE: These values must match what we show in the UI.
-const COSY_OFFPEAK_RATE = 0.07;  // 7p/kWh
-const COSY_MID_RATE = 0.19;     // 19p/kWh
-const COSY_PEAK_RATE = 0.40;    // 40p/kWh
+const COSY_OFFPEAK_RATE = 0.12;  // 12p/kWh
+const COSY_MID_RATE = 0.24;      // 24p/kWh
+const COSY_PEAK_RATE = 0.38;     // 38p/kWh
 
 // Peak share is constant (15% - people still heat at peak)
 const COSY_PEAK_SHARE = 0.15;
