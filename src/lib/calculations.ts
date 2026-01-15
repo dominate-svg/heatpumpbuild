@@ -278,6 +278,9 @@ export interface EstimateResults {
   confidenceLabel: string;
   epcBand: string;
   isOilFuel: boolean;
+  // Raw values for per-tariff comparison (unrounded)
+  rawHpElectricKwh: number;
+  rawBaselineCost: number;
   // Full transparency object
   transparency: SavingsTransparency;
 }
@@ -674,6 +677,9 @@ export function calculateEstimate(
     confidenceLabel: getConfidenceLabel(epcBand, fuelType),
     epcBand,
     isOilFuel: fuelType === 'oil',
+    // Raw values for per-tariff comparison (unrounded)
+    rawHpElectricKwh: cosySavings.hpKwh,
+    rawBaselineCost: cosySavings.currentCost,
     // Full transparency object
     transparency,
   };

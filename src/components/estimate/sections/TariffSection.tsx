@@ -61,8 +61,8 @@ export function TariffSection({
     }, assumptions);
     
     return {
-      heatPumpKwhAnnual: result.hpElectricKwh,
-      currentHeatingCostAnnual: result.baselineCost,
+      heatPumpKwhAnnual: result.rawHpElectricKwh,
+      currentHeatingCostAnnual: result.rawBaselineCost,
       epcBand: result.epcBand,
     };
   }, [epcData, assumptions, scop, currentFuel, locationAdder, cylinderOption, cosyTariff]);
