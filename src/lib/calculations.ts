@@ -120,10 +120,6 @@ const USE_GAS_OPTIMISTIC_EFFICIENCY = false; // A/B variant B = true
 const GAS_SCOP_SPACE_UPLIFT = 0.15;
 const GAS_SCOP_DHW_UPLIFT = 0.10;
 
-// Gas off-peak share nudge (gas homes more predictable usage patterns)
-const GAS_OFFPEAK_SHARE_NUDGE = 0.05;
-const GAS_OFFPEAK_SHARE_MAX = 0.65;
-
 // Fuel prices
 // Gas: £/kWh (DO NOT CHANGE)
 const GAS_RATE = 0.0593; // £/kWh (Ofgem cap) - DO NOT CHANGE
@@ -147,19 +143,11 @@ const COSY_OFFPEAK_RATE = 0.12;  // 12p/kWh
 const COSY_MID_RATE = 0.24;      // 24p/kWh
 const COSY_PEAK_RATE = 0.38;     // 38p/kWh
 
-// Peak share is constant (15% - people still heat at peak)
-const COSY_PEAK_SHARE = 0.15;
-
-// Cheap usage share by EPC band (more conservative for poor insulation)
-const COSY_CHEAP_SHARE_BY_EPC: Record<string, number> = {
-  'A': 0.60,
-  'B': 0.60,
-  'C': 0.55,
-  'D': 0.50,
-  'E': 0.45,
-  'F': 0.40,
-  'G': 0.35,
-};
+// Cosy usage shares (FIXED - not EPC-dependent)
+// Heat pump scheduling optimizes for cheap hours
+const COSY_OFFPEAK_SHARE = 0.65;  // 65% in overnight cheap window
+const COSY_MID_SHARE = 0.10;      // 10% during midday
+const COSY_PEAK_SHARE = 0.25;     // 25% during 4-7pm peak
 
 // Base SCOP mapping
 const BASE_SCOP_MAP: Record<number, number> = {
@@ -238,7 +226,6 @@ export interface SavingsTransparency {
   // Gas optimism adjustments (gas only)
   gasBoilerEfficiency?: number;
   gasScopUpliftApplied?: boolean;
-  gasOffpeakNudgeApplied?: boolean;
   
   // Electricity breakdown
   hpKwhSpace: number;
@@ -460,22 +447,17 @@ function calculateSavings(
   const hpKwh = hpKwhSpace + hpKwhDhw;
 
   // ============================================
-  // Step 5: Calculate EPC-sensitive Cosy blended rate
+  // Step 5: Calculate Cosy blended rate using FIXED shares
   // ============================================
-  let cosyCheapShare = COSY_CHEAP_SHARE_BY_EPC[epcBand] || 0.50;
+  const cosyCheapShare = COSY_OFFPEAK_SHARE;  // Fixed 65%
+  const cosyMidShare = COSY_MID_SHARE;        // Fixed 10%
+  const cosyPeakShare = COSY_PEAK_SHARE;      // Fixed 25%
   
-  // Apply gas off-peak share nudge (gas homes more predictable patterns)
-  // Do NOT apply to oil/LPG
-  if (fuelType === 'gas') {
-    cosyCheapShare = Math.min(cosyCheapShare + GAS_OFFPEAK_SHARE_NUDGE, GAS_OFFPEAK_SHARE_MAX);
-  }
-  
-  const cosyMidShare = 1 - cosyCheapShare - COSY_PEAK_SHARE;
-  
+  // Blended rate: (0.65 × 12) + (0.10 × 24) + (0.25 × 38) = 19.7p
   const blendedRate = 
     (cosyCheapShare * COSY_OFFPEAK_RATE) +
     (cosyMidShare * COSY_MID_RATE) +
-    (COSY_PEAK_SHARE * COSY_PEAK_RATE);
+    (cosyPeakShare * COSY_PEAK_RATE);
 
   // ============================================
   // Step 6: Heat pump running cost
@@ -532,13 +514,12 @@ function calculateSavings(
       // Gas optimism transparency (gas only)
       gasBoilerEfficiency: fuelType === 'gas' ? boilerEfficiency * 100 : undefined,
       gasScopUpliftApplied: fuelType === 'gas',
-      gasOffpeakNudgeApplied: fuelType === 'gas',
       cosyOffpeakRate: COSY_OFFPEAK_RATE * 100,
       cosyMidRate: COSY_MID_RATE * 100,
       cosyPeakRate: COSY_PEAK_RATE * 100,
       cosyCheapShare,
       cosyMidShare,
-      cosyPeakShare: COSY_PEAK_SHARE,
+      cosyPeakShare,
       blendedRate: blendedRate * 100,
       isCosy: true, // This is the Cosy calculation path
       rawSavingsBeforeClamp,
