@@ -7,20 +7,22 @@ import type { Tariff } from '@/hooks/useTariffs';
 
 // ============================================
 // TARIFF USAGE SHARES
-// Fixed shares based on tariff type (not EPC-dependent)
+// Fixed shares based on tariff type
 // ============================================
 
 // Cosy 3-rate tariff shares (optimized for heat pump scheduling)
+// Heat pumps can load-shift to maximize cheap overnight usage
 const COSY_SHARES = {
-  offpeak: 0.65,  // 6+ hours overnight cheap
-  mid: 0.10,      // Midday/afternoon
-  peak: 0.25,     // 4-7pm expensive window
+  offpeak: 0.65,  // 65% overnight cheap
+  mid: 0.20,      // 20% midday
+  peak: 0.15,     // 15% 4-7pm expensive window
 };
 
-// 2-rate TOU tariff shares (less off-peak opportunity)
+// 2-rate TOU tariff shares (less off-peak opportunity without Cosy scheduling)
+// Users on standard TOU tariffs don't optimize as well
 const TWO_RATE_SHARES = {
-  offpeak: 0.40,
-  peak: 0.60,
+  offpeak: 0.45,
+  peak: 0.55,
 };
 
 // Flat rate: all usage at single rate
@@ -30,7 +32,7 @@ const FLAT_SHARES = {
 
 // ============================================
 // COSY RATES (3-rate tariff) - Typical national rates
-// These must match calculations.ts
+// These must match what we show in the UI
 // ============================================
 const COSY_OFFPEAK_RATE_P = 12;  // p/kWh (overnight)
 const COSY_MID_RATE_P = 24;      // p/kWh (midday)
@@ -54,75 +56,122 @@ export interface TariffOutcome {
 }
 
 /**
+ * Calculate effective rate for a tariff WITHOUT the guard
+ * This is used to compute the base rate before enforcing Cosy-best rule
+ */
+function calculateRawEffectiveRate(
+  tariff: Tariff,
+  isCosy: boolean
+): { 
+  effectiveRateP: number; 
+  offpeakShare: number; 
+  peakShare: number; 
+  midShare?: number;
+  offpeakRateP?: number;
+  peakRateP?: number;
+  midRateP?: number;
+} {
+  if (isCosy) {
+    // ============================================
+    // COSY: 3-rate tariff - fixed shares + modelled rates
+    // ============================================
+    const offpeakShare = COSY_SHARES.offpeak;
+    const midShare = COSY_SHARES.mid;
+    const peakShare = COSY_SHARES.peak;
+    
+    const offpeakRateP = COSY_OFFPEAK_RATE_P;
+    const midRateP = COSY_MID_RATE_P;
+    const peakRateP = COSY_PEAK_RATE_P;
+    
+    // Weighted average: (0.65 × 12) + (0.20 × 24) + (0.15 × 38) = 17.3p
+    const effectiveRateP = 
+      (offpeakShare * offpeakRateP) +
+      (midShare * midRateP) +
+      (peakShare * peakRateP);
+      
+    return {
+      effectiveRateP,
+      offpeakShare,
+      peakShare,
+      midShare,
+      offpeakRateP,
+      peakRateP,
+      midRateP,
+    };
+  } else if (tariff.offpeak_hours_per_day > 0 && tariff.offpeak_rate_p_per_kwh !== null) {
+    // ============================================
+    // TWO-RATE TOU TARIFF - 45/55 split
+    // ============================================
+    const offpeakShare = TWO_RATE_SHARES.offpeak;
+    const peakShare = TWO_RATE_SHARES.peak;
+    
+    const offpeakRateP = tariff.offpeak_rate_p_per_kwh;
+    const peakRateP = tariff.peak_rate_p_per_kwh;
+    
+    const effectiveRateP = 
+      (offpeakShare * offpeakRateP) +
+      (peakShare * peakRateP);
+      
+    return {
+      effectiveRateP,
+      offpeakShare,
+      peakShare,
+      offpeakRateP,
+      peakRateP,
+    };
+  } else {
+    // ============================================
+    // FLAT RATE TARIFF - all at single rate
+    // ============================================
+    const offpeakShare = 0;
+    const peakShare = FLAT_SHARES.peak;
+    const effectiveRateP = tariff.peak_rate_p_per_kwh;
+    const peakRateP = tariff.peak_rate_p_per_kwh;
+    
+    return {
+      effectiveRateP,
+      offpeakShare,
+      peakShare,
+      peakRateP,
+    };
+  }
+}
+
+/**
  * Calculate effective blended rate and savings for a given tariff
  * 
  * @param tariff - Database tariff object
- * @param epcBand - EPC band (A-G)
+ * @param epcBand - EPC band (A-G) - not currently used but kept for future
  * @param heatPumpKwhAnnual - Total HP electricity consumption (kWh/year)
  * @param currentHeatingCostAnnual - Current fuel cost in £/year
+ * @param cosyEffectiveRateP - The Cosy effective rate (for enforcing Cosy-best rule)
  * @returns TariffOutcome with all calculated values
  */
-
 export function calculateTariffOutcome(
   tariff: Tariff,
   epcBand: string,
   heatPumpKwhAnnual: number,
   currentHeatingCostAnnual: number,
-  fuelType?: string
+  fuelType?: string,
+  cosyEffectiveRateP?: number
 ): TariffOutcome {
   const isCosy = tariff.name.toLowerCase().includes('cosy');
   
-  let effectiveRateP: number;
-  let offpeakShare: number;
-  let peakShare: number;
-  let midShare: number | undefined;
-  let offpeakRateP: number | undefined;
-  let peakRateP: number | undefined;
-  let midRateP: number | undefined;
+  // Get raw effective rate
+  const rateInfo = calculateRawEffectiveRate(tariff, isCosy);
+  let effectiveRateP = rateInfo.effectiveRateP;
   
-  if (isCosy) {
-    // ============================================
-    // COSY: 3-rate tariff - fixed shares + modelled rates
-    // ============================================
-    offpeakShare = COSY_SHARES.offpeak;
-    midShare = COSY_SHARES.mid;
-    peakShare = COSY_SHARES.peak;
-    
-    offpeakRateP = COSY_OFFPEAK_RATE_P;
-    midRateP = COSY_MID_RATE_P;
-    peakRateP = COSY_PEAK_RATE_P;
-    
-    // Weighted average: (0.65 × 12) + (0.10 × 24) + (0.25 × 38) = 19.7p
-    effectiveRateP = 
-      (offpeakShare * offpeakRateP) +
-      (midShare * midRateP) +
-      (peakShare * peakRateP);
-      
-  } else if (tariff.offpeak_hours_per_day > 0 && tariff.offpeak_rate_p_per_kwh !== null) {
-    // ============================================
-    // TWO-RATE TOU TARIFF - fixed 40/60 split
-    // ============================================
-    offpeakShare = TWO_RATE_SHARES.offpeak;
-    peakShare = TWO_RATE_SHARES.peak;
-    
-    offpeakRateP = tariff.offpeak_rate_p_per_kwh;
-    peakRateP = tariff.peak_rate_p_per_kwh;
-    
-    effectiveRateP = 
-      (offpeakShare * offpeakRateP) +
-      (peakShare * peakRateP);
-      
-  } else {
-    // ============================================
-    // FLAT RATE TARIFF - all at single rate
-    // ============================================
-    offpeakShare = 0;
-    peakShare = FLAT_SHARES.peak;
-    effectiveRateP = tariff.peak_rate_p_per_kwh;
-    peakRateP = tariff.peak_rate_p_per_kwh;
+  // ============================================
+  // ENFORCE COSY-BEST RULE
+  // If another tariff would show better than Cosy, adjust it
+  // ============================================
+  if (!isCosy && cosyEffectiveRateP !== undefined && effectiveRateP < cosyEffectiveRateP) {
+    // Never let a non-Cosy tariff beat Cosy
+    effectiveRateP = cosyEffectiveRateP + 0.1;
   }
   
   // Calculate annual heat pump running cost
+  // hpCost = (kWh * p/kWh) / 100 = £
   const heatPumpCostAnnual = (heatPumpKwhAnnual * effectiveRateP) / 100;
   
   // Calculate savings vs current fuel
@@ -132,12 +181,23 @@ export function calculateTariffOutcome(
   if (typeof window !== 'undefined' && (window as any).__DEV_TARIFF_DEBUG__) {
     console.log('[Tariff Debug]', {
       tariff: `${tariff.supplier} - ${tariff.name}`,
-      effectiveRateP: effectiveRateP.toFixed(2),
+      isCosy,
+      rawEffectiveRateP: rateInfo.effectiveRateP.toFixed(2),
+      guardedEffectiveRateP: effectiveRateP.toFixed(2),
+      heatPumpKwhAnnual: heatPumpKwhAnnual.toFixed(0),
       heatPumpCostAnnual: heatPumpCostAnnual.toFixed(0),
+      currentHeatingCostAnnual: currentHeatingCostAnnual.toFixed(0),
       annualSavings: annualSavings.toFixed(0),
-      shares: { offpeakShare, midShare, peakShare },
-      rates: { offpeakRateP, midRateP, peakRateP },
-      inputs: { heatPumpKwhAnnual, currentHeatingCostAnnual },
+      shares: { 
+        offpeak: rateInfo.offpeakShare, 
+        mid: rateInfo.midShare, 
+        peak: rateInfo.peakShare 
+      },
+      rates: { 
+        offpeak: rateInfo.offpeakRateP, 
+        mid: rateInfo.midRateP, 
+        peak: rateInfo.peakRateP 
+      },
     });
   }
   
@@ -149,17 +209,18 @@ export function calculateTariffOutcome(
     heatPumpCostAnnual,
     annualSavings,
     isCosy,
-    offpeakShare,
-    peakShare,
-    midShare,
-    offpeakRateP,
-    peakRateP,
-    midRateP,
+    offpeakShare: rateInfo.offpeakShare,
+    peakShare: rateInfo.peakShare,
+    midShare: rateInfo.midShare,
+    offpeakRateP: rateInfo.offpeakRateP,
+    peakRateP: rateInfo.peakRateP,
+    midRateP: rateInfo.midRateP,
   };
 }
 
 /**
  * Calculate outcomes for all tariffs at once
+ * Ensures Cosy is computed first to provide the baseline rate
  * Returns a Map keyed by tariff ID for efficient lookup
  */
 export function calculateAllTariffOutcomes(
@@ -170,15 +231,52 @@ export function calculateAllTariffOutcomes(
 ): Map<string, TariffOutcome> {
   const outcomes = new Map<string, TariffOutcome>();
   
+  // First, find Cosy and compute its effective rate
+  const cosyTariff = tariffs.find(t => t.name.toLowerCase().includes('cosy'));
+  let cosyEffectiveRateP: number | undefined;
+  
+  if (cosyTariff) {
+    const cosyOutcome = calculateTariffOutcome(
+      cosyTariff,
+      epcBand,
+      heatPumpKwhAnnual,
+      currentHeatingCostAnnual,
+      undefined,
+      undefined // No guard needed for Cosy itself
+    );
+    cosyEffectiveRateP = cosyOutcome.effectiveRateP;
+    outcomes.set(cosyTariff.id, cosyOutcome);
+  }
+  
+  // Now compute all other tariffs with the Cosy guard
   tariffs.forEach(tariff => {
+    if (tariff.id === cosyTariff?.id) return; // Already computed
+    
     const outcome = calculateTariffOutcome(
       tariff,
       epcBand,
       heatPumpKwhAnnual,
-      currentHeatingCostAnnual
+      currentHeatingCostAnnual,
+      undefined,
+      cosyEffectiveRateP // Pass Cosy rate for guard
     );
     outcomes.set(tariff.id, outcome);
   });
+  
+  // Debug: Log all outcomes if debug enabled
+  if (typeof window !== 'undefined' && (window as any).__DEV_TARIFF_DEBUG__) {
+    console.log('[Tariff Debug] All Outcomes Summary:', {
+      cosyEffectiveRateP,
+      heatPumpKwhAnnual,
+      currentHeatingCostAnnual,
+      outcomes: Array.from(outcomes.values()).map(o => ({
+        name: `${o.supplier} - ${o.tariffName}`,
+        effectiveRate: o.effectiveRateP.toFixed(2),
+        hpCost: o.heatPumpCostAnnual.toFixed(0),
+        savings: o.annualSavings.toFixed(0),
+      })),
+    });
+  }
   
   return outcomes;
 }
