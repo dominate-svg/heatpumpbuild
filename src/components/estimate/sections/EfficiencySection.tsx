@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Check, ChevronDown } from 'lucide-react';
+import { Check, ChevronDown, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
@@ -12,6 +12,7 @@ interface EfficiencySectionProps {
   baseResults: EstimateResults | null;
   assumptions: Assumptions;
   onContinue: () => void;
+  onBack: () => void;
 }
 
 type BehaviourLevel = 'simple' | 'balanced' | 'best';
@@ -83,6 +84,7 @@ export function EfficiencySection({
   baseResults,
   assumptions,
   onContinue,
+  onBack,
 }: EfficiencySectionProps) {
   const [selectedLevel, setSelectedLevel] = useState<BehaviourLevel>(() => {
     if (scop >= 4.0) return 'best';
@@ -111,6 +113,15 @@ export function EfficiencySection({
 
   return (
     <section className="py-6 sm:py-10 animate-fade-in">
+      {/* Back button */}
+      <button 
+        onClick={onBack}
+        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back
+      </button>
+
       {/* Title */}
       <div className="text-center mb-6">
         <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2">

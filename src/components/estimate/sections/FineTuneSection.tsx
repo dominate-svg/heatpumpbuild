@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, ArrowRight, Users, MapPin } from 'lucide-react';
+import { Check, ArrowRight, ArrowLeft, Users, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { Assumptions } from '@/lib/calculations';
@@ -10,6 +10,7 @@ interface FineTuneSectionProps {
   onLocationChange: (value: 'included' | '6m' | '9m') => void;
   onCylinderChange: (value: 'existing' | '150l' | '210l') => void;
   onContinue: () => void;
+  onBack: () => void;
   assumptions: Assumptions;
 }
 
@@ -19,9 +20,18 @@ export function FineTuneSection({
   onLocationChange,
   onCylinderChange,
   onContinue,
+  onBack,
   assumptions,
 }: FineTuneSectionProps) {
   const [step, setStep] = useState<'location' | 'cylinder'>('location');
+
+  const handleLocationBack = () => {
+    onBack();
+  };
+
+  const handleCylinderBack = () => {
+    setStep('location');
+  };
 
   const locationOptions = [
     { 
@@ -68,6 +78,15 @@ export function FineTuneSection({
   if (step === 'location') {
     return (
       <section className="py-6 sm:py-10 animate-fade-in">
+        {/* Back button */}
+        <button 
+          onClick={handleLocationBack}
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </button>
+
         {/* Icon */}
         <div className="flex justify-center mb-4">
           <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
@@ -172,6 +191,15 @@ export function FineTuneSection({
 
   return (
     <section className="py-6 sm:py-10 animate-fade-in">
+      {/* Back button */}
+      <button 
+        onClick={handleCylinderBack}
+        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back
+      </button>
+
       {/* Icon */}
       <div className="flex justify-center mb-4">
         <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">

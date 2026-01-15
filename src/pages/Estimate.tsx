@@ -137,13 +137,13 @@ export default function Estimate() {
       case 'education': 
         return <EducationSection onContinue={goNext} />;
       case 'initial-estimate': 
-        return results ? <InitialEstimateSection results={results} currentFuel={currentFuel} onContinue={goNext} /> : null;
+        return results ? <InitialEstimateSection results={results} currentFuel={currentFuel} onContinue={goNext} onBack={goBack} /> : null;
       case 'efficiency': 
-        return assumptions ? <EfficiencySection scop={scop} onScopChange={setScop} results={results} baseResults={baseResults} assumptions={assumptions} onContinue={goNext} /> : null;
+        return assumptions ? <EfficiencySection scop={scop} onScopChange={setScop} results={results} baseResults={baseResults} assumptions={assumptions} onContinue={goNext} onBack={goBack} /> : null;
       case 'finetune': 
-        return assumptions ? <FineTuneSection locationAdder={locationAdder} cylinderOption={cylinderOption} onLocationChange={setLocationAdder} onCylinderChange={setCylinderOption} onContinue={goNext} assumptions={assumptions} /> : null;
+        return assumptions ? <FineTuneSection locationAdder={locationAdder} cylinderOption={cylinderOption} onLocationChange={setLocationAdder} onCylinderChange={setCylinderOption} onContinue={goNext} onBack={goBack} assumptions={assumptions} /> : null;
       case 'final-estimate': 
-        return results ? <FinalEstimateSection results={results} currentFuel={currentFuel} context={guideContext} onContinue={goNext} /> : null;
+        return results ? <FinalEstimateSection results={results} currentFuel={currentFuel} context={guideContext} onContinue={goNext} onBack={goBack} /> : null;
       case 'booking': 
         return results && assumptions ? <ContactStep epcData={epcData} results={results} assumptions={assumptions} scop={scop} selectedTariff={selectedTariff} currentFuel={currentFuel} locationAdder={locationAdder} cylinderOption={cylinderOption} onBack={goBack} /> : null;
       default: 

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Gift, TrendingDown, Check, Calendar, Sparkles, Send, Loader2 } from 'lucide-react';
+import { Gift, TrendingDown, Check, Calendar, Sparkles, Send, Loader2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -19,6 +19,7 @@ interface FinalEstimateSectionProps {
     savings?: number;
   };
   onContinue: () => void;
+  onBack: () => void;
 }
 
 interface Message {
@@ -54,6 +55,7 @@ export function FinalEstimateSection({
   currentFuel,
   context,
   onContinue,
+  onBack,
 }: FinalEstimateSectionProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -116,6 +118,15 @@ export function FinalEstimateSection({
 
   return (
     <section className="py-6 sm:py-10 animate-fade-in">
+      {/* Back button */}
+      <button 
+        onClick={onBack}
+        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back
+      </button>
+
       {/* Badge */}
       <div className="flex justify-center mb-4">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
