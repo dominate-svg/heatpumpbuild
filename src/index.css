@@ -207,11 +207,22 @@
   /* CTA button hover lift */
   .cta-hover-lift {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    animation: cta-glow 2s ease-in-out infinite;
   }
 
   .cta-hover-lift:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 32px rgba(109, 40, 217, 0.25);
+    box-shadow: 0 8px 32px rgba(109, 40, 217, 0.4);
+    animation: none;
+  }
+
+  @keyframes cta-glow {
+    0%, 100% {
+      box-shadow: 0 4px 20px rgba(109, 40, 217, 0.25);
+    }
+    50% {
+      box-shadow: 0 4px 28px rgba(109, 40, 217, 0.45);
+    }
   }
 
   /* Input focus glow */
