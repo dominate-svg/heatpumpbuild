@@ -57,17 +57,28 @@ export interface TariffOutcome {
  * @param currentHeatingCostAnnual - Current fuel cost in £/year
  * @returns TariffOutcome with all calculated values
  */
+// Gas off-peak share nudge (gas homes have more predictable patterns)
+const GAS_OFFPEAK_SHARE_NUDGE = 0.05;
+const GAS_OFFPEAK_SHARE_MAX = 0.65;
+
 export function calculateTariffOutcome(
   tariff: Tariff,
   epcBand: string,
   heatPumpKwhAnnual: number,
-  currentHeatingCostAnnual: number
+  currentHeatingCostAnnual: number,
+  fuelType?: string
 ): TariffOutcome {
   const normalizedEpc = (epcBand || 'D').toUpperCase().charAt(0);
   const validEpc = ['A', 'B', 'C', 'D', 'E', 'F', 'G'].includes(normalizedEpc) ? normalizedEpc : 'D';
   
   const isCosy = tariff.name.toLowerCase().includes('cosy');
-  const offpeakShare = OFFPEAK_SHARE_BY_EPC[validEpc] || 0.45;
+  let offpeakShare = OFFPEAK_SHARE_BY_EPC[validEpc] || 0.45;
+  
+  // Apply gas off-peak share nudge (gas homes only)
+  // Do NOT apply to oil/LPG
+  if (fuelType === 'gas') {
+    offpeakShare = Math.min(offpeakShare + GAS_OFFPEAK_SHARE_NUDGE, GAS_OFFPEAK_SHARE_MAX);
+  }
   
   let effectiveRateP: number;
   let peakShare: number;
