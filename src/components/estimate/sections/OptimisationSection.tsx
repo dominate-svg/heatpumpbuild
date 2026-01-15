@@ -231,7 +231,7 @@ export function OptimisationSection({
                     <span className={cn(
                       'px-2 py-0.5 text-[11px] font-bold rounded-full',
                       option.tagType === 'popular' && 'bg-primary/10 text-primary',
-                      option.tagType === 'neutral' && 'bg-muted text-muted-foreground',
+                      option.tagType === 'neutral' && 'bg-blue-50 text-blue-700',
                       option.tagType === 'savings' && 'bg-green-100 text-green-700'
                     )}>
                       {option.tag}
@@ -244,7 +244,7 @@ export function OptimisationSection({
                       <Zap className={cn(
                         'w-4 h-4',
                         option.efficiency >= 400 ? 'text-green-600' :
-                        option.efficiency >= 370 ? 'text-primary' : 'text-muted-foreground'
+                        option.efficiency >= 370 ? 'text-primary' : 'text-blue-600'
                       )} />
                       <span className={cn(
                         'text-lg font-bold tabular-nums',
@@ -253,15 +253,15 @@ export function OptimisationSection({
                       )}>
                         {option.efficiency}%
                       </span>
-                      <span className="text-xs text-muted-foreground">efficiency</span>
+                      <span className="text-xs text-foreground/70">efficiency</span>
                     </div>
                     {/* Mini efficiency bar */}
-                    <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden max-w-20">
+                    <div className="flex-1 h-2 bg-primary/10 rounded-full overflow-hidden max-w-20">
                       <div 
                         className={cn(
                           'h-full rounded-full transition-all duration-300',
                           option.efficiency >= 400 ? 'bg-green-500' :
-                          option.efficiency >= 370 ? 'bg-primary' : 'bg-muted-foreground/50'
+                          option.efficiency >= 370 ? 'bg-primary' : 'bg-blue-500'
                         )}
                         style={{ width: `${efficiencyPercent}%` }}
                       />
