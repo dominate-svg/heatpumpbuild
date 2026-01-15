@@ -125,11 +125,11 @@ export function StickyEstimatePanel({ results, currentFuel, className }: StickyE
                 <span className="text-lg font-bold text-foreground">
                   <AnimatedNumber value={results.customerContribution} highlightDirection="up" />
                 </span>
-                <span className="text-xs text-muted-foreground ml-1">install</span>
+                <span className="text-xs text-muted-foreground ml-1">after grant</span>
               </div>
               <div className={cn(
                 'flex items-center gap-1',
-                savingsPositive ? 'text-green-600' : 'text-muted-foreground'
+                savingsPositive ? 'text-green-600' : 'text-amber-600'
               )}>
                 {savingsPositive ? (
                   <TrendingDown className="w-3.5 h-3.5" />
@@ -139,10 +139,13 @@ export function StickyEstimatePanel({ results, currentFuel, className }: StickyE
                 <span className="text-sm font-semibold">
                   <AnimatedNumber 
                     value={Math.abs(results.estimatedSavings)} 
-                    prefix={savingsPositive ? '£' : '-£'}
+                    prefix={savingsPositive ? '£' : '+£'}
                     suffix="/yr"
                     highlightDirection={savingsPositive ? 'down' : 'up'}
                   />
+                </span>
+                <span className="text-[10px] text-muted-foreground">
+                  {savingsPositive ? 'savings' : 'extra'}
                 </span>
               </div>
             </div>
@@ -181,27 +184,27 @@ export function StickyEstimatePanel({ results, currentFuel, className }: StickyE
                 </div>
               </div>
 
-              {/* Running costs */}
+              {/* Running costs - simpler language */}
               <div className="pt-2 border-t border-border">
-                <p className="text-xs font-medium text-muted-foreground mb-2">Running costs</p>
+                <p className="text-xs font-medium text-muted-foreground mb-2">What you'd pay each year to heat your home</p>
                 <div className="space-y-1.5">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Heat pump / year</span>
-                    <span className="font-medium">£{Math.round(results.hpCost).toLocaleString()}</span>
+                    <span className="text-muted-foreground">With heat pump</span>
+                    <span className="font-medium">£{Math.round(results.hpCost).toLocaleString()}/yr</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Your current {currentFuel}</span>
-                    <span className="font-medium">£{Math.round(results.baselineCost).toLocaleString()}</span>
+                    <span className="font-medium">£{Math.round(results.baselineCost).toLocaleString()}/yr</span>
                   </div>
                   <div className={cn(
                     'flex justify-between text-sm pt-1 border-t border-border',
                     savingsPositive ? 'text-green-600' : 'text-amber-600'
                   )}>
                     <span className="font-semibold">
-                      {savingsPositive ? 'Annual savings' : 'Difference'}
+                      {savingsPositive ? 'You save' : 'Extra cost'}
                     </span>
                     <span className="font-bold">
-                      {savingsPositive ? '£' : '+£'}{Math.abs(results.estimatedSavings).toLocaleString()}/yr
+                      {savingsPositive ? '' : '+'}£{Math.abs(results.estimatedSavings).toLocaleString()}/yr
                     </span>
                   </div>
                 </div>

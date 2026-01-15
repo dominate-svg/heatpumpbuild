@@ -198,11 +198,11 @@ export function FinalEstimateSection({
         </div>
       </div>
 
-      {/* AI Assistant section */}
+      {/* AI Assistant section - neat and compact, not floating */}
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-3">
           <Sparkles className="w-4 h-4 text-primary" />
-          <h3 className="font-semibold text-foreground text-sm">Have questions?</h3>
+          <h3 className="font-semibold text-foreground text-sm">Questions? Ask our assistant</h3>
         </div>
 
         <div className="bg-white rounded-xl border border-border overflow-hidden">
@@ -272,7 +272,7 @@ export function FinalEstimateSection({
                   <Input
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    placeholder="Ask anything..."
+                    placeholder="Ask anything about heat pumps or your quote…"
                     className="flex-1 bg-muted/30 border-0 focus-visible:ring-1"
                     disabled={isLoading}
                   />
