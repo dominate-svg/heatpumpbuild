@@ -8,6 +8,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { PropertyMap } from '@/components/estimate/PropertyMap';
 
 interface HomeDataSectionProps {
   epcData: EPCData;
@@ -119,7 +120,7 @@ export function HomeDataSection({
       </button>
 
       {/* Header */}
-      <div className="text-center mb-6 sm:mb-8">
+      <div className="text-center mb-4 sm:mb-6">
         <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-primary/10 mb-3 sm:mb-4">
           <Home className="w-6 h-6 sm:w-7 sm:h-7 text-primary" />
         </div>
@@ -130,6 +131,13 @@ export function HomeDataSection({
           This comes from your EPC — you can change anything if it's wrong.
         </p>
       </div>
+
+      {/* Property map */}
+      <PropertyMap 
+        postcode={epcData.postcode || ''} 
+        address={epcData.address}
+        className="h-32 sm:h-40 mb-4 sm:mb-6"
+      />
 
       {/* Data tiles - animated stack */}
       <div className="space-y-2.5 sm:space-y-3 mb-6 sm:mb-8">
