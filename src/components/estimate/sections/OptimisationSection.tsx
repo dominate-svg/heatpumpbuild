@@ -3,7 +3,7 @@ import { Check, ChevronDown, ArrowLeft, Settings, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
-import type { EstimateResults, Assumptions } from '@/lib/calculations';
+import type { EstimateResults } from '@/lib/calculations';
 import {
   Tooltip,
   TooltipContent,
@@ -14,9 +14,7 @@ import {
 interface OptimisationSectionProps {
   scop: number;
   onScopChange: (scop: number) => void;
-  results: EstimateResults | null;
-  baseResults: EstimateResults | null;
-  assumptions: Assumptions;
+  optionResults: Record<'simple' | 'balanced' | 'optimised', EstimateResults> | null;
   onContinue: () => void;
   onBack: () => void;
 }
@@ -58,16 +56,10 @@ const OPT_OPTIONS: OptOption[] = [
     description: 'More upgrades now for the lowest possible bills long-term.',
   },
 ];
-
-
-const roundToNearest10 = (value: number): number => Math.round(value / 10) * 10;
-
 export function OptimisationSection({ 
   scop, 
   onScopChange,
-  results,
-  baseResults,
-  assumptions,
+  optionResults,
   onContinue,
   onBack,
 }: OptimisationSectionProps) {
@@ -79,54 +71,38 @@ export function OptimisationSection({
   const [explainerOpen, setExplainerOpen] = useState(false);
   const hasInitialized = useRef(false);
 
-  // Calculate exact £ values for each option
+  // Calculate exact £ values for each option (derived from the same model as the sticky bar)
   const optionValues = useMemo(() => {
-    if (!baseResults) return null;
-    
-    const baseInstall = baseResults.customerContribution;
-    const baseRunning = baseResults.hpCost;
-    const baseSavings = baseResults.estimatedSavings;
-    
-    // Running costs scale inversely with SCOP
-    const simpleRunning = baseRunning;
-    const balancedRunning = Math.round(baseRunning * (3.4 / 3.7));
-    const bestRunning = Math.round(baseRunning * (3.4 / 4.0));
-    
-    // Install differences (radiator upgrades)
-    const radCost = assumptions.rad_upgrade_cost || 350;
-    const simpleInstall = baseInstall;
-    const balancedInstall = baseInstall + (4 * radCost); // ~4 extra rads
-    const bestInstall = baseInstall + (9 * radCost);     // ~9 extra rads
-    
-    // Savings improvement
-    const simpleSavings = baseSavings;
-    const balancedSavings = simpleSavings + (simpleRunning - balancedRunning);
-    const bestSavings = simpleSavings + (simpleRunning - bestRunning);
-    
+    if (!optionResults) return null;
+
+    const simple = optionResults.simple;
+    const balanced = optionResults.balanced;
+    const optimised = optionResults.optimised;
+
     return {
-      simple: { 
-        install: simpleInstall, 
-        running: simpleRunning,
-        savings: simpleSavings,
+      simple: {
+        install: simple.customerContribution,
+        running: simple.hpCost,
+        savings: simple.estimatedSavings,
         installDiff: 0,
         savingsDiff: 0,
       },
-      balanced: { 
-        install: balancedInstall, 
-        running: balancedRunning,
-        savings: balancedSavings,
-        installDiff: balancedInstall - simpleInstall,
-        savingsDiff: balancedSavings - simpleSavings,
+      balanced: {
+        install: balanced.customerContribution,
+        running: balanced.hpCost,
+        savings: balanced.estimatedSavings,
+        installDiff: balanced.customerContribution - simple.customerContribution,
+        savingsDiff: balanced.estimatedSavings - simple.estimatedSavings,
       },
-      optimised: { 
-        install: bestInstall, 
-        running: bestRunning,
-        savings: bestSavings,
-        installDiff: bestInstall - simpleInstall,
-        savingsDiff: bestSavings - simpleSavings,
+      optimised: {
+        install: optimised.customerContribution,
+        running: optimised.hpCost,
+        savings: optimised.estimatedSavings,
+        installDiff: optimised.customerContribution - simple.customerContribution,
+        savingsDiff: optimised.estimatedSavings - simple.estimatedSavings,
       },
     };
-  }, [baseResults, assumptions]);
+  }, [optionResults]);
 
   useEffect(() => {
     if (!hasInitialized.current) {
@@ -258,7 +234,7 @@ export function OptimisationSection({
                         'px-2.5 py-1.5 rounded-lg font-bold tabular-nums',
                         values.savings > 0 ? 'bg-green-50 text-green-700' : 'bg-muted text-muted-foreground'
                       )}>
-                        {values.savings > 0 ? `−£${Math.round(values.savings)}/yr` : 'No savings'}
+                        {values.savings > 0 ? `−£${values.savings.toLocaleString()}/yr` : 'No savings'}
                       </span>
                     </div>
                   )}

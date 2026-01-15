@@ -102,23 +102,36 @@ export default function Estimate() {
     }, assumptions);
   }, [epcData, assumptions, scop, selectedTariff, locationAdder, cylinderOption, currentFuel]);
 
-  // Base results for comparison (simple SCOP 3.4)
-  const baseResults = useMemo(() => {
+
+  // Exact results for each optimisation option (so all UI numbers match exactly)
+  const optimisationOptionResults = useMemo(() => {
     if (!epcData || !assumptions) return null;
-    return calculateEstimate({
-      floorArea: epcData.totalFloorArea || 100,
-      heatingCostCurrent: epcData.heatingCostCurrent,
-      spaceHeatingDemand: epcData.spaceHeatingDemand,
-      currentFuel,
-      propertyType: epcData.propertyType,
-      region: epcData.region || 'England',
-      epcBand: epcData.epcBand,
-      scop: 3.4,
-      tariff: selectedTariff,
-      locationAdder: 'included',
-      cylinderOption: 'existing',
-    }, assumptions);
-  }, [epcData, assumptions, selectedTariff, currentFuel]);
+
+    const make = (scopValue: number) =>
+      calculateEstimate(
+        {
+          floorArea: epcData.totalFloorArea || 100,
+          heatingCostCurrent: epcData.heatingCostCurrent,
+          spaceHeatingDemand: epcData.spaceHeatingDemand,
+          currentFuel,
+          propertyType: epcData.propertyType,
+          region: epcData.region || 'England',
+          epcBand: epcData.epcBand,
+          scop: scopValue,
+          tariff: selectedTariff,
+          locationAdder,
+          cylinderOption,
+        },
+        assumptions
+      );
+
+    return {
+      simple: make(3.4),
+      balanced: make(3.7),
+      optimised: make(4.0),
+    };
+  }, [epcData, assumptions, selectedTariff, locationAdder, cylinderOption, currentFuel]);
+
 
   const goNext = useCallback(() => {
     setCurrentStep(s => Math.min(s + 1, STEPS.length - 1));
@@ -183,14 +196,12 @@ export default function Estimate() {
           <OptimisationSection 
             scop={scop} 
             onScopChange={setScop} 
-            results={results} 
-            baseResults={baseResults} 
-            assumptions={assumptions} 
+            optionResults={optimisationOptionResults}
             onContinue={goNext} 
             onBack={goBack} 
           />
         ) : null;
-      
+
       case 'location': 
         return assumptions ? (
           <LocationSection2 
