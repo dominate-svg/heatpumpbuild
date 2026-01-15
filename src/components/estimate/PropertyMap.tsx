@@ -1,17 +1,6 @@
-import { useEffect, useState, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { MapPin, Loader2 } from 'lucide-react';
-
-// Fix for default marker icon in leaflet with bundlers
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-});
 
 interface PropertyMapProps {
   postcode: string;
@@ -22,15 +11,6 @@ interface PropertyMapProps {
 interface Coordinates {
   lat: number;
   lng: number;
-}
-
-// Component to recenter map when coordinates change
-function MapRecenter({ coords }: { coords: Coordinates }) {
-  const map = useMap();
-  useEffect(() => {
-    map.setView([coords.lat, coords.lng], 17);
-  }, [coords, map]);
-  return null;
 }
 
 export function PropertyMap({ postcode, address, className }: PropertyMapProps) {
@@ -50,7 +30,6 @@ export function PropertyMap({ postcode, address, className }: PropertyMapProps) 
       setError(false);
       
       try {
-        // Use Nominatim (OpenStreetMap geocoding) - free, no API key needed
         const searchQuery = address 
           ? `${address}, ${postcode}, UK` 
           : `${postcode}, UK`;
@@ -87,34 +66,6 @@ export function PropertyMap({ postcode, address, className }: PropertyMapProps) 
     fetchCoordinates();
   }, [postcode, address]);
 
-  // Custom purple marker
-  const customIcon = useMemo(() => new L.DivIcon({
-    className: 'custom-marker',
-    html: `
-      <div style="
-        width: 32px;
-        height: 32px;
-        background: linear-gradient(135deg, hsl(263, 70%, 50%), hsl(263, 70%, 40%));
-        border-radius: 50% 50% 50% 0;
-        transform: rotate(-45deg);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 4px 12px rgba(109, 40, 217, 0.4);
-      ">
-        <div style="
-          width: 10px;
-          height: 10px;
-          background: white;
-          border-radius: 50%;
-          transform: rotate(45deg);
-        "></div>
-      </div>
-    `,
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-  }), []);
-
   if (isLoading) {
     return (
       <div className={cn(
@@ -145,24 +96,20 @@ export function PropertyMap({ postcode, address, className }: PropertyMapProps) 
     );
   }
 
+  // Use OpenStreetMap static embed - no library needed
+  const embedUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${coords.lng - 0.002},${coords.lat - 0.001},${coords.lng + 0.002},${coords.lat + 0.001}&layer=mapnik&marker=${coords.lat},${coords.lng}`;
+
   return (
     <div className={cn('rounded-xl overflow-hidden border border-border shadow-sm', className)}>
-      <MapContainer
-        center={[coords.lat, coords.lng]}
-        zoom={17}
-        scrollWheelZoom={false}
-        dragging={false}
-        doubleClickZoom={false}
-        zoomControl={false}
-        attributionControl={false}
-        style={{ height: '100%', width: '100%', minHeight: '120px' }}
-      >
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      <div className="relative w-full h-full min-h-[120px]">
+        <iframe
+          src={embedUrl}
+          className="w-full h-full min-h-[120px] border-0"
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          title="Property location map"
         />
-        <Marker position={[coords.lat, coords.lng]} icon={customIcon} />
-        <MapRecenter coords={coords} />
-      </MapContainer>
+      </div>
       
       {/* Address overlay */}
       <div className="bg-card/95 backdrop-blur-sm px-3 py-2 border-t border-border">
