@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { Check, ChevronDown, ArrowLeft } from 'lucide-react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { Check, ChevronDown, ArrowLeft, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
@@ -17,49 +17,43 @@ interface EfficiencySectionProps {
 
 type BehaviourLevel = 'simple' | 'balanced' | 'best';
 
-const BEHAVIOUR_OPTIONS: {
+interface BehaviourOption {
   id: BehaviourLevel;
   scop: number;
+  scopPercent: string;
   label: string;
   tag: string;
   tagType: 'neutral' | 'popular' | 'savings';
   description: string;
-  installImpact: string;
-  runningImpact: string;
-  runningType: 'higher' | 'baseline' | 'lower';
-}[] = [
+}
+
+const BEHAVIOUR_OPTIONS: BehaviourOption[] = [
   {
     id: 'simple',
     scop: 3.4,
+    scopPercent: '340%',
     label: 'Simple & quick',
     tag: 'Easiest install',
     tagType: 'neutral',
-    description: 'We change as little as possible. Your system works well, but not at maximum efficiency.',
-    installImpact: '+£0',
-    runningImpact: '~£150/yr higher',
-    runningType: 'higher',
+    description: 'We change as little as possible. Your system works well, and you get started faster.',
   },
   {
     id: 'balanced',
     scop: 3.7,
+    scopPercent: '370%',
     label: 'Balanced',
     tag: 'Most popular',
     tagType: 'popular',
     description: 'We make a few small upgrades so your system runs more efficiently and saves more each year.',
-    installImpact: '+£300–500',
-    runningImpact: '~£150/yr lower',
-    runningType: 'lower',
   },
   {
     id: 'best',
     scop: 4.0,
+    scopPercent: '400%',
     label: 'Best long-term',
     tag: 'Lowest bills',
     tagType: 'savings',
     description: 'We fully optimise the system so it runs at maximum efficiency and costs the least to run.',
-    installImpact: '+£700–900',
-    runningImpact: '~£250/yr lower',
-    runningType: 'lower',
   },
 ];
 
@@ -93,6 +87,31 @@ export function EfficiencySection({
   });
   const [explainerOpen, setExplainerOpen] = useState(false);
   const hasInitialized = useRef(false);
+
+  // Calculate exact £ values for each option based on baseResults (simple SCOP 3.4)
+  const optionValues = useMemo(() => {
+    if (!baseResults) return null;
+    
+    const baseInstall = baseResults.customerContribution;
+    const baseRunning = baseResults.hpCost;
+    
+    // Approximate impact calculations based on SCOP differences
+    // Higher SCOP = more radiator upgrades = higher install, but lower running
+    const simpleInstall = baseInstall;
+    const balancedInstall = baseInstall + 400;
+    const bestInstall = baseInstall + 800;
+    
+    // Running costs scale inversely with SCOP
+    const simpleRunning = baseRunning;
+    const balancedRunning = Math.round(baseRunning * (3.4 / 3.7));
+    const bestRunning = Math.round(baseRunning * (3.4 / 4.0));
+    
+    return {
+      simple: { install: simpleInstall, running: simpleRunning },
+      balanced: { install: balancedInstall, running: balancedRunning },
+      best: { install: bestInstall, running: bestRunning },
+    };
+  }, [baseResults]);
 
   useEffect(() => {
     if (!hasInitialized.current) {
@@ -136,6 +155,12 @@ export function EfficiencySection({
       <div className="space-y-3 mb-5">
         {BEHAVIOUR_OPTIONS.map((option) => {
           const isSelected = selectedLevel === option.id;
+          const values = optionValues?.[option.id];
+          const simpleValues = optionValues?.simple;
+          
+          // Calculate difference from simple option
+          const installDiff = values && simpleValues ? values.install - simpleValues.install : 0;
+          const runningDiff = values && simpleValues ? simpleValues.running - values.running : 0;
           
           return (
             <button
@@ -180,25 +205,39 @@ export function EfficiencySection({
                     {option.description}
                   </p>
 
-                  {/* Impact row */}
+                  {/* Calculated values display */}
+                  {values && (
+                    <div className="space-y-2 mb-3">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">After grant:</span>
+                        <span className="font-semibold text-foreground">£{values.install.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Yearly heating cost:</span>
+                        <span className="font-semibold text-foreground">£{values.running.toLocaleString()}/yr</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Impact badges + SCOP */}
                   <div className="flex items-center gap-2 text-xs flex-wrap">
-                    <span className={cn(
-                      'px-2.5 py-1 rounded-lg font-medium',
-                      option.installImpact === '+£0' 
-                        ? 'bg-muted text-muted-foreground' 
-                        : 'bg-amber-50 text-amber-700'
-                    )}>
-                      Install: {option.installImpact}
-                    </span>
-                    <span className={cn(
-                      'px-2.5 py-1 rounded-lg font-medium',
-                      option.runningType === 'higher' 
-                        ? 'bg-amber-50 text-amber-700'
-                        : option.runningType === 'lower'
-                        ? 'bg-green-50 text-green-700'
-                        : 'bg-muted text-muted-foreground'
-                    )}>
-                      Running: {option.runningImpact}
+                    {installDiff === 0 ? (
+                      <span className="px-2.5 py-1 rounded-lg font-medium bg-muted text-muted-foreground">
+                        Included
+                      </span>
+                    ) : (
+                      <span className="px-2.5 py-1 rounded-lg font-medium bg-amber-50 text-amber-700">
+                        +£{installDiff.toLocaleString()} install
+                      </span>
+                    )}
+                    {runningDiff > 0 && (
+                      <span className="px-2.5 py-1 rounded-lg font-medium bg-green-50 text-green-700">
+                        £{runningDiff}/yr lower
+                      </span>
+                    )}
+                    <span className="px-2.5 py-1 rounded-lg font-medium bg-muted/50 text-muted-foreground flex items-center gap-1">
+                      <Zap className="w-3 h-3" />
+                      SCOP {option.scop} ({option.scopPercent})
                     </span>
                   </div>
                 </div>
@@ -208,39 +247,58 @@ export function EfficiencySection({
         })}
       </div>
 
-      {/* Collapsible explainer */}
+      {/* Collapsible explainer - "Why does this matter?" */}
       <Collapsible open={explainerOpen} onOpenChange={setExplainerOpen} className="mb-6">
-        <CollapsibleTrigger className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mx-auto group">
-          <span>What's this?</span>
+        <CollapsibleTrigger className="flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 transition-colors mx-auto group">
+          <span>Why does this matter?</span>
           <ChevronDown className={cn(
             'w-4 h-4 transition-transform duration-200',
             explainerOpen && 'rotate-180'
           )} />
         </CollapsibleTrigger>
         <CollapsibleContent className="mt-4 overflow-hidden data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
-          <div className="bg-muted/50 rounded-xl p-4 text-sm text-muted-foreground space-y-3">
-            <p>
-              Behind the scenes, this changes system efficiency (what engineers call <span className="font-medium text-foreground">SCOP</span>):
-            </p>
-            <div className="flex items-center justify-center gap-4 py-2">
+          <div className="bg-muted/50 rounded-xl p-4 text-sm space-y-4">
+            {/* Simple explanation */}
+            <div className="space-y-2">
+              <p className="text-foreground font-medium">Higher efficiency = lower bills</p>
+              <p className="text-muted-foreground">
+                A more efficient heat pump uses less electricity to make the same amount of warmth. 
+                Think of it like a car that goes further on the same tank of fuel.
+              </p>
+            </div>
+            
+            {/* Visual diagram */}
+            <div className="flex items-center justify-center gap-3 py-3 bg-white rounded-lg border border-border">
               <div className="text-center">
-                <div className="text-xs text-muted-foreground mb-1">Simple</div>
-                <div className="font-semibold text-foreground">3.4</div>
+                <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center mb-1">
+                  <Zap className="w-4 h-4 text-amber-600" />
+                </div>
+                <p className="text-[10px] text-muted-foreground">1 unit<br/>electricity</p>
               </div>
-              <div className="text-muted-foreground/40">→</div>
+              <div className="text-muted-foreground">→</div>
               <div className="text-center">
-                <div className="text-xs text-muted-foreground mb-1">Balanced</div>
-                <div className="font-semibold text-foreground">3.7</div>
-              </div>
-              <div className="text-muted-foreground/40">→</div>
-              <div className="text-center">
-                <div className="text-xs text-muted-foreground mb-1">Best</div>
-                <div className="font-semibold text-foreground">4.0</div>
+                <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center mb-1">
+                  <span className="text-lg">🔥</span>
+                </div>
+                <p className="text-[10px] text-muted-foreground">3–4 units<br/>heat</p>
               </div>
             </div>
-            <p>
-              Higher numbers mean more heat per unit of electricity — so lower bills.
-            </p>
+            
+            {/* Bullet points */}
+            <ul className="space-y-2 text-muted-foreground">
+              <li className="flex items-start gap-2">
+                <Check className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                <span>Simple installs work well, but use a bit more electricity</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Check className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                <span>Best long-term uses less electricity but may need larger radiators</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Check className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                <span>We'll confirm exactly what's needed during your design visit</span>
+              </li>
+            </ul>
           </div>
         </CollapsibleContent>
       </Collapsible>

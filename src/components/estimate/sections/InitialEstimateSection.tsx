@@ -69,14 +69,14 @@ export function InitialEstimateSection({
         {/* Divider */}
         <div className="h-px bg-white/20 my-4" />
 
-        {/* Running costs */}
+        {/* Running costs - simpler language */}
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <p className="opacity-70 mb-0.5">Running cost</p>
+            <p className="opacity-70 mb-0.5">What you'd pay each year</p>
             <p className="text-xl font-bold">£{Math.round(results.hpCost).toLocaleString()}/yr</p>
           </div>
           <div>
-            <p className="opacity-70 mb-0.5">vs your {fuelLabel}</p>
+            <p className="opacity-70 mb-0.5">Your {fuelLabel} now</p>
             <p className="text-xl font-bold">£{Math.round(results.baselineCost).toLocaleString()}/yr</p>
           </div>
         </div>
