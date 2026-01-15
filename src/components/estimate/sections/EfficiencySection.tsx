@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { Thermometer, TrendingDown, TrendingUp } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Check, HelpCircle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import type { EstimateResults, Assumptions } from '@/lib/calculations';
 
@@ -9,16 +9,76 @@ interface EfficiencySectionProps {
   scop: number;
   onScopChange: (scop: number) => void;
   results: EstimateResults | null;
-  baseResults: EstimateResults | null; // Results at default SCOP for comparison
+  baseResults: EstimateResults | null;
   assumptions: Assumptions;
   onContinue: () => void;
 }
 
-const SCOP_OPTIONS = [
-  { value: 3.4, label: 'Standard', radNote: '~2 radiators upgraded' },
-  { value: 3.7, label: 'Balanced', radNote: '~6 radiators upgraded' },
-  { value: 4.0, label: 'High', radNote: '~11 radiators upgraded' },
+type EfficiencyLevel = 'standard' | 'balanced' | 'high';
+
+const EFFICIENCY_OPTIONS: {
+  id: EfficiencyLevel;
+  scop: number;
+  scopLabel: string;
+  title: string;
+  description: string;
+  helperText: string;
+  installBadge: string;
+  runningBadge: string;
+  isRecommended?: boolean;
+}[] = [
+  {
+    id: 'standard',
+    scop: 3.4,
+    scopLabel: '340% SCOP',
+    title: 'Standard efficiency',
+    description: 'Reliable, lowest upfront cost',
+    helperText: 'Best if you want to keep installation simple and minimise changes to your home.',
+    installBadge: 'Included',
+    runningBadge: 'Baseline',
+  },
+  {
+    id: 'balanced',
+    scop: 3.7,
+    scopLabel: '370% SCOP',
+    title: 'Balanced efficiency',
+    description: 'Lower bills without major upgrades',
+    helperText: 'A good balance between upfront cost and long-term savings.',
+    installBadge: '+£250–£500',
+    runningBadge: '−£150/year',
+    isRecommended: true,
+  },
+  {
+    id: 'high',
+    scop: 4.0,
+    scopLabel: '400% SCOP',
+    title: 'High efficiency',
+    description: 'Lowest running costs, most future-proof',
+    helperText: 'Best for long-term savings and future energy prices.',
+    installBadge: '+£600–£900',
+    runningBadge: '−£250/year',
+  },
 ];
+
+// A/B test variant stored in localStorage
+function getABVariant(): 'A' | 'B' {
+  const stored = localStorage.getItem('efficiency_ab_variant');
+  if (stored === 'A' || stored === 'B') return stored;
+  
+  // Randomly assign variant
+  const variant = Math.random() < 0.5 ? 'A' : 'B';
+  localStorage.setItem('efficiency_ab_variant', variant);
+  
+  // Track assignment (would send to analytics in production)
+  console.log('[A/B Test] Efficiency default variant:', variant);
+  return variant;
+}
+
+function getDefaultLevel(): EfficiencyLevel {
+  const variant = getABVariant();
+  // Variant A: Balanced (370%), Variant B: Standard (340%)
+  return variant === 'A' ? 'balanced' : 'standard';
+}
 
 export function EfficiencySection({ 
   scop, 
@@ -28,122 +88,151 @@ export function EfficiencySection({
   assumptions,
   onContinue,
 }: EfficiencySectionProps) {
-  const [sliderValue, setSliderValue] = useState(() => {
-    if (scop <= 3.4) return 0;
-    if (scop <= 3.7) return 1;
-    return 2;
+  const [selectedLevel, setSelectedLevel] = useState<EfficiencyLevel>(() => {
+    // Map current scop to level
+    if (scop >= 4.0) return 'high';
+    if (scop >= 3.7) return 'balanced';
+    return 'standard';
   });
+  const [showExplainer, setShowExplainer] = useState(false);
+  const [animatingCard, setAnimatingCard] = useState<EfficiencyLevel | null>(null);
+  const hasInitialized = useRef(false);
 
-  const currentOption = SCOP_OPTIONS[sliderValue];
-  
+  // Set default based on A/B variant on first render
   useEffect(() => {
-    onScopChange(currentOption.value);
-  }, [sliderValue, currentOption.value, onScopChange]);
+    if (!hasInitialized.current) {
+      hasInitialized.current = true;
+      const defaultLevel = getDefaultLevel();
+      setSelectedLevel(defaultLevel);
+      const option = EFFICIENCY_OPTIONS.find(o => o.id === defaultLevel);
+      if (option) onScopChange(option.scop);
+    }
+  }, [onScopChange]);
 
-  // Calculate differences from base
-  const installDiff = results && baseResults 
-    ? results.customerContribution - baseResults.customerContribution 
-    : 0;
-  const savingsDiff = results && baseResults 
-    ? results.estimatedSavings - baseResults.estimatedSavings 
-    : 0;
+  const handleSelect = (level: EfficiencyLevel) => {
+    if (level === selectedLevel) return;
+    
+    // Trigger card animation
+    setAnimatingCard(level);
+    setTimeout(() => setAnimatingCard(null), 300);
+    
+    setSelectedLevel(level);
+    const option = EFFICIENCY_OPTIONS.find(o => o.id === level);
+    if (option) onScopChange(option.scop);
+  };
 
   return (
     <section className="py-6 sm:py-10 animate-fade-in">
-      {/* Visual - thermometer with radiators */}
-      <div className="mb-6 p-4 rounded-xl bg-white border border-border shadow-sm">
-        <div className="flex items-center justify-center gap-6 mb-3">
-          <div className="text-center">
-            <div className="w-10 h-16 rounded-full bg-gradient-to-t from-orange-500 via-orange-300 to-blue-300 mx-auto mb-1 relative overflow-hidden">
-              <div 
-                className="absolute bottom-0 left-0 right-0 bg-orange-500 transition-all duration-500"
-                style={{ height: `${30 + sliderValue * 25}%` }}
-              />
-            </div>
-            <p className="text-[10px] text-muted-foreground">Efficiency</p>
-          </div>
-          
-          <div className="text-center">
-            <div className="flex gap-1 justify-center mb-1">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div 
-                  key={i}
-                  className={cn(
-                    'w-2 h-8 rounded transition-all duration-300',
-                    i <= (sliderValue === 0 ? 2 : sliderValue === 1 ? 4 : 6)
-                      ? 'bg-primary'
-                      : 'bg-muted'
-                  )}
-                />
-              ))}
-            </div>
-            <p className="text-[10px] text-muted-foreground">Radiators</p>
-          </div>
-        </div>
-        <p className="text-xs text-muted-foreground text-center">
-          Higher efficiency = lower bills, but may need more radiator upgrades
-        </p>
-      </div>
-
       {/* Title */}
-      <div className="text-center mb-6">
+      <div className="text-center mb-2">
         <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1">
           Choose your efficiency level
         </h2>
         <p className="text-sm text-muted-foreground">
-          Slide to see how it affects your costs
+          This controls how much heat you get from each unit of electricity
         </p>
       </div>
 
-      {/* Slider */}
-      <div className="mb-6 px-2">
-        <Slider
-          value={[sliderValue]}
-          onValueChange={([v]) => setSliderValue(v)}
-          min={0}
-          max={2}
-          step={1}
-          className="mb-4"
-        />
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>Standard</span>
-          <span>Balanced</span>
-          <span>High</span>
-        </div>
+      {/* Helper text */}
+      <p className="text-xs text-muted-foreground text-center mb-6 max-w-sm mx-auto">
+        A higher % means lower running costs, but may require slightly more hardware (larger radiators).
+      </p>
+
+      {/* Efficiency cards */}
+      <div className="space-y-3 sm:grid sm:grid-cols-3 sm:gap-3 sm:space-y-0 mb-4">
+        {EFFICIENCY_OPTIONS.map((option) => {
+          const isSelected = selectedLevel === option.id;
+          const isAnimating = animatingCard === option.id;
+          
+          return (
+            <button
+              key={option.id}
+              onClick={() => handleSelect(option.id)}
+              className={cn(
+                'relative w-full p-4 rounded-2xl border-2 text-left transition-all duration-200',
+                'bg-white active:scale-[0.98]',
+                isSelected 
+                  ? 'border-primary shadow-lg shadow-primary/10' 
+                  : 'border-border hover:border-primary/30 shadow-sm',
+                isAnimating && 'scale-[1.02]',
+                isSelected && 'ring-2 ring-primary/20'
+              )}
+            >
+              {/* Recommended pill */}
+              {option.isRecommended && (
+                <div className="absolute -top-2.5 left-4 px-2 py-0.5 bg-primary text-primary-foreground text-[10px] font-semibold rounded-full">
+                  Recommended
+                </div>
+              )}
+              
+              {/* Checkmark */}
+              {isSelected && (
+                <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                  <Check className="w-3 h-3 text-primary-foreground" />
+                </div>
+              )}
+
+              {/* SCOP label - headline sized */}
+              <div className="text-2xl sm:text-3xl font-bold text-foreground mb-1">
+                {option.scopLabel}
+              </div>
+
+              {/* Title */}
+              <h3 className="font-semibold text-foreground text-sm mb-1">
+                {option.title}
+              </h3>
+
+              {/* Description */}
+              <p className="text-sm text-muted-foreground mb-2">
+                {option.description}
+              </p>
+
+              {/* Helper text */}
+              <p className="text-xs text-muted-foreground/80 mb-3 leading-relaxed">
+                {option.helperText}
+              </p>
+
+              {/* Impact badges */}
+              <div className="flex flex-wrap gap-1.5">
+                <span className={cn(
+                  'px-2 py-0.5 rounded-full text-xs font-medium',
+                  option.id === 'standard' 
+                    ? 'bg-muted text-muted-foreground' 
+                    : 'bg-amber-100 text-amber-700'
+                )}>
+                  Install: {option.installBadge}
+                </span>
+                <span className={cn(
+                  'px-2 py-0.5 rounded-full text-xs font-medium',
+                  option.id === 'standard' 
+                    ? 'bg-muted text-muted-foreground' 
+                    : 'bg-green-100 text-green-700'
+                )}>
+                  Running: {option.runningBadge}
+                </span>
+              </div>
+            </button>
+          );
+        })}
       </div>
 
-      {/* Current selection card */}
-      <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <h3 className="font-semibold text-foreground">{currentOption.label} efficiency</h3>
-            <p className="text-xs text-muted-foreground">{currentOption.radNote}</p>
-          </div>
-          <Thermometer className="w-5 h-5 text-primary" />
-        </div>
-        
-        {/* Impact indicators */}
-        <div className="flex gap-3">
-          {installDiff !== 0 && (
-            <div className={cn(
-              'flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium',
-              installDiff > 0 ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
-            )}>
-              {installDiff > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-              {installDiff > 0 ? '+' : ''}£{Math.abs(installDiff).toLocaleString()} install
-            </div>
-          )}
-          {savingsDiff !== 0 && (
-            <div className={cn(
-              'flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium',
-              savingsDiff > 0 ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
-            )}>
-              {savingsDiff > 0 ? <TrendingDown className="w-3 h-3" /> : <TrendingUp className="w-3 h-3" />}
-              {savingsDiff > 0 ? '+' : ''}£{Math.abs(savingsDiff).toLocaleString()}/yr savings
-            </div>
-          )}
-        </div>
+      {/* Microcopy under cards */}
+      <div className="bg-muted/50 rounded-xl p-3 mb-4">
+        <p className="text-xs text-muted-foreground text-center leading-relaxed">
+          <span className="font-medium text-foreground">Radiators don't make heat — they release it.</span>
+          <br />
+          Higher efficiency systems run at lower temperatures and sometimes need slightly bigger radiators.
+        </p>
       </div>
+
+      {/* Why this matters link */}
+      <button
+        onClick={() => setShowExplainer(true)}
+        className="flex items-center gap-1.5 text-sm text-primary hover:underline mx-auto mb-6"
+      >
+        <HelpCircle className="w-4 h-4" />
+        Why does efficiency matter?
+      </button>
 
       {/* CTA */}
       <Button 
@@ -153,6 +242,68 @@ export function EfficiencySection({
       >
         Continue
       </Button>
+
+      {/* Explainer Modal */}
+      <Dialog open={showExplainer} onOpenChange={setShowExplainer}>
+        <DialogContent className="max-w-md mx-4 rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">Why efficiency matters</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 text-sm text-muted-foreground">
+            <p>
+              A heat pump <span className="text-foreground font-medium">moves heat</span> instead of making it.
+            </p>
+            <p>
+              Efficiency (also called SCOP) tells you how many units of heat you get for each unit of electricity.
+            </p>
+            
+            <div>
+              <p className="text-foreground font-medium mb-2">Higher efficiency means:</p>
+              <ul className="space-y-1 ml-4">
+                <li className="flex items-start gap-2">
+                  <span className="text-green-600">•</span>
+                  Lower electricity bills
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-600">•</span>
+                  Lower carbon emissions
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-600">•</span>
+                  More future-proof as energy prices change
+                </li>
+              </ul>
+            </div>
+            
+            <div>
+              <p className="text-foreground font-medium mb-2">But higher efficiency often means:</p>
+              <ul className="space-y-1 ml-4">
+                <li className="flex items-start gap-2">
+                  <span className="text-amber-600">•</span>
+                  Bigger radiators
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-amber-600">•</span>
+                  Slightly higher install cost
+                </li>
+              </ul>
+            </div>
+            
+            <p className="text-foreground">
+              That's why we help you choose the right balance.
+            </p>
+          </div>
+
+          <DialogClose asChild>
+            <Button 
+              className="w-full h-12 rounded-xl font-semibold mt-2"
+            >
+              Got it
+            </Button>
+          </DialogClose>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }
