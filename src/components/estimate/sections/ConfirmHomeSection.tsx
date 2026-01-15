@@ -21,8 +21,8 @@ const FUEL_LABELS: Record<string, string> = {
 const EPC_COLORS: Record<string, string> = {
   A: 'bg-green-500 text-white',
   B: 'bg-green-400 text-white',
-  C: 'bg-lime-400 text-gray-900',
-  D: 'bg-yellow-400 text-gray-900',
+  C: 'bg-lime-400 text-foreground',
+  D: 'bg-yellow-400 text-foreground',
   E: 'bg-orange-400 text-white',
   F: 'bg-orange-500 text-white',
   G: 'bg-red-500 text-white',
