@@ -13,6 +13,7 @@ interface StickyEstimateBarProps {
   results: EstimateResults | null;
   currentFuel: string;
   epcContribution?: number | null;
+  radiatorAdder?: number;
   className?: string;
 }
 
@@ -90,13 +91,14 @@ function AnimatedNumber({
   );
 }
 
-export function StickyEstimateBar({ results, currentFuel, epcContribution, className }: StickyEstimateBarProps) {
+export function StickyEstimateBar({ results, currentFuel, epcContribution, radiatorAdder = 0, className }: StickyEstimateBarProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   if (!results) return null;
 
-  // Use EPC-based contribution if provided, otherwise fall back to results
-  const displayContribution = epcContribution ?? results.customerContribution;
+  // Use EPC-based contribution + radiator adder from efficiency plan
+  const baseContribution = epcContribution ?? results.customerContribution;
+  const displayContribution = baseContribution + radiatorAdder;
   const savingsPositive = results.estimatedSavings > 0;
 
   return (
