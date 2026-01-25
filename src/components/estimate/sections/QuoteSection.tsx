@@ -4,9 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import type { EstimateResults } from '@/lib/calculations';
+import type { EPCData } from '@/lib/calculations';
 import { streamOpenAITextFromSSE, extractAssistantMessageFromNonStreamResponse } from '@/lib/sse';
 import ReactMarkdown from 'react-markdown';
 import octopusPartnerLogo from '@/assets/octopus-partner.png';
+import { estimateContributionFromEpc } from '@/lib/estimateInstallCost';
+import { InstallCostBreakdown } from '@/components/estimate/InstallCostBreakdown';
 import {
   Tooltip,
   TooltipContent,
@@ -19,6 +22,7 @@ interface QuoteSectionProps {
   currentFuel: string;
   epcContribution?: number | null;
   radiatorAdder?: number;
+  epcData: EPCData | null;
   context: {
     epcBand?: string;
     floorArea?: number;
@@ -63,6 +67,7 @@ export function QuoteSection({
   currentFuel,
   epcContribution,
   radiatorAdder = 0,
+  epcData,
   context,
   onContinue,
   onBack,
@@ -77,6 +82,10 @@ export function QuoteSection({
   // Use EPC-based contribution + radiator adder from efficiency plan
   const baseContribution = epcContribution ?? results.customerContribution;
   const displayContribution = baseContribution + radiatorAdder;
+  
+  // Get install cost breakdown for display
+  const installResult = epcData ? estimateContributionFromEpc(epcData) : null;
+  const hasInstallError = installResult && 'error' in installResult;
   
   const savingsPositive = results.estimatedSavings > 0;
   const fuelLabel = FUEL_LABELS[currentFuel] || 'current heating';
@@ -241,6 +250,16 @@ export function QuoteSection({
           Full installation price: £{(displayContribution + results.grantApplied).toLocaleString()}
         </p>
       </div>
+
+      {/* Install cost breakdown */}
+      {!hasInstallError && installResult && 'contribution' in installResult && (
+        <div className="mb-4">
+          <InstallCostBreakdown
+            result={installResult}
+            radiatorAdder={radiatorAdder}
+          />
+        </div>
+      )}
 
       {/* Savings row */}
       <div className={cn(
