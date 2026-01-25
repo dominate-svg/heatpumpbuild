@@ -100,7 +100,7 @@ const CYLINDER_UPSIZING_ADDER = 500;
 // ============================================
 
 function normalizeBuiltForm(propertyType?: string, builtForm?: string): string {
-  // Try builtForm first (more specific), then propertyType
+  // Try builtForm first (more specific from EPC), then propertyType
   const value = builtForm || propertyType;
   if (!value) return 'unknown';
   
@@ -111,23 +111,23 @@ function normalizeBuiltForm(propertyType?: string, builtForm?: string): string {
     return 'flat';
   }
   // Mid-terrace variants (check before generic 'terrace')
-  if (lower.includes('mid-terrace') || lower.includes('mid terrace') || lower.includes('enclosed mid')) {
+  if (lower.includes('mid-terrace') || lower.includes('mid terrace') || lower.includes('enclosed mid') || lower === 'mid terrace') {
     return 'mid-terrace';
   }
   // End-terrace variants
-  if (lower.includes('end-terrace') || lower.includes('end terrace') || lower.includes('enclosed end')) {
+  if (lower.includes('end-terrace') || lower.includes('end terrace') || lower.includes('enclosed end') || lower === 'end terrace') {
     return 'end-terrace';
   }
   // Generic terrace defaults to mid-terrace
   if (lower.includes('terrace')) {
     return 'mid-terrace';
   }
-  // Semi-detached variants
-  if (lower.includes('semi-detached') || lower.includes('semi detached') || lower === 'semi') {
+  // Semi-detached variants - check for variations
+  if (lower.includes('semi-detached') || lower.includes('semi detached') || lower === 'semi' || lower === 'semidetached') {
     return 'semi-detached';
   }
   // Detached (must check after semi to avoid false match)
-  if (lower.includes('detached') && !lower.includes('semi')) {
+  if ((lower.includes('detached') || lower === 'detached') && !lower.includes('semi')) {
     return 'detached';
   }
   // Bungalow - treat as semi-detached for complexity estimation
@@ -239,12 +239,22 @@ export function estimateContributionFromEpc(epc: EPCData): ContributionResult | 
   }
   
   if (builtFormAdder > 0) {
-    const formLabel = builtForm.charAt(0).toUpperCase() + builtForm.slice(1).replace('-', ' ');
+    let formLabel: string;
+    let formDescription: string;
+    
+    if (builtForm === 'unknown') {
+      formLabel = 'Property type';
+      formDescription = 'We couldn\'t determine your property type from EPC data, so we\'ve included a standard allowance';
+    } else {
+      formLabel = builtForm.charAt(0).toUpperCase() + builtForm.slice(1).replace('-', ' ');
+      formDescription = `${formLabel} properties can have more complex installation requirements`;
+    }
+    
     explanations.push({
       key: 'builtForm',
       label: 'Property type',
       amount: builtFormAdder,
-      description: `${formLabel} properties can have more complex installation requirements`,
+      description: formDescription,
     });
   }
   
