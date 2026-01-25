@@ -320,6 +320,7 @@ export default function Estimate() {
           results={results} 
           currentFuel={currentFuel} 
           epcContribution={epcContribution}
+          radiatorAdder={results.radiatorAdder}
         />
       )}
     </div>
