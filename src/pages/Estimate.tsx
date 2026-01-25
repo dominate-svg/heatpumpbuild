@@ -16,6 +16,7 @@ import { OptimisationSection } from '@/components/estimate/sections/Optimisation
 import { LocationSection2 } from '@/components/estimate/sections/LocationSection2';
 import { CylinderSection } from '@/components/estimate/sections/CylinderSection';
 import { TariffSection } from '@/components/estimate/sections/TariffSection';
+import { InstallCostSection } from '@/components/estimate/sections/InstallCostSection';
 import { QuoteSection } from '@/components/estimate/sections/QuoteSection';
 import { ContactStep } from '@/components/wizard/steps/ContactStep';
 
@@ -28,15 +29,16 @@ function detectFuelType(mainFuel?: string): string {
   return 'gas';
 }
 
-// 8-step flow:
+// 9-step flow:
 // 1. education - How a heat pump works
 // 2. home-data - We found this about your home
 // 3. optimisation - How optimised should your system be
 // 4. location - Where can the heat pump go
 // 5. cylinder - Hot water cylinder
 // 6. tariff - Electricity tariff
-// 7. quote - Your personalised quote (full breakdown + AI)
-// 8. booking - Contact form
+// 7. install-cost - Detailed install cost breakdown
+// 8. quote - Your personalised quote (full breakdown + AI)
+// 9. booking - Contact form
 const STEPS = [
   'education',
   'home-data', 
@@ -44,6 +46,7 @@ const STEPS = [
   'location',
   'cylinder',
   'tariff',
+  'install-cost',
   'quote',
   'booking',
 ];
@@ -159,8 +162,8 @@ export default function Estimate() {
     );
   }
 
-  // Show sticky panel from optimisation step (step 2) until quote (step 6)
-  // Not shown on education, home-data, quote, or booking
+  // Show sticky panel from optimisation step (step 2) until tariff (step 5)
+  // Not shown on education, home-data, install-cost, quote, or booking
   const showStickyBar = currentStep >= 2 && currentStep <= 5;
 
   // Calculate heat loss for display
@@ -239,6 +242,15 @@ export default function Estimate() {
             cylinderOption={cylinderOption}
           />
         ) : null;
+      
+      case 'install-cost':
+        return (
+          <InstallCostSection
+            epcData={epcData}
+            onContinue={goNext}
+            onBack={goBack}
+          />
+        );
       
       case 'quote': 
         return results ? (

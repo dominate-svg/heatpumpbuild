@@ -12,6 +12,9 @@ interface EPCResponse {
     'total-floor-area'?: string;
     'main-fuel'?: string;
     'property-type'?: string;
+    'built-form'?: string;
+    'construction-age-band'?: string;
+    'hotwater-description'?: string;
     'local-authority'?: string;
     'current-energy-rating'?: string;
     'space-heating-demand'?: string;
@@ -47,7 +50,10 @@ export function useEPCLookup() {
         heatingCostCurrent: row['heating-cost-current'] ? parseFloat(row['heating-cost-current']) : undefined,
         totalFloorArea: row['total-floor-area'] ? parseFloat(row['total-floor-area']) : undefined,
         mainFuel: row['main-fuel'],
-        propertyType: row['property-type'],
+        propertyType: row['property-type'] || row['built-form'],
+        builtForm: row['built-form'],
+        constructionAgeBand: row['construction-age-band'],
+        hotWaterDescription: row['hotwater-description'],
         region: determineRegion(row['local-authority'] || row.postcode),
         epcBand: row['current-energy-rating'],
         spaceHeatingDemand: row['space-heating-demand'] ? parseFloat(row['space-heating-demand']) : undefined,
