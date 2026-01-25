@@ -39,20 +39,20 @@ const PLAN_OPTIONS: PlanOption[] = [
   {
     id: 'simple',
     scop: 3.4,
-    label: 'Simple & quick',
-    tag: 'Lowest upfront',
-    tagType: 'neutral',
+    label: 'Simple setup',
+    tag: 'Recommended',
+    tagType: 'recommended',
     efficiencyLabel: 'Standard (340%)',
-    description: 'Keep changes minimal. Lowest install cost, slightly higher running costs.',
+    description: 'Minimal changes. Lower install cost but higher running bills.',
   },
   {
     id: 'balanced',
     scop: 3.7,
     label: 'Balanced upgrade',
-    tag: 'Recommended',
-    tagType: 'recommended',
+    tag: 'Best value',
+    tagType: 'neutral',
     efficiencyLabel: 'Improved (370%)',
-    description: 'Best mix of price and lower bills. A few upgrades for better efficiency.',
+    description: 'Best value. A few upgrades for noticeably lower bills.',
   },
   {
     id: 'optimised',
@@ -61,17 +61,13 @@ const PLAN_OPTIONS: PlanOption[] = [
     tag: 'Lowest bills',
     tagType: 'savings',
     efficiencyLabel: 'High (400%)',
-    description: 'Lowest bills long-term. May need more radiator upgrades.',
+    description: 'Maximum efficiency. Higher upfront but lowest bills long-term.',
   },
 ];
 
-// A/B test: check localStorage for default selection
+// Default to 'simple' - lowest upfront cost with highest savings ratio
 function getDefaultSelection(): PlanLevel {
-  try {
-    const variant = localStorage.getItem('efficiency_default_variant');
-    if (variant === 'B') return 'simple';
-  } catch {}
-  return 'balanced'; // Variant A (default)
+  return 'simple';
 }
 
 export function EfficiencyPlanSection({ 
