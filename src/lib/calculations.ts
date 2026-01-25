@@ -54,6 +54,10 @@ export interface EPCData {
   region?: string;
   spaceHeatingDemand?: number;
   epcBand?: string;
+  // Additional fields for install cost estimation
+  builtForm?: string;
+  constructionAgeBand?: string;
+  hotWaterDescription?: string;
 }
 
 export interface EstimateInputs {
