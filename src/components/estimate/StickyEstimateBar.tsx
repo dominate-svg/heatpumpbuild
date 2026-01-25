@@ -12,6 +12,7 @@ import {
 interface StickyEstimateBarProps {
   results: EstimateResults | null;
   currentFuel: string;
+  epcContribution?: number | null;
   className?: string;
 }
 
@@ -89,11 +90,13 @@ function AnimatedNumber({
   );
 }
 
-export function StickyEstimateBar({ results, currentFuel, className }: StickyEstimateBarProps) {
+export function StickyEstimateBar({ results, currentFuel, epcContribution, className }: StickyEstimateBarProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   if (!results) return null;
 
+  // Use EPC-based contribution if provided, otherwise fall back to results
+  const displayContribution = epcContribution ?? results.customerContribution;
   const savingsPositive = results.estimatedSavings > 0;
 
   return (
@@ -131,7 +134,7 @@ export function StickyEstimateBar({ results, currentFuel, className }: StickyEst
             <div className="flex items-center gap-2 sm:gap-3 lg:flex-col lg:items-start lg:gap-1">
               <div className="flex items-baseline gap-1">
                 <span className="text-lg sm:text-xl lg:text-xl font-bold text-foreground">
-                  <AnimatedNumber value={results.customerContribution} highlightDirection="up" />
+                  <AnimatedNumber value={displayContribution} highlightDirection="up" />
                 </span>
                 <span className="text-[9px] sm:text-[10px] text-muted-foreground">after grant</span>
               </div>
@@ -201,7 +204,7 @@ export function StickyEstimateBar({ results, currentFuel, className }: StickyEst
                   </div>
                   <div className="flex justify-between pt-1.5 border-t border-border">
                     <span className="font-semibold">You pay</span>
-                    <span className="font-bold text-base tabular-nums">£{results.customerContribution.toLocaleString()}</span>
+                    <span className="font-bold text-base tabular-nums">£{displayContribution.toLocaleString()}</span>
                   </div>
                 </div>
               </div>

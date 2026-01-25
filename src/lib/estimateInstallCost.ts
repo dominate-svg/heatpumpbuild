@@ -214,13 +214,6 @@ export function estimateContributionFromEpc(epc: EPCData): ContributionResult | 
   const rating = getEpcRating(epc.epcBand);
   const needsCylinder = isCombiBoiler(epc.hotWaterDescription);
   
-  // Debug: log the raw EPC values and normalized results
-  console.log('[InstallCost] EPC Data:', {
-    propertyType: epc.propertyType,
-    builtForm: epc.builtForm,
-    normalizedBuiltForm: builtForm,
-  });
-  
   // Calculate adders (NO radiator adder - that comes from efficiency plan selection)
   const sizeAdder = getSizeAdder(floorArea);
   const builtFormAdder = getBuiltFormAdder(builtForm);
@@ -228,8 +221,6 @@ export function estimateContributionFromEpc(epc: EPCData): ContributionResult | 
   const ratingAdder = getRatingAdder(rating);
   const cylinderAdder = needsCylinder ? CYLINDER_REQUIRED_ADDER : 0;
   const cylinderUpsizingAdder = (needsCylinder && floorArea >= 131) ? CYLINDER_UPSIZING_ADDER : 0;
-  
-  console.log('[InstallCost] Adders:', { sizeAdder, builtFormAdder, ageAdder, ratingAdder, cylinderAdder });
   
   // Calculate total (radiator adder removed from base estimate)
   const rawContribution = sizeAdder + builtFormAdder + ageAdder + ratingAdder + cylinderAdder + cylinderUpsizingAdder;

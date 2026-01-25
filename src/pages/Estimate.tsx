@@ -4,6 +4,7 @@ import { useAssumptions } from '@/hooks/useAssumptions';
 import { useTariffs, type Tariff } from '@/hooks/useTariffs';
 import { calculateEstimate } from '@/lib/calculations';
 import type { EPCData } from '@/lib/calculations';
+import { estimateContributionFromEpc } from '@/lib/estimateInstallCost';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -104,6 +105,14 @@ export default function Estimate() {
       cylinderOption,
     }, assumptions);
   }, [epcData, assumptions, scop, selectedTariff, locationAdder, cylinderOption, currentFuel]);
+
+  // EPC-based install cost contribution (single source of truth)
+  const epcContribution = useMemo(() => {
+    if (!epcData) return null;
+    const result = estimateContributionFromEpc(epcData);
+    if ('error' in result) return null;
+    return result.contribution;
+  }, [epcData]);
 
 
   // Exact results for each optimisation option (so all UI numbers match exactly)
@@ -257,6 +266,7 @@ export default function Estimate() {
           <QuoteSection 
             results={results} 
             currentFuel={currentFuel} 
+            epcContribution={epcContribution}
             context={guideContext} 
             onContinue={goNext} 
             onBack={goBack} 
@@ -305,7 +315,11 @@ export default function Estimate() {
 
       {/* Sticky estimate bar - mobile bottom / desktop right side */}
       {showStickyBar && results && (
-        <StickyEstimateBar results={results} currentFuel={currentFuel} />
+        <StickyEstimateBar 
+          results={results} 
+          currentFuel={currentFuel} 
+          epcContribution={epcContribution}
+        />
       )}
     </div>
   );
