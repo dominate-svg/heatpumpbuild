@@ -1,14 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { ArrowLeft, PoundSterling, Award, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import type { EPCData } from '@/lib/calculations';
-import { 
-  estimateInstallCostFromEpc, 
-  type CylinderOverride, 
-  type RadiatorOverride,
-  type InstallCostResult 
-} from '@/lib/estimateInstallCost';
+import { estimateContributionFromEpc, type ContributionResult } from '@/lib/estimateInstallCost';
 import { InstallCostBreakdown } from '@/components/estimate/InstallCostBreakdown';
 
 interface InstallCostSectionProps {
@@ -22,17 +17,10 @@ export function InstallCostSection({
   onContinue, 
   onBack 
 }: InstallCostSectionProps) {
-  const [cylinderOverride, setCylinderOverride] = useState<CylinderOverride>('unknown');
-  const [radiatorOverride, setRadiatorOverride] = useState<RadiatorOverride>('unknown');
-  
   const installResult = useMemo(() => {
-    return estimateInstallCostFromEpc(epcData, {
-      hasCylinder: cylinderOverride,
-      radiatorUpgrades: radiatorOverride,
-    });
-  }, [epcData, cylinderOverride, radiatorOverride]);
+    return estimateContributionFromEpc(epcData);
+  }, [epcData]);
   
-  // Check if we got an error
   const hasError = 'error' in installResult;
   
   return (
@@ -66,11 +54,7 @@ export function InstallCostSection({
         </Alert>
       ) : (
         <InstallCostBreakdown
-          result={installResult as InstallCostResult}
-          cylinderValue={cylinderOverride}
-          radiatorValue={radiatorOverride}
-          onCylinderChange={setCylinderOverride}
-          onRadiatorChange={setRadiatorOverride}
+          result={installResult as ContributionResult}
           className="mb-6"
         />
       )}
@@ -83,10 +67,10 @@ export function InstallCostSection({
           </div>
           <div>
             <p className="font-medium text-green-800 dark:text-green-200 text-sm">
-              £7,500 BUS Grant included
+              £7,500 BUS Grant
             </p>
             <p className="text-xs text-green-700 dark:text-green-300 mt-1">
-              The Boiler Upgrade Scheme grant is already deducted. We handle all the paperwork for you.
+              The Boiler Upgrade Scheme grant covers a standard installation. We handle all the paperwork for you.
             </p>
           </div>
         </div>
