@@ -18,7 +18,7 @@ export interface ContributionBreakdown {
   ratingAdder: number;
   cylinderAdder: number;
   cylinderUpsizingAdder: number;
-  radiatorAdder: number;
+  // Radiator adder removed from base estimate - only added via efficiency plan selection
 }
 
 export interface ContributionExplanation {
@@ -38,7 +38,6 @@ export interface ContributionResult {
     ageBand: string;
     epcRating: string;
     hotWater: string;
-    radiatorScore: number;
   };
 }
 
@@ -89,13 +88,9 @@ const RATING_ADDERS: Record<string, number> = {
 };
 const RATING_MISSING_ADDER = 750;
 
-// Radiator score adders
-const RADIATOR_ADDERS: Array<{ maxScore: number; adder: number }> = [
-  { maxScore: 1, adder: 0 },
-  { maxScore: 3, adder: 1250 },
-  { maxScore: Infinity, adder: 3000 },
-];
-
+// Radiator score adders - REMOVED from base estimate
+// Radiator upgrades are now ONLY added when user selects balanced/optimised plans
+// This prevents assuming radiators need replacing when they could be new
 // Cylinder adders
 const CYLINDER_REQUIRED_ADDER = 1250;
 const CYLINDER_UPSIZING_ADDER = 500;
@@ -104,30 +99,43 @@ const CYLINDER_UPSIZING_ADDER = 500;
 // HELPER FUNCTIONS
 // ============================================
 
-function normalizeBuiltForm(propertyType?: string): string {
-  if (!propertyType) return 'unknown';
+function normalizeBuiltForm(propertyType?: string, builtForm?: string): string {
+  // Try builtForm first (more specific), then propertyType
+  const value = builtForm || propertyType;
+  if (!value) return 'unknown';
   
-  const lower = propertyType.toLowerCase().trim();
+  const lower = value.toLowerCase().trim();
   
+  // Flat variants
   if (lower.includes('flat') || lower.includes('apartment') || lower.includes('maisonette')) {
     return 'flat';
   }
+  // Mid-terrace variants (check before generic 'terrace')
   if (lower.includes('mid-terrace') || lower.includes('mid terrace') || lower.includes('enclosed mid')) {
     return 'mid-terrace';
   }
+  // End-terrace variants
   if (lower.includes('end-terrace') || lower.includes('end terrace') || lower.includes('enclosed end')) {
     return 'end-terrace';
   }
+  // Generic terrace defaults to mid-terrace
   if (lower.includes('terrace')) {
     return 'mid-terrace';
   }
-  if (lower.includes('semi')) {
+  // Semi-detached variants
+  if (lower.includes('semi-detached') || lower.includes('semi detached') || lower === 'semi') {
     return 'semi-detached';
   }
-  if (lower.includes('detached')) {
+  // Detached (must check after semi to avoid false match)
+  if (lower.includes('detached') && !lower.includes('semi')) {
     return 'detached';
   }
+  // Bungalow - treat as semi-detached for complexity estimation
   if (lower.includes('bungalow')) {
+    return 'semi-detached';
+  }
+  // House without further info - use semi as neutral default
+  if (lower.includes('house')) {
     return 'semi-detached';
   }
   
@@ -181,32 +189,9 @@ function getRatingAdder(rating: string): number {
   return RATING_ADDERS[rating] ?? RATING_MISSING_ADDER;
 }
 
-function getRadiatorScore(rating: string, ageBand: string, floorArea: number, builtForm: string): number {
-  let score = 0;
-  
-  // EPC rating score
-  if (rating === 'D') score += 1;
-  else if (rating === 'E') score += 2;
-  else if (rating === 'F' || rating === 'G') score += 3;
-  
-  // Pre-1950 score
-  if (ageBand === 'pre1950') score += 1;
-  
-  // Large home score
-  if (floorArea >= 131) score += 1;
-  
-  // Detached score
-  if (builtForm === 'detached') score += 1;
-  
-  return score;
-}
-
-function getRadiatorAdder(score: number): number {
-  for (const band of RADIATOR_ADDERS) {
-    if (score <= band.maxScore) return band.adder;
-  }
-  return RADIATOR_ADDERS[RADIATOR_ADDERS.length - 1].adder;
-}
+// Radiator scoring and adder functions removed
+// Radiator upgrades are now determined ONLY by the efficiency plan the user selects
+// This prevents false assumptions about radiator condition
 
 function roundToNearest100(value: number): number {
   return Math.round(value / 100) * 100;
@@ -223,13 +208,13 @@ export function estimateContributionFromEpc(epc: EPCData): ContributionResult | 
     return { error: 'We need floor area from EPC to estimate costs. Please select a different EPC record or enter details manually.' };
   }
   
-  // Normalize inputs
-  const builtForm = normalizeBuiltForm(epc.propertyType);
+  // Normalize inputs - pass both propertyType and builtForm for better matching
+  const builtForm = normalizeBuiltForm(epc.propertyType, epc.builtForm);
   const ageBand = getAgeBand(epc.constructionAgeBand);
   const rating = getEpcRating(epc.epcBand);
   const needsCylinder = isCombiBoiler(epc.hotWaterDescription);
   
-  // Calculate adders
+  // Calculate adders (NO radiator adder - that comes from efficiency plan selection)
   const sizeAdder = getSizeAdder(floorArea);
   const builtFormAdder = getBuiltFormAdder(builtForm);
   const ageAdder = getAgeAdder(ageBand);
@@ -237,11 +222,8 @@ export function estimateContributionFromEpc(epc: EPCData): ContributionResult | 
   const cylinderAdder = needsCylinder ? CYLINDER_REQUIRED_ADDER : 0;
   const cylinderUpsizingAdder = (needsCylinder && floorArea >= 131) ? CYLINDER_UPSIZING_ADDER : 0;
   
-  const radiatorScore = getRadiatorScore(rating, ageBand, floorArea, builtForm);
-  const radiatorAdder = getRadiatorAdder(radiatorScore);
-  
-  // Calculate total
-  const rawContribution = sizeAdder + builtFormAdder + ageAdder + ratingAdder + cylinderAdder + cylinderUpsizingAdder + radiatorAdder;
+  // Calculate total (radiator adder removed from base estimate)
+  const rawContribution = sizeAdder + builtFormAdder + ageAdder + ratingAdder + cylinderAdder + cylinderUpsizingAdder;
   const contribution = Math.min(CONTRIBUTION_CAP, Math.max(0, roundToNearest100(rawContribution)));
   
   // Build explanations (only for items that apply)
@@ -295,14 +277,7 @@ export function estimateContributionFromEpc(epc: EPCData): ContributionResult | 
     });
   }
   
-  if (radiatorAdder > 0) {
-    explanations.push({
-      key: 'radiators',
-      label: 'Radiator upgrades',
-      amount: radiatorAdder,
-      description: 'Based on your home\'s age and efficiency, some radiators may need upgrading',
-    });
-  }
+  // Note: No radiator explanation - radiators only added via efficiency plan selection
   
   return {
     contribution,
@@ -313,7 +288,6 @@ export function estimateContributionFromEpc(epc: EPCData): ContributionResult | 
       ratingAdder,
       cylinderAdder,
       cylinderUpsizingAdder,
-      radiatorAdder,
     },
     explanations,
     debug: {
@@ -322,7 +296,6 @@ export function estimateContributionFromEpc(epc: EPCData): ContributionResult | 
       ageBand,
       epcRating: rating,
       hotWater: needsCylinder ? 'combi' : 'cylinder',
-      radiatorScore,
     },
   };
 }
