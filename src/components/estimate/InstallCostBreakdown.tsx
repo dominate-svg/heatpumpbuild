@@ -6,13 +6,15 @@ import { formatContribution } from '@/lib/estimateInstallCost';
 
 interface InstallCostBreakdownProps {
   result: ContributionResult;
+  radiatorAdder?: number;
   className?: string;
 }
 
-export function InstallCostBreakdown({ result, className }: InstallCostBreakdownProps) {
+export function InstallCostBreakdown({ result, radiatorAdder = 0, className }: InstallCostBreakdownProps) {
   const [showDetails, setShowDetails] = useState(false);
   
-  const isZeroContribution = result.contribution === 0;
+  const totalContribution = result.contribution + radiatorAdder;
+  const isZeroContribution = totalContribution === 0;
   
   return (
     <div className={cn("space-y-4", className)}>
@@ -21,7 +23,7 @@ export function InstallCostBreakdown({ result, className }: InstallCostBreakdown
         <div className="text-center">
           <p className="text-sm text-muted-foreground mb-1">Estimated customer contribution</p>
           <p className="text-3xl sm:text-4xl font-bold text-foreground">
-            {formatContribution(result.contribution)}
+            {formatContribution(totalContribution)}
           </p>
           {isZeroContribution && (
             <div className="flex items-center justify-center gap-2 mt-2 text-green-600 dark:text-green-400">
@@ -70,11 +72,26 @@ export function InstallCostBreakdown({ result, className }: InstallCostBreakdown
                   <ExplanationItem key={item.key} item={item} />
                 ))}
                 
+                {/* Radiator adder */}
+                {radiatorAdder > 0 && (
+                  <div className="flex items-start justify-between gap-3 bg-muted/30 rounded-lg p-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm text-foreground">Radiator upgrades</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Additional radiators for improved efficiency
+                      </p>
+                    </div>
+                    <span className="text-sm font-semibold whitespace-nowrap text-foreground">
+                      +{formatContribution(radiatorAdder)}
+                    </span>
+                  </div>
+                )}
+
                 {/* Total */}
                 <div className="flex items-center justify-between pt-3 border-t border-border">
                   <span className="font-semibold text-foreground">Total contribution</span>
                   <span className="font-bold text-lg text-primary">
-                    {formatContribution(result.contribution)}
+                    {formatContribution(totalContribution)}
                   </span>
                 </div>
               </div>

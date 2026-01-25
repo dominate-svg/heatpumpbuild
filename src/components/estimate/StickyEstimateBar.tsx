@@ -99,15 +99,6 @@ export function StickyEstimateBar({ results, currentFuel, epcContribution, radia
   // Use EPC-based contribution + radiator adder from efficiency plan
   const baseContribution = epcContribution ?? results.customerContribution;
   const displayContribution = baseContribution + radiatorAdder;
-  
-  // Debug: Log values
-  console.log('[StickyEstimateBar] Display calculation:', {
-    baseContribution,
-    radiatorAdder,
-    displayContribution,
-    resultsRadiatorAdder: results.radiatorAdder,
-  });
-
   const savingsPositive = results.estimatedSavings > 0;
 
   return (

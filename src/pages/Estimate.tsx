@@ -17,7 +17,6 @@ import { OptimisationSection } from '@/components/estimate/sections/Optimisation
 import { LocationSection2 } from '@/components/estimate/sections/LocationSection2';
 import { CylinderSection } from '@/components/estimate/sections/CylinderSection';
 import { TariffSection } from '@/components/estimate/sections/TariffSection';
-import { InstallCostSection } from '@/components/estimate/sections/InstallCostSection';
 import { QuoteSection } from '@/components/estimate/sections/QuoteSection';
 import { ContactStep } from '@/components/wizard/steps/ContactStep';
 
@@ -30,16 +29,15 @@ function detectFuelType(mainFuel?: string): string {
   return 'gas';
 }
 
-// 9-step flow:
+// 8-step flow:
 // 1. education - How a heat pump works
 // 2. home-data - We found this about your home
 // 3. optimisation - How optimised should your system be
 // 4. location - Where can the heat pump go
 // 5. cylinder - Hot water cylinder
 // 6. tariff - Electricity tariff
-// 7. install-cost - Detailed install cost breakdown
-// 8. quote - Your personalised quote (full breakdown + AI)
-// 9. booking - Contact form
+// 7. quote - Your personalised quote (full breakdown + AI)
+// 8. booking - Contact form
 const STEPS = [
   'education',
   'home-data', 
@@ -47,7 +45,6 @@ const STEPS = [
   'location',
   'cylinder',
   'tariff',
-  'install-cost',
   'quote',
   'booking',
 ];
@@ -67,11 +64,6 @@ export default function Estimate() {
   const [cylinderOption, setCylinderOption] = useState<'existing' | '150l' | '210l'>('existing');
   const [currentFuel, setCurrentFuel] = useState<string>('gas');
   const [scop, setScop] = useState(3.7); // Default to balanced
-
-  // Debug: Log when scop changes
-  useEffect(() => {
-    console.log('[Estimate] SCOP changed to:', scop);
-  }, [scop]);
 
   useEffect(() => {
     const stored = sessionStorage.getItem('epcData');
@@ -118,18 +110,6 @@ export default function Estimate() {
     if ('error' in result) return null;
     return result.contribution;
   }, [epcData]);
-
-  // Debug: Log results radiatorAdder
-  useEffect(() => {
-    if (results) {
-      console.log('[Estimate] Results updated:', {
-        scop,
-        radiatorAdder: results.radiatorAdder,
-        customerContribution: results.customerContribution,
-        epcContribution,
-      });
-    }
-  }, [results, scop, epcContribution]);
 
   // Exact results for each optimisation option (so all UI numbers match exactly)
   const optimisationOptionResults = useMemo(() => {
@@ -187,9 +167,9 @@ export default function Estimate() {
     );
   }
 
-  // Show sticky panel from optimisation step (step 2) until tariff (step 5)
-  // Not shown on education, home-data, install-cost, quote, or booking
-  const showStickyBar = currentStep >= 2 && currentStep <= 5;
+  // Show sticky panel from optimisation step (step 2) until tariff (step 5, now index 5)
+  // Not shown on education, home-data, quote, or booking
+  const showStickyBar = currentStep >= 2 && currentStep <= 5 && STEPS[currentStep] !== 'quote';
 
   // Calculate heat loss for display
   const heatLossKw = results?.heatLossKw || 8;
@@ -268,15 +248,6 @@ export default function Estimate() {
           />
         ) : null;
       
-      case 'install-cost':
-        return (
-          <InstallCostSection
-            epcData={epcData}
-            onContinue={goNext}
-            onBack={goBack}
-          />
-        );
-      
       case 'quote': 
         return results ? (
           <QuoteSection 
@@ -284,6 +255,7 @@ export default function Estimate() {
             currentFuel={currentFuel} 
             epcContribution={epcContribution}
             radiatorAdder={results.radiatorAdder}
+            epcData={epcData}
             context={guideContext} 
             onContinue={goNext} 
             onBack={goBack} 
