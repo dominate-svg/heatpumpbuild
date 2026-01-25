@@ -267,6 +267,7 @@ export default function Estimate() {
             results={results} 
             currentFuel={currentFuel} 
             epcContribution={epcContribution}
+            radiatorAdder={results.radiatorAdder}
             context={guideContext} 
             onContinue={goNext} 
             onBack={goBack} 

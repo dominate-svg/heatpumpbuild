@@ -18,6 +18,7 @@ interface QuoteSectionProps {
   results: EstimateResults;
   currentFuel: string;
   epcContribution?: number | null;
+  radiatorAdder?: number;
   context: {
     epcBand?: string;
     floorArea?: number;
@@ -61,6 +62,7 @@ export function QuoteSection({
   results, 
   currentFuel,
   epcContribution,
+  radiatorAdder = 0,
   context,
   onContinue,
   onBack,
@@ -72,8 +74,9 @@ export function QuoteSection({
   const scrollRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef<Message[]>([]);
 
-  // Use EPC-based contribution if provided, otherwise fall back to results
-  const displayContribution = epcContribution ?? results.customerContribution;
+  // Use EPC-based contribution + radiator adder from efficiency plan
+  const baseContribution = epcContribution ?? results.customerContribution;
+  const displayContribution = baseContribution + radiatorAdder;
   
   const savingsPositive = results.estimatedSavings > 0;
   const fuelLabel = FUEL_LABELS[currentFuel] || 'current heating';
