@@ -68,6 +68,11 @@ export default function Estimate() {
   const [currentFuel, setCurrentFuel] = useState<string>('gas');
   const [scop, setScop] = useState(3.7); // Default to balanced
 
+  // Debug: Log when scop changes
+  useEffect(() => {
+    console.log('[Estimate] SCOP changed to:', scop);
+  }, [scop]);
+
   useEffect(() => {
     const stored = sessionStorage.getItem('epcData');
     if (!stored) { navigate('/'); return; }
@@ -114,6 +119,17 @@ export default function Estimate() {
     return result.contribution;
   }, [epcData]);
 
+  // Debug: Log results radiatorAdder
+  useEffect(() => {
+    if (results) {
+      console.log('[Estimate] Results updated:', {
+        scop,
+        radiatorAdder: results.radiatorAdder,
+        customerContribution: results.customerContribution,
+        epcContribution,
+      });
+    }
+  }, [results, scop, epcContribution]);
 
   // Exact results for each optimisation option (so all UI numbers match exactly)
   const optimisationOptionResults = useMemo(() => {
