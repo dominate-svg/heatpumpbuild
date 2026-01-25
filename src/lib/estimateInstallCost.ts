@@ -214,6 +214,13 @@ export function estimateContributionFromEpc(epc: EPCData): ContributionResult | 
   const rating = getEpcRating(epc.epcBand);
   const needsCylinder = isCombiBoiler(epc.hotWaterDescription);
   
+  // Debug: log the raw EPC values and normalized results
+  console.log('[InstallCost] EPC Data:', {
+    propertyType: epc.propertyType,
+    builtForm: epc.builtForm,
+    normalizedBuiltForm: builtForm,
+  });
+  
   // Calculate adders (NO radiator adder - that comes from efficiency plan selection)
   const sizeAdder = getSizeAdder(floorArea);
   const builtFormAdder = getBuiltFormAdder(builtForm);
@@ -221,6 +228,8 @@ export function estimateContributionFromEpc(epc: EPCData): ContributionResult | 
   const ratingAdder = getRatingAdder(rating);
   const cylinderAdder = needsCylinder ? CYLINDER_REQUIRED_ADDER : 0;
   const cylinderUpsizingAdder = (needsCylinder && floorArea >= 131) ? CYLINDER_UPSIZING_ADDER : 0;
+  
+  console.log('[InstallCost] Adders:', { sizeAdder, builtFormAdder, ageAdder, ratingAdder, cylinderAdder });
   
   // Calculate total (radiator adder removed from base estimate)
   const rawContribution = sizeAdder + builtFormAdder + ageAdder + ratingAdder + cylinderAdder + cylinderUpsizingAdder;
@@ -238,15 +247,18 @@ export function estimateContributionFromEpc(epc: EPCData): ContributionResult | 
     });
   }
   
-  if (builtFormAdder > 0) {
-    let formLabel: string;
-    let formDescription: string;
+  // ALWAYS show property type so users can verify what we detected
+  {
+    const formLabel = builtForm === 'unknown' 
+      ? 'Unknown' 
+      : builtForm.charAt(0).toUpperCase() + builtForm.slice(1).replace('-', ' ');
     
+    let formDescription: string;
     if (builtForm === 'unknown') {
-      formLabel = 'Property type';
-      formDescription = 'We couldn\'t determine your property type from EPC data, so we\'ve included a standard allowance';
+      formDescription = 'We couldn\'t determine your property type from EPC data';
+    } else if (builtFormAdder === 0) {
+      formDescription = `${formLabel} properties typically have straightforward installations`;
     } else {
-      formLabel = builtForm.charAt(0).toUpperCase() + builtForm.slice(1).replace('-', ' ');
       formDescription = `${formLabel} properties can have more complex installation requirements`;
     }
     

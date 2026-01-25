@@ -98,14 +98,19 @@ export function InstallCostBreakdown({ result, className }: InstallCostBreakdown
 }
 
 function ExplanationItem({ item }: { item: ContributionExplanation }) {
+  const isZero = item.amount === 0;
+  
   return (
     <div className="flex items-start justify-between gap-3 bg-muted/30 rounded-lg p-3">
       <div className="flex-1 min-w-0">
         <p className="font-medium text-sm text-foreground">{item.label}</p>
         <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
       </div>
-      <span className="text-sm font-semibold text-foreground whitespace-nowrap">
-        +{formatContribution(item.amount)}
+      <span className={cn(
+        "text-sm font-semibold whitespace-nowrap",
+        isZero ? "text-green-600 dark:text-green-400" : "text-foreground"
+      )}>
+        {isZero ? "Included" : `+${formatContribution(item.amount)}`}
       </span>
     </div>
   );
