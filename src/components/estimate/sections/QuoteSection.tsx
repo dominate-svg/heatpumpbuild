@@ -17,6 +17,7 @@ import {
 interface QuoteSectionProps {
   results: EstimateResults;
   currentFuel: string;
+  epcContribution?: number | null;
   context: {
     epcBand?: string;
     floorArea?: number;
@@ -59,6 +60,7 @@ const STARTER_QUESTIONS = [
 export function QuoteSection({ 
   results, 
   currentFuel,
+  epcContribution,
   context,
   onContinue,
   onBack,
@@ -70,6 +72,9 @@ export function QuoteSection({
   const scrollRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef<Message[]>([]);
 
+  // Use EPC-based contribution if provided, otherwise fall back to results
+  const displayContribution = epcContribution ?? results.customerContribution;
+  
   const savingsPositive = results.estimatedSavings > 0;
   const fuelLabel = FUEL_LABELS[currentFuel] || 'current heating';
 
@@ -227,10 +232,10 @@ export function QuoteSection({
         </div>
         <p className="text-xs opacity-75 mb-1 uppercase tracking-wide">You pay</p>
         <p className="text-4xl sm:text-5xl font-bold mb-2 tabular-nums">
-          £{results.customerContribution.toLocaleString()}
+          £{displayContribution.toLocaleString()}
         </p>
         <p className="text-xs opacity-75">
-          Full installation price: £{results.grossInstallPrice.toLocaleString()}
+          Full installation price: £{(displayContribution + results.grantApplied).toLocaleString()}
         </p>
       </div>
 
