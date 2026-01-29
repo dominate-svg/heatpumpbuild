@@ -131,6 +131,10 @@ const GAS_RATE = 0.0593; // £/kWh (Ofgem cap) - DO NOT CHANGE
 // LPG: £/kWh
 const LPG_RATE = 0.105; // £/kWh
 
+// Electric heating: £/kWh (direct electric heaters, storage heaters)
+// Uses standard electricity rate - much higher than gas
+const ELECTRIC_RATE = 0.245; // 24.5p/kWh (typical SVT rate)
+
 // Oil pricing (stored as pence per litre, converted properly)
 // Default: 65p per litre (conservative mid)
 // Energy content: 10.35 kWh per litre (kerosene)
@@ -414,6 +418,10 @@ function calculateSavings(
   } else if (fuelType === 'lpg') {
     // LPG: simple rate
     currentCost = fuelKwh * LPG_RATE;
+  } else if (fuelType === 'electric') {
+    // Electric: Direct electric heating (storage heaters, panel heaters)
+    // High baseline cost = large savings when switching to heat pump
+    currentCost = fuelKwh * ELECTRIC_RATE;
   } else {
     // Default to gas calculation
     currentCost = fuelKwh * GAS_RATE;
